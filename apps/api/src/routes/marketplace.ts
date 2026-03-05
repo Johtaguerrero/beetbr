@@ -57,7 +57,7 @@ marketplaceRouter.post('/', authenticate, async (req: AuthRequest, res: Response
 
     const listing = await prisma.listing.create({
         data: {
-            ...validated.data,
+            ...(validated.data as any),
             price: validated.data.price,
             sellerId: profileId,
             sellerType: role,
