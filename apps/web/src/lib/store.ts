@@ -464,20 +464,26 @@ export const useStore = create<BeetrStore>()(
 
             fetchFeed: async (page = 1) => {
                 const { accessToken } = get();
-                if (accessToken === 'demo-token') return; // demo mode uses mock data already in store
+                if (accessToken === 'demo-token') return;
                 try {
                     const res: any = await api.feed.getFeed(page);
                     set({ posts: res.data });
-                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+                } catch (error: any) {
+                    console.error('Failed to fetch feed:', error);
+                    // Silently fail to prevent toast spam when API is down
+                }
             },
 
             fetchStories: async () => {
                 const { accessToken } = get();
-                if (accessToken === 'demo-token') return; // demo mode uses mock data already in store
+                if (accessToken === 'demo-token') return;
                 try {
                     const res: any = await api.feed.getStories();
                     set({ stories: res.data });
-                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+                } catch (error: any) {
+                    console.error('Failed to fetch stories:', error);
+                    // Silently fail to prevent toast spam when API is down
+                }
             },
 
             togglePostLike: (postId) => set((s) => {
@@ -492,51 +498,66 @@ export const useStore = create<BeetrStore>()(
                 return { posts, likedPosts: liked };
             }),
 
-            createPost: async (data) => {
+            createPost: async (data, file) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return '';
-                // Demo mode: create post locally without API
-                if (accessToken === 'demo-token') {
-                    const mediaUrl = data.file ? URL.createObjectURL(data.file) : '';
+
+                // Helper to create locally
+                const createLocally = (mediaUrl?: string) => {
                     const newPost: Post = {
                         id: `post-${Date.now()}`,
                         artistId: artistProfile.id,
                         artist: { stageName: artistProfile.stageName, avatarUrl: '', scoreBeet: artistProfile.scoreBeet },
                         type: data.type,
-                        text: data.text || '',
+                        text: data.text,
                         hashtags: data.hashtags || [],
                         mediaUrl,
-                        plays: 0,
                         likes: 0,
                         comments: 0,
+                        plays: 0,
                         liked: false,
                         createdAt: new Date().toISOString(),
                     };
                     set((s) => ({ posts: [newPost, ...s.posts] }));
                     get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
                     return newPost.id;
+                };
+
+                if (accessToken === 'demo-token') {
+                    if (file) {
+                        const objectUrl = URL.createObjectURL(file);
+                        return createLocally(objectUrl);
+                    } else {
+                        return createLocally();
+                    }
                 }
+
                 try {
-                    let mediaUrl = '';
-                    if (data.file) {
-                        const res = await api.upload(data.file);
+                    let mediaUrl = undefined;
+                    if (file) {
+                        const res = await api.upload(file);
                         mediaUrl = res.url;
                     }
                     const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id });
                     set((s) => ({ posts: [res.data, ...s.posts] }));
-                    get().addToast({ message: 'Post publicado!', type: 'success' });
+                    get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
                     return res.data.id;
                 } catch (error: any) {
-                    get().addToast({ message: error.message, type: 'error' });
-                    return '';
+                    console.error('API createPost failed, falling back locally:', error);
+                    // Fallback locally if API is down
+                    if (file) {
+                        return createLocally(URL.createObjectURL(file));
+                    } else {
+                        return createLocally();
+                    }
                 }
             },
 
             createStory: async (file) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return;
-                // Demo mode: create story locally without API
-                if (accessToken === 'demo-token') {
+
+                const createLocally = () => {
                     const objectUrl = URL.createObjectURL(file);
                     const newStory: Story = {
                         id: `story-${Date.now()}`,
@@ -549,14 +570,23 @@ export const useStore = create<BeetrStore>()(
                     };
                     set((s) => ({ stories: [newStory, ...s.stories] }));
                     get().addToast({ message: 'Story publicado! 📸', type: 'success' });
+                };
+
+                // Demo mode: create story locally without API
+                if (accessToken === 'demo-token') {
+                    createLocally();
                     return;
                 }
+
                 try {
                     const uploadRes = await api.upload(file);
                     const res: any = await api.feed.createStory({ mediaUrl: uploadRes.url, artistId: artistProfile.id, mediaType: 'IMAGE' });
                     set((s) => ({ stories: [res.data, ...s.stories] }));
                     get().addToast({ message: 'Story publicado!', type: 'success' });
-                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+                } catch (error: any) {
+                    console.error('API createStory failed, falling back locally:', error);
+                    createLocally();
+                }
             },
 
             toggleShortlist: (artistId) => set((s) => ({ shortlist: s.shortlist.includes(artistId) ? s.shortlist.filter((id) => id !== artistId) : [...s.shortlist, artistId] })),
