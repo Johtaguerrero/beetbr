@@ -100,161 +100,163 @@ export default function DealRoom() {
 
     return (
         <AppShell noPadding>
-            <div className="flex h-screen flex-col overflow-hidden">
-                {/* Left panel */}
-                <div className="flex-shrink-0 border-b overflow-y-auto" style={{ borderColor: 'var(--color-border)' }}>
-                    {/* Mobile tabs */}
-                    <div className="flex border-b" style={{ borderColor: 'var(--color-border)' }}>
-                        {(['chat', 'details', 'contract'] as const).map((t) => (
-                            <button key={t} onClick={() => setTab(t)}
-                                className="flex-1 py-2.5 text-xs font-semibold capitalize transition-colors"
-                                style={{ color: tab === t ? 'var(--color-accent)' : 'var(--color-muted)', borderBottom: tab === t ? '2px solid var(--color-accent)' : '2px solid transparent' }}>
-                                {t === 'chat' ? '💬 Chat' : t === 'details' ? '📋 Proposta' : '📄 Contrato'}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className={`p-5 space-y-4 ${tab !== 'details' && tab !== 'contract' ? 'hidden' : ''}`}>
-                        {/* Header */}
-                        <div className="flex items-center justify-between">
-                            <h2 className="font-bold text-white text-sm">Deal Room</h2>
-                            <StatusBadge status={proposal.status} />
+            <div className="flex h-screen items-center justify-center">
+                <div className="flex flex-col overflow-hidden w-full max-w-[480px] h-full md:h-[calc(100vh-2rem)] md:my-4 md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+                    {/* Left panel */}
+                    <div className="flex-shrink-0 border-b overflow-y-auto" style={{ borderColor: 'var(--color-border)' }}>
+                        {/* Mobile tabs */}
+                        <div className="flex border-b" style={{ borderColor: 'var(--color-border)' }}>
+                            {(['chat', 'details', 'contract'] as const).map((t) => (
+                                <button key={t} onClick={() => setTab(t)}
+                                    className="flex-1 py-2.5 text-xs font-semibold capitalize transition-colors"
+                                    style={{ color: tab === t ? 'var(--color-accent)' : 'var(--color-muted)', borderBottom: tab === t ? '2px solid var(--color-accent)' : '2px solid transparent' }}>
+                                    {t === 'chat' ? '💬 Chat' : t === 'details' ? '📋 Proposta' : '📄 Contrato'}
+                                </button>
+                            ))}
                         </div>
 
-                        {/* Participants */}
-                        <div className="beet-card p-3 space-y-2.5">
-                            <div className="flex items-center gap-2">
-                                <Avatar name={proposal.industryName || 'Empresa'} size="sm" emoji="🏢" isIndustry />
-                                <div>
-                                    <p className="text-xs font-semibold text-white">{proposal.industryName || 'Empresa'}</p>
-                                    <p className="text-[10px] text-beet-muted">Empresa</p>
-                                </div>
+                        <div className={`p-5 space-y-4 ${tab !== 'details' && tab !== 'contract' ? 'hidden' : ''}`}>
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                                <h2 className="font-bold text-white text-sm">Deal Room</h2>
+                                <StatusBadge status={proposal.status} />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Avatar name={proposal.artistName || 'Artista'} size="sm" emoji="🎤" />
-                                <div>
-                                    <p className="text-xs font-semibold text-white">{proposal.artistName || 'Artista'}</p>
-                                    <div className="flex items-center gap-1">
-                                        <p className="text-[10px] text-beet-muted">Artista</p>
-                                        <ScoreBeetBadge score={proposal.artistScore || 0} />
+
+                            {/* Participants */}
+                            <div className="beet-card p-3 space-y-2.5">
+                                <div className="flex items-center gap-2">
+                                    <Avatar name={proposal.industryName || 'Empresa'} size="sm" emoji="🏢" isIndustry />
+                                    <div>
+                                        <p className="text-xs font-semibold text-white">{proposal.industryName || 'Empresa'}</p>
+                                        <p className="text-[10px] text-beet-muted">Empresa</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Avatar name={proposal.artistName || 'Artista'} size="sm" emoji="🎤" />
+                                    <div>
+                                        <p className="text-xs font-semibold text-white">{proposal.artistName || 'Artista'}</p>
+                                        <div className="flex items-center gap-1">
+                                            <p className="text-[10px] text-beet-muted">Artista</p>
+                                            <ScoreBeetBadge score={proposal.artistScore || 0} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Proposal details */}
-                        <div className="space-y-1.5">
-                            <p className="section-title">Proposta</p>
-                            {[
-                                { label: 'Tipo', value: TYPE_LABELS[proposal.type] },
-                                { label: 'Valor', value: `R$ ${Number(proposal.amount).toLocaleString('pt-BR')}` },
-                                { label: 'Local', value: proposal.location || (proposal.online ? '🌐 Online' : '—') },
-                                { label: 'Data', value: proposal.date ? new Date(proposal.date).toLocaleDateString('pt-BR') : '—' },
-                                { label: 'Duração', value: proposal.durationHours ? `${proposal.durationHours}h` : '—' },
-                                { label: 'Resp. em', value: proposal.responseDeadline ? new Date(proposal.responseDeadline).toLocaleDateString('pt-BR') : '—' },
-                            ].map((item) => (
-                                <div key={item.label} className="flex justify-between text-xs">
-                                    <span className="text-beet-muted">{item.label}</span>
-                                    <span className="font-semibold text-white text-right max-w-[55%]">{item.value}</span>
-                                </div>
-                            ))}
-                            {proposal.terms && (
-                                <div className="mt-2 rounded-xl bg-beet-dark p-2.5 text-xs text-beet-gray leading-relaxed">{proposal.terms}</div>
-                            )}
-                        </div>
-
-                        {/* Contract versions */}
-                        <div>
-                            <p className="section-title mb-2">Contrato</p>
-                            {proposal.contractVersions.length === 0 ? (
-                                <p className="text-xs text-beet-muted">Nenhuma versão enviada ainda</p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {proposal.contractVersions.map((v) => (
-                                        <div key={v.id} className="flex items-center gap-2 rounded-xl bg-beet-dark px-3 py-2">
-                                            <span className="text-sm">📄</span>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-medium text-white truncate">{v.fileName}</p>
-                                                <p className="text-[10px] text-beet-muted">v{v.version} · {v.uploaderRole === 'ARTIST' ? '🎤' : '🏢'}</p>
-                                            </div>
-                                            <span className="text-xs text-beet-blue cursor-pointer hover:underline">⬇</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            {proposal.status === 'ACCEPTED' && (
-                                <button onClick={handleUploadContract} disabled={uploading}
-                                    className="btn-outline w-full mt-2 py-2 text-xs flex items-center justify-center gap-2">
-                                    {uploading ? <><Spinner size="sm" /> Enviando...</> : '📤 Enviar nova versão'}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Actions */}
-                        {(canAct || canCancel) && (
-                            <div className="space-y-2 pt-2">
-                                {canAct && (
-                                    <>
-                                        <button onClick={handleAccept} disabled={actLoading}
-                                            className="btn-accent w-full py-3 flex items-center justify-center gap-2">
-                                            {actLoading ? <Spinner size="sm" /> : '✓ Aceitar proposta'}
-                                        </button>
-                                        <button onClick={handleReject} disabled={actLoading}
-                                            className="btn-danger w-full py-2.5 text-xs">
-                                            ✕ Recusar
-                                        </button>
-                                    </>
+                            {/* Proposal details */}
+                            <div className="space-y-1.5">
+                                <p className="section-title">Proposta</p>
+                                {[
+                                    { label: 'Tipo', value: TYPE_LABELS[proposal.type] },
+                                    { label: 'Valor', value: `R$ ${Number(proposal.amount).toLocaleString('pt-BR')}` },
+                                    { label: 'Local', value: proposal.location || (proposal.online ? '🌐 Online' : '—') },
+                                    { label: 'Data', value: proposal.date ? new Date(proposal.date).toLocaleDateString('pt-BR') : '—' },
+                                    { label: 'Duração', value: proposal.durationHours ? `${proposal.durationHours}h` : '—' },
+                                    { label: 'Resp. em', value: proposal.responseDeadline ? new Date(proposal.responseDeadline).toLocaleDateString('pt-BR') : '—' },
+                                ].map((item) => (
+                                    <div key={item.label} className="flex justify-between text-xs">
+                                        <span className="text-beet-muted">{item.label}</span>
+                                        <span className="font-semibold text-white text-right max-w-[55%]">{item.value}</span>
+                                    </div>
+                                ))}
+                                {proposal.terms && (
+                                    <div className="mt-2 rounded-xl bg-beet-dark p-2.5 text-xs text-beet-gray leading-relaxed">{proposal.terms}</div>
                                 )}
-                                {canCancel && (
-                                    <button onClick={() => { if (confirm('Cancelar esta proposta?')) cancelProposal(proposalId); }}
-                                        className="btn-danger w-full py-2.5 text-xs">
-                                        🚫 Cancelar proposta
+                            </div>
+
+                            {/* Contract versions */}
+                            <div>
+                                <p className="section-title mb-2">Contrato</p>
+                                {proposal.contractVersions.length === 0 ? (
+                                    <p className="text-xs text-beet-muted">Nenhuma versão enviada ainda</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {proposal.contractVersions.map((v) => (
+                                            <div key={v.id} className="flex items-center gap-2 rounded-xl bg-beet-dark px-3 py-2">
+                                                <span className="text-sm">📄</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-medium text-white truncate">{v.fileName}</p>
+                                                    <p className="text-[10px] text-beet-muted">v{v.version} · {v.uploaderRole === 'ARTIST' ? '🎤' : '🏢'}</p>
+                                                </div>
+                                                <span className="text-xs text-beet-blue cursor-pointer hover:underline">⬇</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {proposal.status === 'ACCEPTED' && (
+                                    <button onClick={handleUploadContract} disabled={uploading}
+                                        className="btn-outline w-full mt-2 py-2 text-xs flex items-center justify-center gap-2">
+                                        {uploading ? <><Spinner size="sm" /> Enviando...</> : '📤 Enviar nova versão'}
                                     </button>
                                 )}
                             </div>
-                        )}
-                    </div>
-                </div>
 
-                {/* Chat panel */}
-                <div className={`flex flex-1 flex-col overflow-hidden ${tab !== 'chat' ? 'hidden' : ''}`}>
-                    {/* Chat header */}
-                    <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
-                        <button onClick={() => router.back()} className="text-beet-muted hover:text-white transition-colors mr-1">←</button>
-                        <p className="text-sm font-semibold text-white">
-                            {proposal.industryName} × {proposal.artistName}
-                        </p>
-                        <StatusBadge status={proposal.status} />
-                    </div>
-
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto space-y-3 px-4 py-4">
-                        {proposal.messages.length === 0 && (
-                            <div className="flex h-full items-center justify-center flex-col gap-3 text-center">
-                                <span className="text-4xl">💬</span>
-                                <p className="text-sm text-beet-muted">Nenhuma mensagem ainda.<br />Inicie a conversa!</p>
-                            </div>
-                        )}
-                        {proposal.messages.map((msg) => (
-                            <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} />
-                        ))}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input */}
-                    {['SENT', 'VIEWED', 'NEGOTIATING', 'ACCEPTED'].includes(proposal.status) && (
-                        <div className="border-t p-3" style={{ borderColor: 'var(--color-border)' }}>
-                            <div className="flex gap-2">
-                                <input className="beet-input flex-1 py-2.5 text-sm"
-                                    placeholder="Escreva uma mensagem..."
-                                    value={input} onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} />
-                                <button onClick={handleSend} disabled={!input.trim()}
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-beet-black disabled:opacity-40 transition-all hover:scale-110"
-                                    style={{ background: 'var(--color-accent)' }}>↑</button>
-                            </div>
+                            {/* Actions */}
+                            {(canAct || canCancel) && (
+                                <div className="space-y-2 pt-2">
+                                    {canAct && (
+                                        <>
+                                            <button onClick={handleAccept} disabled={actLoading}
+                                                className="btn-accent w-full py-3 flex items-center justify-center gap-2">
+                                                {actLoading ? <Spinner size="sm" /> : '✓ Aceitar proposta'}
+                                            </button>
+                                            <button onClick={handleReject} disabled={actLoading}
+                                                className="btn-danger w-full py-2.5 text-xs">
+                                                ✕ Recusar
+                                            </button>
+                                        </>
+                                    )}
+                                    {canCancel && (
+                                        <button onClick={() => { if (confirm('Cancelar esta proposta?')) cancelProposal(proposalId); }}
+                                            className="btn-danger w-full py-2.5 text-xs">
+                                            🚫 Cancelar proposta
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
+
+                    {/* Chat panel */}
+                    <div className={`flex flex-1 flex-col overflow-hidden ${tab !== 'chat' ? 'hidden' : ''}`}>
+                        {/* Chat header */}
+                        <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
+                            <button onClick={() => router.back()} className="text-beet-muted hover:text-white transition-colors mr-1">←</button>
+                            <p className="text-sm font-semibold text-white">
+                                {proposal.industryName} × {proposal.artistName}
+                            </p>
+                            <StatusBadge status={proposal.status} />
+                        </div>
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto space-y-3 px-4 py-4">
+                            {proposal.messages.length === 0 && (
+                                <div className="flex h-full items-center justify-center flex-col gap-3 text-center">
+                                    <span className="text-4xl">💬</span>
+                                    <p className="text-sm text-beet-muted">Nenhuma mensagem ainda.<br />Inicie a conversa!</p>
+                                </div>
+                            )}
+                            {proposal.messages.map((msg) => (
+                                <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} />
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input */}
+                        {['SENT', 'VIEWED', 'NEGOTIATING', 'ACCEPTED'].includes(proposal.status) && (
+                            <div className="border-t p-3" style={{ borderColor: 'var(--color-border)' }}>
+                                <div className="flex gap-2">
+                                    <input className="beet-input flex-1 py-2.5 text-sm"
+                                        placeholder="Escreva uma mensagem..."
+                                        value={input} onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} />
+                                    <button onClick={handleSend} disabled={!input.trim()}
+                                        className="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-beet-black disabled:opacity-40 transition-all hover:scale-110"
+                                        style={{ background: 'var(--color-accent)' }}>↑</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </AppShell>
