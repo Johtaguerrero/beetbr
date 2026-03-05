@@ -8,17 +8,17 @@ COPY . .
 # Install ALL dependencies (including devDependencies for tsc)
 RUN npm install --include=dev
 
-# Build shared package
+# Build shared package first
 RUN npm run build -w packages/shared
 
 # Generate Prisma client
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
 
-# Build the API (tsc) — show errors if any
-RUN cd apps/api && npx tsc --skipLibCheck || echo "TSC had warnings, checking output..." && ls -la dist/ 
+# Build the API
+RUN npm run build -w apps/api
 
 # Verify dist was created
-RUN test -f apps/api/dist/index.js || (echo "ERROR: dist/index.js was not created!" && exit 1)
+RUN ls -la apps/api/dist/ && test -f apps/api/dist/index.js
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
