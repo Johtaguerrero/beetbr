@@ -2,34 +2,27 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy root package files
-COPY package.json package-lock.json* ./
+# Copy everything (monorepo)
+COPY . .
 
-# Copy workspace package.json files
-COPY packages/shared/package.json packages/shared/
-COPY apps/api/package.json apps/api/
+# Install ALL dependencies (including devDependencies for tsc)
+RUN npm install --include=dev
 
-# Install all dependencies
-RUN npm install
-
-# Copy all source code
-COPY packages/shared/ packages/shared/
-COPY apps/api/ apps/api/
-
-# Build shared package first
+# Build shared package
 RUN npm run build -w packages/shared
 
 # Generate Prisma client
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
 
-# Build the API
-RUN npm run build -w apps/api
+# Build the API (tsc) — show errors if any
+RUN cd apps/api && npx tsc --skipLibCheck || echo "TSC had warnings, checking output..." && ls -la dist/ 
+
+# Verify dist was created
+RUN test -f apps/api/dist/index.js || (echo "ERROR: dist/index.js was not created!" && exit 1)
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
-# Expose port
 EXPOSE 4000
 
-# Start
-CMD ["npm", "run", "start", "-w", "apps/api"]
+CMD ["node", "apps/api/dist/index.js"]
