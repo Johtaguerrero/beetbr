@@ -1,0 +1,19 @@
+{
+    "name": "beetbr",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+        "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web",
+        "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
+        "test": "npm run test -w apps/api"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "typescript": "^5.3.3"
+    }
+}

@@ -1,0 +1,448 @@
+// This is the BEETBR Prisma schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  ARTIST
+  INDUSTRY
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DELETED
+}
+
+enum ContactVisibility {
+  PUBLIC
+  VERIFIED_ONLY
+  PROPOSAL_ONLY
+  PRIVATE
+}
+
+enum IndustryType {
+  LABEL
+  AGENCY
+  BRAND
+  PRODUCER
+  EVENT
+  OTHER
+}
+
+enum PostType {
+  TRACK
+  VIDEO
+  LYRIC
+  AUDIO
+}
+
+enum ProposalType {
+  LIVE_SHOW
+  RECORDING
+  FEAT
+  MUSIC_VIDEO
+  EVENT
+  OTHER
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ContractStatus {
+  DRAFT
+  UNDER_REVIEW
+  SIGNED
+  TERMINATED
+}
+
+// ============================================================
+// USER
+// ============================================================
+
+model User {
+  id               String     @id @default(uuid())
+  email            String     @unique
+  passwordHash     String
+  role             UserRole
+  verified         Boolean    @default(false)
+  status           UserStatus @default(ACTIVE)
+  refreshToken     String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  artistProfile   ArtistProfile?
+  industryProfile IndustryProfile?
+  sentMessages    ProposalMessage[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+// ============================================================
+// ARTIST PROFILE
+// ============================================================
+
+model ArtistProfile {
+  id                 String            @id @default(uuid())
+  userId             String            @unique
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stageName          String
+  genres             String[]
+  city               String
+  state              String            @db.Char(2)
+  bio                String            @default("")
+  avatarUrl          String?
+  coverUrl           String?
+  availableForBooking Boolean          @default(true)
+  contactVisibility  ContactVisibility @default(PROPOSAL_ONLY)
+  scoreBeet          Float             @default(0)
+  instagram          String?
+  website            String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  posts        Post[]
+  stories      Story[]
+  metrics      Metrics?
+  proposals    Proposal[]    @relation("ArtistProposals")
+  savedBy      SavedArtist[]
+  listings     Listing[]
+  collabs      CollabPost[]
+  interests    CollabInterest[]
+
+  @@map("artist_profiles")
+}
+
+// ============================================================
+// INDUSTRY PROFILE
+// ============================================================
+
+model IndustryProfile {
+  id          String       @id @default(uuid())
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  type        IndustryType
+  niches      String[]
+  city        String
+  state       String       @db.Char(2)
+  logoUrl     String?
+  website     String?
+  instagram   String?
+  verified    Boolean      @default(false)
+  cnpj        String?      @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  proposals   Proposal[]    @relation("IndustryProposals")
+  shortlists  SavedArtist[]
+  listings    Listing[]
+
+  @@map("industry_profiles")
+}
+
+// ============================================================
+// POST & STORY
+// ============================================================
+
+model Post {
+  id        String   @id @default(uuid())
+  artistId  String
+  artist    ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  type      PostType
+  text      String?
+  mediaUrl  String?
+  thumbUrl  String?
+  duration  Int?     // seconds
+  hashtags  String[]
+  plays     Int      @default(0)
+  likes     Int      @default(0)
+  comments  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("posts")
+}
+
+model Story {
+  id        String   @id @default(uuid())
+  artistId  String
+  artist    ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  mediaType String   @default("IMAGE")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("stories")
+}
+
+// ============================================================
+// METRICS (BeetAI source data)
+// ============================================================
+
+model Metrics {
+  id            String   @id @default(uuid())
+  artistId      String   @unique
+  artist        ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  plays         Int      @default(0)
+  views         Int      @default(0)
+  engagement    Float    @default(0) // %
+  weeklyGrowth  Float    @default(0) // %
+  retention     Float    @default(0) // %
+  consistency   Float    @default(0) // 0–100
+  updatedAt     DateTime @updatedAt
+
+  @@map("metrics")
+}
+
+// ============================================================
+// PROPOSALS & DEAL ROOM
+// ============================================================
+
+model Proposal {
+  id               String         @id @default(uuid())
+  industryId       String
+  industry         IndustryProfile @relation("IndustryProposals", fields: [industryId], references: [id])
+  artistId         String
+  artist           ArtistProfile   @relation("ArtistProposals", fields: [artistId], references: [id])
+  type             ProposalType
+  amount           Decimal        @db.Decimal(12, 2)
+  date             DateTime?
+  location         String?
+  online           Boolean        @default(false)
+  terms            String?        @db.Text
+  durationHours    Int?
+  responseDeadline DateTime?
+  status           ProposalStatus @default(SENT)
+  contractFileUrl  String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  messages  ProposalMessage[]
+  contract  Contract?
+
+  @@map("proposals")
+}
+
+model ProposalMessage {
+  id            String   @id @default(uuid())
+  proposalId    String
+  proposal      Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  senderUserId  String
+  sender        User     @relation(fields: [senderUserId], references: [id])
+  message       String?  @db.Text
+  attachmentUrl String?
+  attachmentName String?
+  systemMessage Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@map("proposal_messages")
+}
+
+// ============================================================
+// CONTRACT
+// ============================================================
+
+model Contract {
+  id         String         @id @default(uuid())
+  proposalId String         @unique
+  proposal   Proposal       @relation(fields: [proposalId], references: [id])
+  status     ContractStatus @default(DRAFT)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  versions ContractFileVersion[]
+
+  @@map("contracts")
+}
+
+model ContractFileVersion {
+  id           String   @id @default(uuid())
+  contractId   String
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  version      Int
+  fileUrl      String
+  fileName     String
+  uploadedBy   String   // user ID
+  uploaderRole String   // 'ARTIST' | 'INDUSTRY'
+  createdAt    DateTime @default(now())
+
+  @@unique([contractId, version])
+  @@map("contract_file_versions")
+}
+
+// ============================================================
+// SHORTLIST
+// ============================================================
+
+model SavedArtist {
+  industryId String
+  industry   IndustryProfile @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  artistId   String
+  artist     ArtistProfile   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@id([industryId, artistId])
+  @@map("saved_artists")
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorUserId  String
+  actor        User     @relation(fields: [actorUserId], references: [id])
+  action       String
+  resourceType String
+  resourceId   String
+  ip           String?
+  userAgent    String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+// ============================================================
+// MARKETPLACE (Anúncios)
+// ============================================================
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  SOLD
+  EXPIRED
+  DELETED
+}
+
+enum MarketplaceCategory {
+  INSTRUMENT
+  EQUIPMENT
+  SERVICE
+  STUDIO_TIME
+  TICKET
+  MERCH
+  OTHER
+}
+
+enum ItemCondition {
+  NEW
+  USED_LIKE_NEW
+  USED_GOOD
+  USED_FAIR
+}
+
+model Listing {
+  id          String              @id @default(uuid())
+  sellerId    String
+  sellerType  UserRole           // 'ARTIST' or 'INDUSTRY'
+  title       String
+  description String              @db.Text
+  price       Decimal             @db.Decimal(12, 2)
+  category    MarketplaceCategory
+  condition   ItemCondition
+  location    String
+  images      String[]
+  status      ListingStatus       @default(ACTIVE)
+  views       Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  artistSeller   ArtistProfile?   @relation(fields: [sellerId], references: [id], map: "listing_artist_fkey")
+  industrySeller IndustryProfile? @relation(fields: [sellerId], references: [id], map: "listing_industry_fkey")
+
+  @@index([category])
+  @@index([sellerId])
+  @@map("listings")
+}
+
+// ============================================================
+// COLLABORATIONS
+// ============================================================
+
+enum CollabStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum CollabRole {
+  FEAT
+  PRODUCER
+  MIX_MASTER
+  SONGWRITER
+  MUSICIAN
+  OTHER
+}
+
+enum CompensationType {
+  PAID
+  REV_SHARE
+  FREE
+  NEGOTIABLE
+}
+
+model CollabPost {
+  id           String           @id @default(uuid())
+  authorId     String
+  author       ArtistProfile    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title        String
+  description  String           @db.Text
+  type         CollabRole
+  genres       String[]
+  location     String?
+  remote       Boolean          @default(false)
+  compensation CompensationType
+  status       CollabStatus     @default(ACTIVE)
+  views        Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  interests    CollabInterest[]
+
+  @@index([authorId])
+  @@map("collab_posts")
+}
+
+model CollabInterest {
+  id        String   @id @default(uuid())
+  collabId  String
+  collab    CollabPost @relation(fields: [collabId], references: [id], onDelete: Cascade)
+  userId    String
+  message   String   @db.Text
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt DateTime @default(now())
+
+  artist    ArtistProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([collabId])
+  @@map("collab_interests")
+}

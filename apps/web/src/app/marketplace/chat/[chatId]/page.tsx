@@ -1,0 +1,128 @@
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useStore } from '@/lib/store';
+import { Avatar } from '@/components/ui';
+
+function AntiFraudBanner() {
+    return (
+        <div className="mx-4 mt-2 rounded-xl border p-3 flex gap-2 text-[11px]"
+            style={{ borderColor: 'rgba(255,212,0,0.25)', background: 'rgba(255,212,0,0.06)' }}>
+            <span>🛡️</span>
+            <p className="text-beet-muted">Negocie sempre pelo chat BEETBR. Nunca pague fora da plataforma sem verificação.</p>
+        </div>
+    );
+}
+
+export default function MarketplaceChat() {
+    useAuthGuard();
+    const params = useParams();
+    const chatId = params.chatId as string;
+    const { marketplaceChats, sendMarketMessage, currentUser, listings } = useStore();
+    const [text, setText] = useState('');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const chat = marketplaceChats.find((c) => c.id === chatId);
+    const listing = chat ? listings.find((l) => l.id === chat.listingId) : null;
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chat?.messages.length]);
+
+    const handleSend = () => {
+        if (!text.trim() || !chatId) return;
+        sendMarketMessage(chatId, text.trim());
+        setText('');
+    };
+
+    if (!chat) {
+        return (
+            <AppShell>
+                <div className="empty-state">
+                    <p className="text-5xl">💬</p>
+                    <p className="text-[var(--color-primary-text,white)] font-semibold">Conversa não encontrada</p>
+                    <Link href="/marketplace/saved" className="btn-outline text-sm">← Meus interesses</Link>
+                </div>
+            </AppShell>
+        );
+    }
+
+    const isBuyer = chat.buyerId === currentUser?.id;
+    const otherName = isBuyer ? chat.sellerName : chat.buyerName;
+
+    return (
+        <AppShell>
+            <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen max-h-screen">
+                {/* Header */}
+                <div className="flex items-center gap-3 border-b px-4 py-3 flex-shrink-0"
+                    style={{ borderColor: 'var(--color-border)' }}>
+                    <Link href="/marketplace/saved" className="text-beet-muted hover:text-[var(--color-primary-text,white)] transition-colors">←</Link>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl text-lg"
+                        style={{ background: 'var(--color-accent-dim)' }}>🛍️</div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[var(--color-primary-text,white)] text-sm line-clamp-1">{chat.listingTitle}</p>
+                        <p className="text-[11px] text-beet-muted">{isBuyer ? `Vendedor: ${otherName}` : `Comprador: ${otherName}`}</p>
+                    </div>
+                    {listing && (
+                        <Link href={`/marketplace/listing/${listing.id}`}
+                            className="btn-outline px-3 py-1.5 text-[10px] flex-shrink-0">Ver anúncio</Link>
+                    )}
+                </div>
+
+                <AntiFraudBanner />
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                    {chat.messages.map((msg, i) => {
+                        const isMe = msg.senderId === currentUser?.id;
+                        return (
+                            <motion.div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
+                                {!isMe && (
+                                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full mr-2 text-sm"
+                                        style={{ background: 'var(--color-dark)' }}>🎤</div>
+                                )}
+                                <div className="max-w-[75%] space-y-0.5">
+                                    {!isMe && <p className="text-[10px] text-beet-muted ml-1">{otherName}</p>}
+                                    <div className="rounded-2xl px-4 py-2.5 text-sm"
+                                        style={{
+                                            background: isMe ? 'var(--color-accent)' : 'var(--color-card)',
+                                            color: isMe ? 'var(--color-bg)' : 'white',
+                                            borderBottomRightRadius: isMe ? 4 : undefined,
+                                            borderBottomLeftRadius: !isMe ? 4 : undefined,
+                                            border: !isMe ? '1px solid var(--color-border)' : 'none',
+                                        }}>
+                                        {msg.text}
+                                    </div>
+                                    <p className="text-[9px] text-beet-muted px-1 text-right">
+                                        {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="flex gap-2 border-t p-4 flex-shrink-0 pb-safe"
+                    style={{ borderColor: 'var(--color-border)' }}>
+                    <input
+                        className="beet-input flex-1 min-w-0 py-3"
+                        placeholder="Digite sua mensagem..."
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                    />
+                    <button onClick={handleSend} disabled={!text.trim()}
+                        className="btn-accent px-4 flex-shrink-0 disabled:opacity-40">
+                        ✉️
+                    </button>
+                </div>
+            </div>
+        </AppShell>
+    );
+}
