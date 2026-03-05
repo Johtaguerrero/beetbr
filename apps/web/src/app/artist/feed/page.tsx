@@ -495,9 +495,21 @@ export default function FeedPage() {
     const [selectedStory, setSelectedStory] = useState<Story | null>(null);
 
     useEffect(() => {
+        fetchFeed();
+        fetchStories();
         const t = setTimeout(() => setLoading(false), 600);
         return () => clearTimeout(t);
     }, []);
+
+    /* Story index for navigation */
+    const storyIndex = selectedStory ? stories.findIndex(s => s.id === selectedStory.id) : -1;
+    const goNextStory = () => {
+        if (storyIndex < stories.length - 1) setSelectedStory(stories[storyIndex + 1]);
+        else setSelectedStory(null);
+    };
+    const goPrevStory = () => {
+        if (storyIndex > 0) setSelectedStory(stories[storyIndex - 1]);
+    };
 
     return (
         <AppShell>
@@ -639,25 +651,175 @@ export default function FeedPage() {
 
             <PublishFAB />
 
-            {/* ── Story Viewer Modal ── */}
+            {/* ── Enhanced Story Viewer Modal ── */}
             <AnimatePresence>
                 {selectedStory && selectedStory.mediaUrl && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-                        onClick={() => setSelectedStory(null)}
-                    >
-                        <button style={{ position: 'absolute', top: 20, right: 20, color: 'white', fontSize: 24, padding: 10, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} onClick={() => setSelectedStory(null)}>✕</button>
-                        {selectedStory.mediaType === 'VIDEO' ? (
-                            <video src={selectedStory.mediaUrl} controls autoPlay style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8 }} onClick={e => e.stopPropagation()} />
-                        ) : (
-                            <img src={selectedStory.mediaUrl} alt="Story" style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
-                        )}
-                    </motion.div>
+                    <StoryViewerModal
+                        story={selectedStory}
+                        stories={stories}
+                        storyIndex={storyIndex}
+                        onClose={() => setSelectedStory(null)}
+                        onNext={goNextStory}
+                        onPrev={goPrevStory}
+                    />
                 )}
             </AnimatePresence>
         </AppShell>
     );
 }
+
+/* ══════════════════════════════════════════════════════════
+   STORY VIEWER MODAL — full-screen with timer, progress, interactions
+══════════════════════════════════════════════════════════ */
+function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev }: {
+    story: Story; stories: Story[]; storyIndex: number;
+    onClose: () => void; onNext: () => void; onPrev: () => void;
+}) {
+    const [progress, setProgress] = useState(0);
+    const [liked, setLiked] = useState(false);
+    const [paused, setPaused] = useState(false);
+    const DURATION = 5000; // 5 seconds per story
+
+    useEffect(() => {
+        setProgress(0);
+        setLiked(false);
+        setPaused(false);
+    }, [story.id]);
+
+    useEffect(() => {
+        if (paused) return;
+        const interval = setInterval(() => {
+            setProgress(prev => {
+                const next = prev + (100 / (DURATION / 50));
+                if (next >= 100) { onNext(); return 0; }
+                return next;
+            });
+        }, 50);
+        return () => clearInterval(interval);
+    }, [paused, story.id, onNext]);
+
+    const handleTap = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (x < rect.width / 3) onPrev();
+        else if (x > (rect.width * 2) / 3) onNext();
+        else setPaused(p => !p);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999,
+                background: '#000', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+            }}
+        >
+            {/* Progress bars */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '8px 8px 0', zIndex: 10 }}>
+                {stories.map((s, i) => (
+                    <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                        <div style={{
+                            height: '100%', borderRadius: 2,
+                            background: 'white',
+                            width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%',
+                            transition: i === storyIndex ? 'none' : 'width 0.3s',
+                        }} />
+                    </div>
+                ))}
+            </div>
+
+            {/* Header */}
+            <div style={{ position: 'absolute', top: 18, left: 12, right: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Avatar name={story.artist?.stageName || 'Artist'} size="sm" />
+                    <div>
+                        <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white' }}>
+                            {story.artist?.stageName || 'Artist'}
+                        </p>
+                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>
+                            {new Date(story.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            {paused && ' · PAUSADO'}
+                        </p>
+                    </div>
+                </div>
+                <button onClick={onClose} style={{
+                    color: 'white', fontSize: 20, padding: 8,
+                    background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
+                    border: 'none', cursor: 'pointer', lineHeight: 1,
+                }}>✕</button>
+            </div>
+
+            {/* Media — tap zones */}
+            <div onClick={handleTap} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                {story.mediaType === 'VIDEO' ? (
+                    <video src={story.mediaUrl} autoPlay muted playsInline
+                        style={{ maxHeight: '100vh', maxWidth: '100vw', width: '100%', height: '100%', objectFit: 'contain' }}
+                        onClick={e => e.stopPropagation()}
+                    />
+                ) : (
+                    <img src={story.mediaUrl} alt="Story"
+                        style={{ maxHeight: '100vh', maxWidth: '100vw', width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                )}
+            </div>
+
+            {/* Bottom interaction bar */}
+            <div style={{
+                position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                padding: '40px 20px 24px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+                {/* Like */}
+                <motion.button whileTap={{ scale: 0.8 }}
+                    onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+                    style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: liked ? '#FF0055' : 'white',
+                    }}>
+                    <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2}
+                        style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none' }} />
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>
+                        {liked ? 'CURTIU' : 'CURTIR'}
+                    </span>
+                </motion.button>
+
+                {/* Comment */}
+                <button onClick={(e) => e.stopPropagation()} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                }}>
+                    <MessageCircle size={26} strokeWidth={2} />
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>COMENTAR</span>
+                </button>
+
+                {/* Share */}
+                <button onClick={(e) => e.stopPropagation()} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                }}>
+                    <Share2 size={26} strokeWidth={2} />
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>ENVIAR</span>
+                </button>
+
+                {/* Zap/fire */}
+                <motion.button whileTap={{ scale: 0.8 }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--color-accent)',
+                    }}>
+                    <Zap size={26} fill="var(--color-accent)" strokeWidth={0} />
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>BOOST</span>
+                </motion.button>
+            </div>
+        </motion.div>
+    );
+}
+
