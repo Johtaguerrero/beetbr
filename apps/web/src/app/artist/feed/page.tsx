@@ -17,7 +17,7 @@ const TC: Record<string, { label: string; color: string }> = {
 /* ══════════════════════════════════════════════════════════
    STORY BUBBLE  — round, neon ring when unseen
 ══════════════════════════════════════════════════════════ */
-function StoryBubble({ story, isAdd }: { story?: Story; isAdd?: boolean }) {
+function StoryBubble({ story, isAdd, onSelect }: { story?: Story; isAdd?: boolean; onSelect?: (s: Story) => void }) {
     const { createStory } = useStore();
     const [seen, setSeen] = useState(story?.seen);
     const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +48,7 @@ function StoryBubble({ story, isAdd }: { story?: Story; isAdd?: boolean }) {
     if (!story) return null;
     /* ── Story ring ── */
     return (
-        <button className="flex flex-col items-center gap-2 flex-shrink-0 select-none" onClick={() => setSeen(true)}>
+        <button className="flex flex-col items-center gap-2 flex-shrink-0 select-none" onClick={() => { setSeen(true); onSelect?.(story); }}>
             <div style={{
                 padding: 3, borderRadius: '50%',
                 background: seen
@@ -151,9 +151,17 @@ function PostCard({ post }: { post: Post }) {
                     </p>
                 )}
 
+                {post.mediaUrl && post.type === 'VIDEO' && (
+                    <video controls src={post.mediaUrl} style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
+                )}
+
+                {post.mediaUrl && (post.type === 'LYRIC' || post.type === 'IMAGE') && (
+                    <img src={post.mediaUrl} alt="Post media" style={{ width: '100%', borderRadius: '4px', marginBottom: 12, objectFit: 'contain', maxHeight: '500px', background: 'var(--color-nav-bg)' }} />
+                )}
+
                 {post.type === 'TRACK' && (
                     <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }}>
-                        <TrackPlayer />
+                        <TrackPlayer url={post.mediaUrl} title="Faixa" />
                     </div>
                 )}
 
@@ -302,10 +310,11 @@ function PublishFAB() {
 /* ══════════════════════════════════════════════════════════
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
-export default function ArtistFeed() {
+export default function FeedPage() {
     useAuthGuard('ARTIST');
-    const { posts, stories, artistProfile } = useStore();
+    const { artistProfile, posts, stories, fetchFeed, fetchStories } = useStore();
     const [loading, setLoading] = useState(true);
+    const [selectedStory, setSelectedStory] = useState<Story | null>(null);
 
     useEffect(() => {
         const t = setTimeout(() => setLoading(false), 600);
@@ -315,7 +324,7 @@ export default function ArtistFeed() {
     return (
         <AppShell>
             {/* Smart floating FAB */}
-            <PublishFAB />
+            {/* <PublishFAB /> */} {/* Moved to the end of the return statement */}
 
             <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', paddingBottom: 96 }}>
 
@@ -356,7 +365,7 @@ export default function ArtistFeed() {
                         className="scrollbar-none"
                     >
                         <StoryBubble isAdd />
-                        {stories.map(s => <StoryBubble key={s.id} story={s} />)}
+                        {stories.map(s => <StoryBubble key={s.id} story={s} onSelect={setSelectedStory} />)}
                     </div>
 
                     {/* ── FEED ── */}
@@ -442,10 +451,32 @@ export default function ArtistFeed() {
                     </div>
 
                     <p style={{ marginTop: 32, fontFamily: 'Space Mono, monospace', fontSize: '8px', letterSpacing: '0.1em', color: 'var(--color-muted)', lineHeight: 2, textTransform: 'uppercase' }}>
-                        Sobre · Ajuda · Termos · Privacidade<br />© 2026 BEATBR
+                        © 2024 BeatBR<br />O ecossistema do novo mercado musical.
                     </p>
                 </aside>
             </div>
+
+            <PublishFAB />
+
+            {/* ── Story Viewer Modal ── */}
+            <AnimatePresence>
+                {selectedStory && selectedStory.mediaUrl && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                        onClick={() => setSelectedStory(null)}
+                    >
+                        <button style={{ position: 'absolute', top: 20, right: 20, color: 'white', fontSize: 24, padding: 10, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} onClick={() => setSelectedStory(null)}>✕</button>
+                        {selectedStory.mediaType === 'VIDEO' ? (
+                            <video src={selectedStory.mediaUrl} controls autoPlay style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8 }} onClick={e => e.stopPropagation()} />
+                        ) : (
+                            <img src={selectedStory.mediaUrl} alt="Story" style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </AppShell>
     );
 }

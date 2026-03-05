@@ -127,20 +127,26 @@ export function Waveform({ bars = 20 }: { bars?: number }) {
 }
 
 // ── Track Player ──────────────────────────────────────────────
-export function TrackPlayer({ title }: { title?: string }) {
+export function TrackPlayer({ title, url }: { title?: string; url?: string }) {
     return (
-        <div className="flex items-center gap-3 rounded-xl bg-beet-dark p-3">
-            <button
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-beet-black hover:scale-110 transition-transform"
-                style={{ background: 'var(--color-accent)' }}
-            >
-                ▶
-            </button>
+        <div className="flex flex-col gap-2 rounded-xl bg-beet-dark p-3">
             <div className="flex flex-1 flex-col gap-1.5">
                 {title && <p className="text-xs font-medium text-white">{title}</p>}
-                <Waveform />
+                {url ? (
+                    <audio controls src={url} className="w-full h-10" />
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <button
+                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-beet-black"
+                            style={{ background: 'var(--color-accent)' }}
+                        >
+                            ▶
+                        </button>
+                        <Waveform />
+                        <span className="text-xs text-beet-muted">--:--</span>
+                    </div>
+                )}
             </div>
-            <span className="text-xs text-beet-muted">2:47</span>
         </div>
     );
 }
