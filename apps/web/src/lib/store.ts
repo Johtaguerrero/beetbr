@@ -463,6 +463,8 @@ export const useStore = create<BeetrStore>()(
             updateArtistProfile: (data) => set((s) => ({ artistProfile: s.artistProfile ? { ...s.artistProfile, ...data } : null })),
 
             fetchFeed: async (page = 1) => {
+                const { accessToken } = get();
+                if (accessToken === 'demo-token') return; // demo mode uses mock data already in store
                 try {
                     const res: any = await api.feed.getFeed(page);
                     set({ posts: res.data });
@@ -470,6 +472,8 @@ export const useStore = create<BeetrStore>()(
             },
 
             fetchStories: async () => {
+                const { accessToken } = get();
+                if (accessToken === 'demo-token') return; // demo mode uses mock data already in store
                 try {
                     const res: any = await api.feed.getStories();
                     set({ stories: res.data });
