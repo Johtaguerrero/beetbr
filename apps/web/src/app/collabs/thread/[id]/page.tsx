@@ -58,7 +58,7 @@ export default function CollabThreadPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen relative overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+        <div className="flex flex-col h-[calc(100vh-64px)] relative overflow-hidden" style={{ background: 'var(--color-bg)' }}>
             {/* Thread Header */}
             <div className="px-4 py-3 border-b flex items-center justify-between backdrop-blur-xl z-20" style={{ background: 'var(--color-nav-bg)', borderColor: 'var(--color-nav-border)' }}>
                 <div className="flex items-center gap-3">

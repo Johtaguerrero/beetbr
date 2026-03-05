@@ -100,11 +100,11 @@ export default function DealRoom() {
 
     return (
         <AppShell noPadding>
-            <div className="flex h-screen flex-col lg:flex-row overflow-hidden">
+            <div className="flex h-screen flex-col overflow-hidden">
                 {/* Left panel */}
-                <div className="flex-shrink-0 border-b lg:border-b-0 lg:border-r lg:w-80 overflow-y-auto" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="flex-shrink-0 border-b overflow-y-auto" style={{ borderColor: 'var(--color-border)' }}>
                     {/* Mobile tabs */}
-                    <div className="flex border-b lg:hidden" style={{ borderColor: 'var(--color-border)' }}>
+                    <div className="flex border-b" style={{ borderColor: 'var(--color-border)' }}>
                         {(['chat', 'details', 'contract'] as const).map((t) => (
                             <button key={t} onClick={() => setTab(t)}
                                 className="flex-1 py-2.5 text-xs font-semibold capitalize transition-colors"
@@ -114,7 +114,7 @@ export default function DealRoom() {
                         ))}
                     </div>
 
-                    <div className={`p-5 space-y-4 ${tab !== 'details' && tab !== 'contract' ? 'hidden' : ''} lg:block`}>
+                    <div className={`p-5 space-y-4 ${tab !== 'details' && tab !== 'contract' ? 'hidden' : ''}`}>
                         {/* Header */}
                         <div className="flex items-center justify-between">
                             <h2 className="font-bold text-white text-sm">Deal Room</h2>
@@ -217,10 +217,10 @@ export default function DealRoom() {
                 </div>
 
                 {/* Chat panel */}
-                <div className={`flex flex-1 flex-col overflow-hidden ${tab !== 'chat' ? 'hidden' : ''} lg:flex`}>
+                <div className={`flex flex-1 flex-col overflow-hidden ${tab !== 'chat' ? 'hidden' : ''}`}>
                     {/* Chat header */}
                     <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
-                        <button onClick={() => router.back()} className="text-beet-muted hover:text-white transition-colors lg:hidden mr-1">←</button>
+                        <button onClick={() => router.back()} className="text-beet-muted hover:text-white transition-colors mr-1">←</button>
                         <p className="text-sm font-semibold text-white">
                             {proposal.industryName} × {proposal.artistName}
                         </p>

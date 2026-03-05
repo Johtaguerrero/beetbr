@@ -55,7 +55,7 @@ export default function MarketplaceChat() {
 
     return (
         <AppShell>
-            <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen max-h-screen">
+            <div className="flex flex-col h-[calc(100vh-4rem)] max-h-screen">
                 {/* Header */}
                 <div className="flex items-center gap-3 border-b px-4 py-3 flex-shrink-0"
                     style={{ borderColor: 'var(--color-border)' }}>
