@@ -248,11 +248,78 @@ function StoryBubble({ story, isAdd, onSelect }: { story?: Story; isAdd?: boolea
 }
 
 /* ══════════════════════════════════════════════════════════
+   COMMENT SHEET MODAL
+══════════════════════════════════════════════════════════ */
+function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const [comment, setComment] = useState('');
+
+    if (!isOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'fixed', inset: 0, zIndex: 100000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                onClick={onClose}
+            >
+                <motion.div
+                    initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    style={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        background: 'var(--color-bg)', borderTop: '1px solid var(--color-nav-border)',
+                        borderTopLeftRadius: 16, borderTopRightRadius: 16,
+                        height: '70vh', display: 'flex', flexDirection: 'column',
+                        maxWidth: 480, margin: '0 auto'
+                    }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div style={{ padding: '16px', borderBottom: '1px solid var(--color-nav-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 800 }}>Comentários</h3>
+                        <button onClick={onClose} style={{ color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                    </div>
+
+                    <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+                        <EmptyState icon="💬" title="Nenhum comentário" description="Seja o primeiro a comentar!" />
+                    </div>
+
+                    <div style={{ padding: 16, borderTop: '1px solid var(--color-nav-border)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                        <textarea
+                            value={comment} onChange={e => setComment(e.target.value)}
+                            placeholder="Adicione um comentário..."
+                            rows={1}
+                            style={{
+                                flex: 1, background: 'var(--color-card)', border: '1px solid var(--color-nav-border)',
+                                borderRadius: 20, padding: '10px 16px', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                                resize: 'none', outline: 'none'
+                            }}
+                        />
+                        <button
+                            disabled={!comment.trim()}
+                            style={{
+                                background: comment.trim() ? 'var(--color-accent)' : 'var(--color-nav-border)',
+                                color: comment.trim() ? '#000' : 'var(--color-muted)',
+                                border: 'none', borderRadius: 20, padding: '10px 16px', fontWeight: 700,
+                                cursor: comment.trim() ? 'pointer' : 'default',
+                                fontFamily: 'Space Mono, monospace', fontSize: 12, textTransform: 'uppercase'
+                            }}
+                            onClick={() => { setComment(''); onClose(); }}
+                        >
+                            Enviar
+                        </button>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
 function PostCard({ post }: { post: Post }) {
     const { togglePostLike } = useStore();
     const [liked, setLiked] = useState(post.liked);
+    const [showComments, setShowComments] = useState(false);
     const tc = TC[post.type] || TC.TRACK;
 
     const timeAgo = () => {
@@ -305,7 +372,7 @@ function PostCard({ post }: { post: Post }) {
                         padding: '4px 10px', borderRadius: '2px',
                         border: `1px solid ${tc.color}50`, background: `${tc.color}12`, color: tc.color,
                     }}>{tc.label}</span>
-                    <button style={{ color: 'var(--color-muted)', padding: '4px', lineHeight: 1 }}>
+                    <button style={{ color: 'var(--color-muted)', padding: '4px', lineHeight: 1, border: 'none', background: 'none' }}>
                         <MoreHorizontal size={18} strokeWidth={1.75} />
                     </button>
                 </div>
@@ -320,6 +387,7 @@ function PostCard({ post }: { post: Post }) {
                         lineHeight: 1.65,
                         color: 'var(--color-primary-text)',
                         marginBottom: 14,
+                        whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                     }}>
                         {post.text.split(' ').map((w, i) =>
                             w.startsWith('#')
@@ -359,7 +427,7 @@ function PostCard({ post }: { post: Post }) {
                 {/* Like */}
                 <motion.button whileTap={{ scale: 0.8 }}
                     onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: liked ? '#FF0055' : 'var(--color-muted)', minHeight: 40 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: liked ? '#FF0055' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
                 >
                     <Heart size={20} strokeWidth={2} fill={liked ? '#FF0055' : 'none'}
                         style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none', transition: 'filter .2s' }} />
@@ -370,7 +438,8 @@ function PostCard({ post }: { post: Post }) {
 
                 {/* Comment */}
                 <button
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--color-muted)', minHeight: 40 }}
+                    onClick={() => setShowComments(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-primary-text)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-muted)')}
                 >
@@ -387,7 +456,7 @@ function PostCard({ post }: { post: Post }) {
                         style={{
                             width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-glass-btn)',
-                            color: 'var(--color-muted)',
+                            color: 'var(--color-muted)', border: 'none', cursor: 'pointer'
                         }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-nav-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-muted)'; }}
@@ -396,6 +465,8 @@ function PostCard({ post }: { post: Post }) {
                     </motion.button>
                 </div>
             </div>
+
+            <CommentSheet isOpen={showComments} onClose={() => setShowComments(false)} />
         </motion.article>
     );
 }
@@ -679,16 +750,18 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
     const [liked, setLiked] = useState(false);
     const [paused, setPaused] = useState(false);
     const [muted, setMuted] = useState(true);
+    const [showComments, setShowComments] = useState(false);
     const DURATION = 5000; // 5 seconds per story
 
     useEffect(() => {
         setProgress(0);
         setLiked(false);
         setPaused(false);
+        setShowComments(false);
     }, [story.id]);
 
     useEffect(() => {
-        if (paused) return;
+        if (paused || showComments) return;
         const interval = setInterval(() => {
             setProgress(prev => {
                 const next = prev + (100 / (DURATION / 50));
