@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText } from 'lucide-react';
 
 /* ── Type colours ──────────────────────────────────────── */
 const TC: Record<string, { label: string; color: string }> = {
@@ -14,6 +14,183 @@ const TC: Record<string, { label: string; color: string }> = {
     IMAGE: { label: 'IMAGE', color: '#FF8800' },
     LYRIC: { label: 'LYRIC', color: '#00E5FF' },
 };
+
+const POST_TYPES = [
+    { key: 'IMAGE', icon: Camera, label: 'Imagem', accept: 'image/*', color: '#FF8800' },
+    { key: 'VIDEO', icon: Film, label: 'Vídeo', accept: 'video/*', color: '#7000FF' },
+    { key: 'TRACK', icon: Music, label: 'Faixa', accept: 'audio/*', color: '#00FF88' },
+    { key: 'LYRIC', icon: FileText, label: 'Letra', accept: 'image/*', color: '#00E5FF' },
+] as const;
+
+/* ══════════════════════════════════════════════════════════
+   INLINE COMPOSER — create posts directly on feed
+══════════════════════════════════════════════════════════ */
+function InlineComposer() {
+    const { createPost, addToast } = useStore();
+    const [expanded, setExpanded] = useState(false);
+    const [text, setText] = useState('');
+    const [file, setFile] = useState<File | null>(null);
+    const [filePreview, setFilePreview] = useState<string | null>(null);
+    const [postType, setPostType] = useState<string>('IMAGE');
+    const [publishing, setPublishing] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
+
+    const selectedType = POST_TYPES.find(t => t.key === postType) || POST_TYPES[0];
+
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        setFile(f);
+        if (f.type.startsWith('image') || f.type.startsWith('video')) {
+            setFilePreview(URL.createObjectURL(f));
+        } else {
+            setFilePreview(null);
+        }
+    };
+
+    const clearFile = () => {
+        setFile(null);
+        setFilePreview(null);
+        if (fileRef.current) fileRef.current.value = '';
+    };
+
+    const handlePublish = async () => {
+        if (!text.trim() && !file) { addToast({ message: 'Adicione texto ou arquivo!', type: 'error' }); return; }
+        setPublishing(true);
+        try {
+            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined });
+            setText('');
+            clearFile();
+            setExpanded(false);
+        } catch (e) { /* toast handled by store */ }
+        setPublishing(false);
+    };
+
+    return (
+        <div style={{
+            margin: '12px 12px 0', padding: '16px',
+            background: 'var(--color-card)', border: '1px solid var(--color-nav-border)',
+            borderLeft: `3px solid ${selectedType.color}`,
+            borderRadius: '2px',
+        }}>
+            {/* Collapsed: just a clickable bar */}
+            {!expanded ? (
+                <button onClick={() => setExpanded(true)} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                    background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+                }}>
+                    <div style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: 'var(--color-accent-dim)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                    }}>
+                        <PenLine size={16} style={{ color: 'var(--color-accent)' }} />
+                    </div>
+                    <span style={{
+                        fontFamily: 'Space Grotesk, sans-serif', fontSize: '15px',
+                        color: 'var(--color-muted)', flex: 1,
+                    }}>O que você quer compartilhar?</span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {POST_TYPES.map(t => (
+                            <t.icon key={t.key} size={16} style={{ color: t.color, opacity: 0.5 }} />
+                        ))}
+                    </div>
+                </button>
+            ) : (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                    {/* Type tabs */}
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                        {POST_TYPES.map(t => (
+                            <button key={t.key} onClick={() => { setPostType(t.key); clearFile(); }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 5,
+                                    padding: '6px 12px', borderRadius: '2px', border: '1px solid',
+                                    borderColor: postType === t.key ? t.color : 'var(--color-nav-border)',
+                                    background: postType === t.key ? `${t.color}15` : 'transparent',
+                                    color: postType === t.key ? t.color : 'var(--color-muted)',
+                                    fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
+                                    letterSpacing: '0.1em', cursor: 'pointer', transition: 'all .15s',
+                                }}>
+                                <t.icon size={12} /> {t.label.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Text area */}
+                    <textarea
+                        value={text} onChange={e => setText(e.target.value)}
+                        placeholder={postType === 'LYRIC' ? 'Cole sua letra ou composição...' : 'O que está rolando?'}
+                        rows={3}
+                        style={{
+                            width: '100%', resize: 'none', border: '1px solid var(--color-nav-border)',
+                            borderRadius: '2px', padding: 12, background: 'var(--color-glass-btn)',
+                            color: 'var(--color-primary-text)', fontFamily: 'Space Grotesk, sans-serif',
+                            fontSize: '14px', outline: 'none',
+                        }}
+                    />
+
+                    {/* File preview */}
+                    {file && (
+                        <div style={{ marginTop: 10, position: 'relative' }}>
+                            {filePreview && file.type.startsWith('image') && (
+                                <img src={filePreview} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-nav-border)' }} />
+                            )}
+                            {filePreview && file.type.startsWith('video') && (
+                                <video src={filePreview} controls style={{ width: '100%', maxHeight: 200, borderRadius: '4px' }} />
+                            )}
+                            {file.type.startsWith('audio') && (
+                                <div style={{ padding: 10, background: 'var(--color-glass-btn)', borderRadius: '4px', border: '1px solid var(--color-nav-border)' }}>
+                                    <p style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 6 }}>🎵 {file.name}</p>
+                                    <audio controls src={URL.createObjectURL(file)} style={{ width: '100%', height: 32 }} />
+                                </div>
+                            )}
+                            <button onClick={clearFile} style={{
+                                position: 'absolute', top: 6, right: 6, width: 24, height: 24,
+                                borderRadius: '50%', background: 'rgba(0,0,0,0.7)', border: 'none',
+                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', fontSize: 12,
+                            }}><X size={14} /></button>
+                        </div>
+                    )}
+
+                    {/* Actions row */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <input type="file" ref={fileRef} className="hidden" accept={selectedType.accept} onChange={handleFile} />
+                            <button onClick={() => fileRef.current?.click()} style={{
+                                display: 'flex', alignItems: 'center', gap: 5,
+                                padding: '6px 12px', borderRadius: '2px', border: '1px solid var(--color-nav-border)',
+                                background: 'var(--color-glass-btn)', color: 'var(--color-muted)',
+                                fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
+                                cursor: 'pointer',
+                            }}>
+                                <Upload size={12} /> {file ? 'TROCAR' : 'ARQUIVO'}
+                            </button>
+                            <button onClick={() => { setText(''); clearFile(); setExpanded(false); }} style={{
+                                padding: '6px 12px', borderRadius: '2px', border: '1px solid var(--color-nav-border)',
+                                background: 'transparent', color: 'var(--color-muted)',
+                                fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
+                                cursor: 'pointer',
+                            }}>
+                                CANCELAR
+                            </button>
+                        </div>
+                        <button onClick={handlePublish} disabled={publishing} style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 20px', borderRadius: '2px', border: 'none',
+                            background: 'var(--color-accent)', color: '#000',
+                            fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700,
+                            letterSpacing: '0.1em', cursor: publishing ? 'not-allowed' : 'pointer',
+                            opacity: publishing ? 0.6 : 1,
+                        }}>
+                            <Zap size={12} fill="#000" /> {publishing ? 'PUBLICANDO...' : 'PUBLICAR'}
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+        </div>
+    );
+}
 
 /* ══════════════════════════════════════════════════════════
    STORY BUBBLE  — round, neon ring when unseen
@@ -368,6 +545,9 @@ export default function FeedPage() {
                         <StoryBubble isAdd />
                         {stories.map(s => <StoryBubble key={s.id} story={s} onSelect={setSelectedStory} />)}
                     </div>
+
+                    {/* ── INLINE COMPOSER ── */}
+                    <InlineComposer />
 
                     {/* ── FEED ── */}
                     <div style={{ padding: '12px 12px 0' }}>
