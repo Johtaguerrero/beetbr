@@ -74,7 +74,7 @@ export interface Post {
     id: string;
     artistId: string;
     artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
-    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO';
+    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE';
     text?: string;
     mediaUrl?: string;
     thumbUrl?: string;

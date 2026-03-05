@@ -9,10 +9,11 @@ import { Spinner } from '@/components/ui';
 const HASHTAG_SUGGESTIONS: Record<string, string[]> = {
     TRACK: ['FunkBR', 'TrapNacional', 'BeatBR', 'NovaMusica', 'RnBBR', 'MusicaBrasileira'],
     VIDEO: ['ClipeBR', 'YoutubeBR', 'BeatBR', 'VideoClipe', 'NovoclipeBR'],
+    IMAGE: ['FotoBR', 'ShowBR', 'BeatBR', 'Bastidores', 'StreetArtBR'],
     LYRIC: ['Letra', 'LetraBR', 'Composicao', 'BeatBR', 'NovaletraBR'],
 };
 
-type PostType = 'TRACK' | 'VIDEO' | 'LYRIC';
+type PostType = 'TRACK' | 'VIDEO' | 'IMAGE' | 'LYRIC';
 
 export default function CreatePost() {
     useAuthGuard('ARTIST');
@@ -63,6 +64,7 @@ export default function CreatePost() {
     const TYPE_CONFIG = {
         TRACK: { icon: '🎵', label: 'Faixa/Música', desc: 'Compartilhe uma faixa musical', accept: 'audio/*' },
         VIDEO: { icon: '🎬', label: 'Vídeo', desc: 'Compartilhe um videoclipe ou performance', accept: 'video/*' },
+        IMAGE: { icon: '📸', label: 'Imagem', desc: 'Compartilhe uma foto ou arte', accept: 'image/*' },
         LYRIC: { icon: '📝', label: 'Letra/Poesia', desc: 'Compartilhe uma letra ou composição', accept: 'image/*' },
     };
 
@@ -78,7 +80,7 @@ export default function CreatePost() {
                     {/* Type selector */}
                     <div>
                         <p className="section-title mb-3">Tipo de conteúdo</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             {(Object.entries(TYPE_CONFIG) as [PostType, typeof TYPE_CONFIG.TRACK][]).map(([t, config]) => (
                                 <button key={t} onClick={() => { setType(t); setFile(null); }}
                                     className="rounded-xl border p-3 text-center transition-all duration-200"

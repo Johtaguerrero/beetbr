@@ -11,6 +11,7 @@ import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenL
 const TC: Record<string, { label: string; color: string }> = {
     TRACK: { label: 'TRACK', color: '#00FF88' },
     VIDEO: { label: 'VIDEO', color: '#7000FF' },
+    IMAGE: { label: 'IMAGE', color: '#FF8800' },
     LYRIC: { label: 'LYRIC', color: '#00E5FF' },
 };
 

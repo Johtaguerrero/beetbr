@@ -493,6 +493,7 @@ export const useStore = create<BeetrStore>()(
                 if (!artistProfile) return '';
                 // Demo mode: create post locally without API
                 if (accessToken === 'demo-token') {
+                    const mediaUrl = data.file ? URL.createObjectURL(data.file) : '';
                     const newPost: Post = {
                         id: `post-${Date.now()}`,
                         artistId: artistProfile.id,
@@ -500,6 +501,7 @@ export const useStore = create<BeetrStore>()(
                         type: data.type,
                         text: data.text || '',
                         hashtags: data.hashtags || [],
+                        mediaUrl,
                         plays: 0,
                         likes: 0,
                         comments: 0,
