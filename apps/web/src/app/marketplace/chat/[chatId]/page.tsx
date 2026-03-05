@@ -55,8 +55,8 @@ export default function MarketplaceChat() {
 
     return (
         <AppShell>
-            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-                <div className="flex flex-col w-full max-w-[480px] h-full md:h-[calc(100vh-6rem)] md:rounded-2xl md:border overflow-hidden" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+            <div className="md:flex md:h-[calc(100vh-4rem)] md:items-center md:justify-center">
+                <div className="flex flex-col w-full md:max-w-[480px] h-[calc(100dvh-64px-80px)] md:h-[calc(100vh-6rem)] md:rounded-2xl md:border overflow-hidden" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                     {/* Header */}
                     <div className="flex items-center gap-3 border-b px-4 py-3 flex-shrink-0"
                         style={{ borderColor: 'var(--color-border)' }}>

@@ -100,8 +100,8 @@ export default function DealRoom() {
 
     return (
         <AppShell noPadding>
-            <div className="flex h-screen items-center justify-center">
-                <div className="flex flex-col overflow-hidden w-full max-w-[480px] h-full md:h-[calc(100vh-2rem)] md:my-4 md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+            <div className="md:flex md:h-screen md:items-center md:justify-center">
+                <div className="flex flex-col overflow-hidden w-full md:max-w-[480px] h-[calc(100dvh-64px-80px)] md:h-[calc(100vh-2rem)] md:my-4 md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                     {/* Left panel */}
                     <div className="flex-shrink-0 border-b overflow-y-auto" style={{ borderColor: 'var(--color-border)' }}>
                         {/* Mobile tabs */}

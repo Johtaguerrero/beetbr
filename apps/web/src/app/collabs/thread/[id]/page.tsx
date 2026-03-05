@@ -58,8 +58,8 @@ export default function CollabThreadPage() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-64px)] items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-            <div className="flex flex-col relative overflow-hidden w-full max-w-[480px] h-full md:h-[calc(100vh-6rem)] md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-nav-border)' }}>
+        <div className="md:flex md:h-[calc(100vh-64px)] md:items-center md:justify-center" style={{ background: 'var(--color-bg)' }}>
+            <div className="flex flex-col relative overflow-hidden w-full md:max-w-[480px] h-[calc(100dvh-64px-80px)] md:h-[calc(100vh-6rem)] md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-nav-border)' }}>
                 {/* Thread Header */}
                 <div className="px-4 py-3 border-b flex items-center justify-between backdrop-blur-xl z-20" style={{ background: 'var(--color-nav-bg)', borderColor: 'var(--color-nav-border)' }}>
                     <div className="flex items-center gap-3">
