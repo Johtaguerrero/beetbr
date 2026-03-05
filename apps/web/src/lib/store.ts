@@ -498,9 +498,10 @@ export const useStore = create<BeetrStore>()(
                 return { posts, likedPosts: liked };
             }),
 
-            createPost: async (data, file) => {
+            createPost: async (data) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return '';
+                const file = data.file;
 
                 // Helper to create locally
                 const createLocally = (mediaUrl?: string) => {

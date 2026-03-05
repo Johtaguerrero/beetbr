@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2 } from 'lucide-react';
 
 /* ── Type colours ──────────────────────────────────────── */
 const TC: Record<string, { label: string; color: string }> = {
@@ -678,6 +678,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
     const [progress, setProgress] = useState(0);
     const [liked, setLiked] = useState(false);
     const [paused, setPaused] = useState(false);
+    const [muted, setMuted] = useState(true);
     const DURATION = 5000; // 5 seconds per story
 
     useEffect(() => {
@@ -746,17 +747,30 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                         </p>
                     </div>
                 </div>
-                <button onClick={onClose} style={{
-                    color: 'white', fontSize: 20, padding: 8,
-                    background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
-                    border: 'none', cursor: 'pointer', lineHeight: 1,
-                }}>✕</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {story.mediaType === 'VIDEO' && (
+                        <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} style={{
+                            color: 'white', padding: 8,
+                            background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                            border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', lineHeight: 1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                        </button>
+                    )}
+                    <button onClick={onClose} style={{
+                        color: 'white', fontSize: 20, padding: 8,
+                        background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
+                        border: 'none', cursor: 'pointer', lineHeight: 1, width: 36, height: 36,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>✕</button>
+                </div>
             </div>
 
             {/* Media — tap zones */}
             <div onClick={handleTap} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 {story.mediaType === 'VIDEO' ? (
-                    <video src={story.mediaUrl} autoPlay muted playsInline
+                    <video src={story.mediaUrl} autoPlay muted={muted} playsInline
                         style={{ maxHeight: '100vh', maxWidth: '100vw', width: '100%', height: '100%', objectFit: 'contain' }}
                         onClick={e => e.stopPropagation()}
                     />
