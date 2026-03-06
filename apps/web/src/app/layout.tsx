@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AppShellWrapper } from '@/components/shell/AppShellWrapper';
 
 export const metadata: Metadata = {
     title: 'BeatBR — A vitrine da nova música brasileira',
@@ -21,7 +22,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
                 <meta name="theme-color" content="#0B0B0B" />
             </head>
-            <body>{children}</body>
+            <body>
+                <AppShellWrapper>
+                    {children}
+                </AppShellWrapper>
+            </body>
         </html>
     );
 }

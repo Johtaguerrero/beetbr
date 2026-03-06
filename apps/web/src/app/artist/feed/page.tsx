@@ -3,10 +3,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story } from '@/lib/store';
-import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
 import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2 } from 'lucide-react';
+
 
 /* ── Type colours ──────────────────────────────────────── */
 const TC: Record<string, { label: string; color: string }> = {
@@ -283,7 +284,8 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                         <EmptyState icon="💬" title="Nenhum comentário" description="Seja o primeiro a comentar!" />
                     </div>
 
-                    <div style={{ padding: 16, borderTop: '1px solid var(--color-nav-border)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                    <div style={{ padding: 16, borderTop: '1px solid var(--color-nav-border)', display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <CustomEmojiPicker onSelect={(emoji) => setComment(prev => prev + emoji)} />
                         <textarea
                             value={comment} onChange={e => setComment(e.target.value)}
                             placeholder="Adicione um comentário..."
@@ -317,11 +319,55 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 /* ══════════════════════════════════════════════════════════
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) {
     const { togglePostLike } = useStore();
     const [liked, setLiked] = useState(post.liked);
     const [showComments, setShowComments] = useState(false);
+    const [commentText, setCommentText] = useState('');
+    const [comments, setComments] = useState<any[]>([]); // Local state for demo
     const tc = TC[post.type] || TC.TRACK;
+
+    const containerRef = useRef<HTMLElement>(null);
+    const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
+
+    // Auto-play / Auto-pause logic
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const media = mediaRef.current;
+                if (!media || isStoryOpen) {
+                    if (media && !media.paused) media.pause();
+                    return;
+                }
+
+                if (entry.intersectionRatio >= 0.6) {
+                    const playPromise = media.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => { /* autoplay prevented by browser */ });
+                    }
+                } else {
+                    if (!media.paused) media.pause();
+                }
+            });
+        }, { threshold: [0, 0.6, 1.0] });
+
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, [isStoryOpen]);
+
+    // Force pause if story opens
+    useEffect(() => {
+        if (isStoryOpen && mediaRef.current && !mediaRef.current.paused) {
+            mediaRef.current.pause();
+        }
+    }, [isStoryOpen]);
+
+    const addPostComment = (postId: string, text: string) => {
+        const newRef = { text, authorName: 'Você', createdAt: new Date().toISOString() };
+        setComments(prev => [newRef, ...prev]);
+    };
 
     const timeAgo = () => {
         const diff = Date.now() - new Date(post.createdAt).getTime();
@@ -333,6 +379,7 @@ function PostCard({ post }: { post: Post }) {
 
     return (
         <motion.article
+            ref={containerRef}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             style={{
@@ -341,8 +388,9 @@ function PostCard({ post }: { post: Post }) {
                 border: '1px solid var(--color-nav-border)',
                 borderLeft: `3px solid ${tc.color}`,
                 borderRadius: '2px',
-                overflow: 'hidden',
+                overflow: 'visible', // Change to visible to allow emoji picker popup
                 boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                position: 'relative'
             }}
         >
             {/* top gradient line */}
@@ -399,7 +447,7 @@ function PostCard({ post }: { post: Post }) {
                 )}
 
                 {post.mediaUrl && post.type === 'VIDEO' && (
-                    <video controls src={post.mediaUrl} style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
+                    <video ref={mediaRef as any} controls src={post.mediaUrl} preload="metadata" playsInline style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
                 )}
 
                 {post.mediaUrl && (post.type === 'LYRIC' || post.type === 'IMAGE') && (
@@ -408,7 +456,7 @@ function PostCard({ post }: { post: Post }) {
 
                 {post.type === 'TRACK' && (
                     <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }}>
-                        <TrackPlayer url={post.mediaUrl} title="Faixa" />
+                        <TrackPlayer ref={mediaRef as any} url={post.mediaUrl} title="Faixa" />
                     </div>
                 )}
 
@@ -475,23 +523,61 @@ function PostCard({ post }: { post: Post }) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        style={{ overflow: 'hidden', borderTop: '1px solid var(--color-nav-border)' }}
+                        style={{ overflow: 'visible', borderTop: '1px solid var(--color-nav-border)' }}
                     >
                         <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.02)' }}>
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                            <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
                                 <Avatar name="Você" size="sm" />
-                                <div style={{ flex: 1, display: 'flex', gap: 8 }}>
+                                <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    <CustomEmojiPicker onSelect={(emoji) => setCommentText(prev => prev + emoji)} />
                                     <input
                                         type="text"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && commentText.trim()) {
+                                                addPostComment(post.id, commentText);
+                                                setCommentText('');
+                                            }
+                                        }}
                                         placeholder="Adicione um comentário..."
                                         style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--color-nav-border)', borderRadius: 20, padding: '8px 16px', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: 13, outline: 'none' }}
                                     />
-                                    <button style={{ background: 'var(--color-accent)', color: '#000', border: 'none', borderRadius: 20, padding: '0 16px', fontWeight: 700, fontFamily: 'Space Mono, monospace', fontSize: 11, cursor: 'pointer' }}>
+                                    <button
+                                        onClick={() => {
+                                            if (commentText.trim()) {
+                                                addPostComment(post.id, commentText);
+                                                setCommentText('');
+                                            }
+                                        }}
+                                        style={{ background: 'var(--color-accent)', color: '#000', border: 'none', borderRadius: 20, padding: '0 16px', fontWeight: 700, fontFamily: 'Space Mono, monospace', fontSize: 11, cursor: 'pointer' }}
+                                    >
                                         ENVIAR
                                     </button>
                                 </div>
                             </div>
-                            <EmptyState icon="💬" title="Nenhum comentário" description="Seja o primeiro a comentar!" />
+
+                            {/* Render Comments */}
+                            {comments.length === 0 ? (
+                                <EmptyState icon="💬" title="Nenhum comentário" description="Seja o primeiro a comentar!" />
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+                                    {comments.map((c, i) => (
+                                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                            <Avatar name={c.authorName} size="sm" />
+                                            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '8px', borderTopLeftRadius: 0 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                    <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'white' }}>{c.authorName}</span>
+                                                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'var(--color-muted)' }}>agora</span>
+                                                </div>
+                                                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: 'var(--color-primary-text)', lineHeight: 1.4 }}>
+                                                    <RenderTextWithEmojis text={c.text} />
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -612,7 +698,7 @@ export default function FeedPage() {
     };
 
     return (
-        <AppShell>
+        <>
             {/* Smart floating FAB */}
             {/* <PublishFAB /> */} {/* Moved to the end of the return statement */}
 
@@ -671,7 +757,7 @@ export default function FeedPage() {
                             <EmptyState icon="🎵" title="Nenhuma publicação ainda" description="Siga artistas para ver o feed"
                                 action={<Link href="/rankings" className="btn-outline">EXPLORAR ARTISTAS</Link>} />
                         ) : (
-                            posts.map(post => <PostCard key={post.id} post={post} />)
+                            posts.map(post => <PostCard key={post.id} post={post} isStoryOpen={!!selectedStory} />)
                         )}
                     </div>
                 </div>
@@ -764,7 +850,7 @@ export default function FeedPage() {
                     />
                 )}
             </AnimatePresence>
-        </AppShell>
+        </>
     );
 }
 
@@ -800,6 +886,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                 return next;
             });
         }, 50);
+
         return () => clearInterval(interval);
     }, [paused, story.id, onNext, duration]);
 
@@ -852,7 +939,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                             <div style={{
                                 height: '100%', borderRadius: 2,
                                 background: 'white',
-                                width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%',
+                                width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}% ` : '0%',
                                 transition: i === storyIndex ? 'none' : 'width 0.3s',
                             }} />
                         </div>
@@ -937,7 +1024,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
 
                     {/* Comment - Redirects to DM */}
                     <button
-                        onClick={(e) => { e.stopPropagation(); router.push(`/marketplace/chat/${story.artistId}`); onClose(); }}
+                        onClick={(e) => { e.stopPropagation(); router.push(`/ marketplace / chat / ${story.artistId} `); onClose(); }}
                         style={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                             background: 'none', border: 'none', cursor: 'pointer', color: 'white',

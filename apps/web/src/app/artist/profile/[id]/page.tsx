@@ -3,7 +3,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ArtistProfile } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, TrackPlayer, Skeleton, EmptyState } from '@/components/ui';
 
@@ -40,26 +40,26 @@ export default function ArtistProfilePage() {
     }, [params.id, isSelf, artists, myProfile]);
 
     if (loading) return (
-        <AppShell>
+        <>
             <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
                 <Skeleton className="h-48 rounded-xl" />
                 <Skeleton className="h-32 rounded-xl" />
                 <Skeleton className="h-40 rounded-xl" />
             </div>
-        </AppShell>
+        </>
     );
 
     if (!artist) return (
-        <AppShell>
+        <>
             <EmptyState icon="🎤" title="Artista não encontrado" description="Este perfil não existe ou foi removido"
                 action={<button onClick={() => router.back()} className="btn-outline text-sm">Voltar</button>} />
-        </AppShell>
+        </>
     );
 
     const isIndustry = currentUser?.role === 'INDUSTRY';
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
                 {/* Cover */}
                 <div className="relative mb-6">
@@ -147,6 +147,6 @@ export default function ArtistProfilePage() {
                     )}
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

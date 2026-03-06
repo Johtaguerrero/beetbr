@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, StatusBadge, Skeleton } from '@/components/ui';
 
@@ -44,7 +44,7 @@ export default function IndustryDashboard() {
     const shortlistArtists = artists.filter((a) => shortlist.includes(a.id));
 
     return (
-        <AppShell>
+        <>
             <div className="px-4 py-6 pb-24 lg:px-8 lg:pb-6 overflow-y-auto max-h-screen">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
@@ -150,6 +150,6 @@ export default function IndustryDashboard() {
                     </>
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }

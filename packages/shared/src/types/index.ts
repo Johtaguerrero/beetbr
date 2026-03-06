@@ -406,3 +406,46 @@ export interface WsTypingPayload {
     isTyping: boolean;
 }
 
+// ============================================================
+// Notifications & Connections
+// ============================================================
+
+export type NotificationType =
+    | 'NEW_PROPOSAL'
+    | 'PROPOSAL_RESPONSE'
+    | 'NEW_MESSAGE'
+    | 'COLLAB_INTEREST'
+    | 'MARKETPLACE_INTERACT'
+    | 'NEW_FOLLOWER'
+    | 'NEW_LIKE'
+    | 'SYSTEM';
+
+export interface Notification {
+    id: string;
+    userId: string;
+    type: NotificationType;
+    title: string;
+    message: string;
+    read: boolean;
+    link?: string;
+    createdAt: string;
+}
+
+export interface Follow {
+    followerId: string;
+    followingId: string;
+    createdAt: string;
+}
+
+// ============================================================
+// Marketplace Messages
+// ============================================================
+
+export interface ListingMessage {
+    id: string;
+    listingId: string;
+    senderId: string;
+    message: string;
+    createdAt: string;
+}
+

@@ -324,6 +324,7 @@ interface BeetrStore {
 
     toasts: Toast[];
     notifications: Notification[];
+    postComments: Record<string, { id: string; authorName: string; authorAvatarUrl?: string; text: string; createdAt: string }[]>;
 
     loginAsArtist: (email: string, password: string) => Promise<void>;
     loginAsIndustry: (email: string, password: string) => Promise<void>;
@@ -338,6 +339,7 @@ interface BeetrStore {
     fetchStories: () => Promise<void>;
     createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File }) => Promise<string>;
     createStory: (file: File) => Promise<void>;
+    addPostComment: (postId: string, text: string) => void;
 
     toggleShortlist: (artistId: string) => void;
     isInShortlist: (artistId: string) => boolean;
@@ -395,6 +397,7 @@ export const useStore = create<BeetrStore>()(
             likedPosts: new Set(),
             toasts: [],
             notifications: [],
+            postComments: {},
             listings: MOCK_LISTINGS,
             savedListings: [],
             marketplaceChats: [],
@@ -496,6 +499,25 @@ export const useStore = create<BeetrStore>()(
                     return { ...p, likes: p.likes + 1, liked: true };
                 });
                 return { posts, likedPosts: liked };
+            }),
+
+            addPostComment: (postId, text) => set((s) => {
+                const currentUser = s.currentUser;
+                const authorName = currentUser?.role === 'ARTIST' ? s.artistProfile?.stageName : s.industryProfile?.companyName;
+                const newComment = {
+                    id: `comment-${Date.now()}`,
+                    authorName: authorName || 'Você',
+                    text,
+                    createdAt: new Date().toISOString()
+                };
+
+                const currentComments = s.postComments[postId] || [];
+                const updatedPosts = s.posts.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p);
+
+                return {
+                    postComments: { ...s.postComments, [postId]: [...currentComments, newComment] },
+                    posts: updatedPosts
+                };
             }),
 
             createPost: async (data) => {

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
 import { ScoreBeetBadge, Avatar } from '@/components/ui';
 
@@ -80,18 +80,18 @@ export default function ListingDetail() {
 
     if (!listing) {
         return (
-            <AppShell>
+            <>
                 <div className="empty-state">
                     <p className="text-5xl">😕</p>
                     <p className="text-[var(--color-primary-text,white)] font-semibold">Anúncio não encontrado</p>
                     <Link href="/marketplace" className="btn-outline text-sm">Voltar ao Marketplace</Link>
                 </div>
-            </AppShell>
+            </>
         );
     }
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-4xl px-4 py-6 pb-28 lg:px-6 lg:pb-6">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-1.5 text-xs text-beet-muted mb-5">
@@ -242,6 +242,6 @@ export default function ListingDetail() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
 import { type MarketplaceCategory } from '@beetbr/shared';
 
@@ -77,7 +77,7 @@ export default function NewListing() {
     const STEPS = ['Tipo & Categoria', 'Detalhes', 'Preço & Entrega'];
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-2xl px-4 py-6 pb-24 lg:px-6">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-white">🛍️ Novo Anúncio</h1>
@@ -279,6 +279,6 @@ export default function NewListing() {
                     )}
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

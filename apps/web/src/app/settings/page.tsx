@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppShell, useAuthGuard, clearAuthCookies } from '@/components/shell/AppShell';
+import { useAuthGuard, clearAuthCookies } from '@/components/shell/AppShell';
 import { useStore } from '@/lib/store';
 import { Toggle } from '@/components/ui';
 
@@ -49,7 +49,7 @@ export default function Settings() {
     const displayName = artistProfile?.stageName || industryProfile?.companyName || currentUser?.email || 'Usuário';
 
     return (
-        <AppShell>
+        <>
             <div className="flex min-h-screen flex-col lg:flex-row overflow-hidden max-h-screen">
                 {/* Nav sidebar */}
                 <aside className="w-full border-b px-4 py-4 lg:w-56 lg:border-b-0 lg:border-r lg:py-6 lg:px-3 flex-shrink-0"
@@ -216,7 +216,7 @@ export default function Settings() {
                     </div>
                 </main>
             </div>
-        </AppShell>
+        </>
     );
 }
 

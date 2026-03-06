@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ArtistProfile } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, GenrePill, EmptyState } from '@/components/ui';
 
@@ -85,7 +85,7 @@ export default function Discover() {
     const hasFilters = searchState || genres.length > 0 || minScore > 0 || availOnly;
 
     return (
-        <AppShell>
+        <>
             <div className="flex h-screen overflow-hidden">
                 {/* Desktop sidebar filters */}
                 <aside className="hidden w-64 flex-shrink-0 overflow-y-auto border-r p-5 space-y-5 pb-8 lg:block"
@@ -194,6 +194,6 @@ export default function Discover() {
                     </div>
                 </main>
             </div>
-        </AppShell>
+        </>
     );
 }

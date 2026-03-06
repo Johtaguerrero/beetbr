@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES, type Listing, type MarketplaceCategory } from '@/lib/store';
 import { ScoreBeetBadge, Skeleton } from '@/components/ui';
 
@@ -114,7 +114,7 @@ export default function CategoryPage() {
     );
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-5xl px-4 py-6 pb-28 lg:px-6 lg:pb-6">
                 {/* Header */}
                 <div className="mb-6">
@@ -215,6 +215,6 @@ export default function CategoryPage() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

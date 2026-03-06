@@ -3,9 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore } from '@/lib/store';
-import { Avatar } from '@/components/ui';
+import { Avatar, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
 
 function AntiFraudBanner() {
     return (
@@ -40,13 +40,13 @@ export default function MarketplaceChat() {
 
     if (!chat) {
         return (
-            <AppShell>
+            <>
                 <div className="empty-state">
                     <p className="text-5xl">💬</p>
                     <p className="text-[var(--color-primary-text,white)] font-semibold">Conversa não encontrada</p>
                     <Link href="/marketplace/saved" className="btn-outline text-sm">← Meus interesses</Link>
                 </div>
-            </AppShell>
+            </>
         );
     }
 
@@ -54,7 +54,7 @@ export default function MarketplaceChat() {
     const otherName = isBuyer ? chat.sellerName : chat.buyerName;
 
     return (
-        <AppShell>
+        <>
             <div className="md:flex md:h-[calc(100vh-4rem)] md:items-center md:justify-center">
                 <div className="flex flex-col w-full md:max-w-[480px] h-[calc(100dvh-64px-80px)] md:h-[calc(100vh-6rem)] md:rounded-2xl md:border overflow-hidden" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                     {/* Header */}
@@ -96,7 +96,7 @@ export default function MarketplaceChat() {
                                                 borderBottomLeftRadius: !isMe ? 4 : undefined,
                                                 border: !isMe ? '1px solid var(--color-border)' : 'none',
                                             }}>
-                                            {msg.text}
+                                            <RenderTextWithEmojis text={msg.text} />
                                         </div>
                                         <p className="text-[9px] text-beet-muted px-1 text-right">
                                             {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -109,8 +109,9 @@ export default function MarketplaceChat() {
                     </div>
 
                     {/* Input */}
-                    <div className="flex gap-2 border-t p-4 flex-shrink-0 pb-safe"
+                    <div className="flex gap-2 border-t p-4 flex-shrink-0 pb-safe items-center"
                         style={{ borderColor: 'var(--color-border)' }}>
+                        <CustomEmojiPicker onSelect={(emoji) => setText(prev => prev + emoji)} />
                         <input
                             className="beet-input flex-1 min-w-0 py-3"
                             placeholder="Digite sua mensagem..."
@@ -125,6 +126,6 @@ export default function MarketplaceChat() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

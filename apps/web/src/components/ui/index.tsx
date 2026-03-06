@@ -1,5 +1,7 @@
 'use client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { Flame, Heart, Music, Zap, Star, CheckCircle, Coffee, Rocket, Smile } from 'lucide-react';
 
 // ── Loading Spinner ───────────────────────────────────────────
 export function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
@@ -112,13 +114,13 @@ export function GenrePill({ genre, active, onClick }: { genre: string; active?: 
 }
 
 // ── Waveform (animated) ───────────────────────────────────────
-export function Waveform({ bars = 20 }: { bars?: number }) {
+export function Waveform({ bars = 20, playing = false }: { bars?: number; playing?: boolean }) {
     return (
-        <div className="flex h-8 items-end gap-0.5">
+        <div className="flex h-8 items-end gap-0.5 w-full">
             {Array.from({ length: bars }).map((_, i) => (
                 <div
                     key={i}
-                    className="waveform-bar flex-1 rounded-sm"
+                    className={`waveform-bar flex-1 rounded-sm ${playing ? '' : 'paused'}`}
                     style={{ height: `${30 + Math.random() * 70}%`, animationDelay: `${i * 0.06}s` }}
                 />
             ))}
@@ -127,29 +129,122 @@ export function Waveform({ bars = 20 }: { bars?: number }) {
 }
 
 // ── Track Player ──────────────────────────────────────────────
-export function TrackPlayer({ title, url }: { title?: string; url?: string }) {
+export const TrackPlayer = forwardRef<HTMLAudioElement, { title?: string; url?: string; mediaRef?: React.Ref<HTMLAudioElement> }>(({ title, url, mediaRef }, ref) => {
+    const internalRef = useRef<HTMLAudioElement>(null);
+    const audioRef = (mediaRef as React.RefObject<HTMLAudioElement>) || internalRef;
+
+    // Fallback if mediaRef isn't provided directly but via forwardRef
+    useImperativeHandle(ref, () => audioRef.current as HTMLAudioElement);
+
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    // Sync play state if external autoplay hits
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+        const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+        const handleLoadedMetadata = () => setDuration(audio.duration);
+
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+        return () => {
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+    }, [audioRef]);
+
+    const togglePlay = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play().catch(err => console.error("Play prevented", err));
+            }
+        }
+    };
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+        if (!audioRef.current || !duration) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        audioRef.current.currentTime = percent * duration;
+    };
+
+    const formatTime = (time: number) => {
+        if (!time || isNaN(time)) return "0:00";
+        const m = Math.floor(time / 60);
+        const s = Math.floor(time % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
+
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
     return (
-        <div className="flex flex-col gap-2 rounded-xl bg-beet-dark p-3">
-            <div className="flex flex-1 flex-col gap-1.5">
-                {title && <p className="text-xs font-medium text-white">{title}</p>}
-                {url ? (
-                    <audio controls src={url} className="w-full h-10" />
-                ) : (
-                    <div className="flex items-center gap-3">
-                        <button
-                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-beet-black"
-                            style={{ background: 'var(--color-accent)' }}
-                        >
-                            ▶
-                        </button>
-                        <Waveform />
-                        <span className="text-xs text-beet-muted">--:--</span>
+        <div className="flex flex-col gap-2 rounded-[4px] bg-[var(--color-card)] border border-[var(--color-nav-border)] p-3">
+            <div className="flex flex-1 flex-col gap-1.5 w-full">
+                {title && <p className="text-[14px] font-bold text-white font-['Space_Grotesk'] leading-tight">{title}</p>}
+
+                <audio ref={audioRef} src={url} preload="metadata" className="hidden" />
+
+                <div className="flex items-center gap-3 w-full">
+                    {/* Play/Pause Button */}
+                    <button
+                        onClick={togglePlay}
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-black transition-transform hover:scale-105 active:scale-95 z-10"
+                        style={{ background: 'var(--color-accent)' }}
+                    >
+                        {isPlaying ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                        ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 2 }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        )}
+                    </button>
+
+                    {/* Timeline & Waveform Container */}
+                    <div
+                        className="relative flex-1 h-10 cursor-pointer flex items-center overflow-hidden rounded-sm bg-black/20"
+                        onClick={handleSeek}
+                    >
+                        {/* The Waveform - slightly faded inside the dark area */}
+                        <div className="absolute inset-0 opacity-40 px-1 pointer-events-none flex items-center justify-center">
+                            <Waveform bars={30} playing={isPlaying} />
+                        </div>
+
+                        {/* Progress Bar (Fill) Overlay */}
+                        <div
+                            className="absolute left-0 top-0 bottom-0 pointer-events-none"
+                            style={{
+                                width: `${progress}%`,
+                                background: 'linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.4))',
+                                borderRight: '2px solid var(--color-accent)',
+                                transition: 'width 0.1s linear'
+                            }}
+                        />
+
+                        {/* Timestamps superimposed */}
+                        <div className="absolute inset-0 flex justify-between items-end px-2 pb-1 pointer-events-none text-[9px] font-bold font-['Space_Mono'] text-[var(--color-muted)] leading-none">
+                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(duration)}</span>
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );
-}
+});
+TrackPlayer.displayName = 'TrackPlayer';
 
 // ── Section title ─────────────────────────────────────────────
 export function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -174,5 +269,92 @@ export function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: 
                 style={{ left: checked ? '18px' : '2px' }}
             />
         </button>
+    );
+}
+
+// ── Custom Branded Emojis ─────────────────────────────────────
+export const CUSTOM_EMOJIS: Record<string, React.ReactNode> = {
+    ':fogo:': <Flame size={16} fill="var(--color-accent)" color="var(--color-accent)" />,
+    ':coracao:': <Heart size={16} fill="var(--color-accent)" color="var(--color-accent)" />,
+    ':musica:': <Music size={16} color="var(--color-accent)" />,
+    ':raio:': <Zap size={16} fill="var(--color-accent)" color="var(--color-accent)" />,
+    ':estrela:': <Star size={16} fill="var(--color-accent)" color="var(--color-accent)" />,
+    ':rock:': <Rocket size={16} fill="var(--color-accent)" color="var(--color-accent)" />,
+    ':cafe:': <Coffee size={16} color="var(--color-accent)" />,
+    ':check:': <CheckCircle size={16} color="var(--color-accent)" />
+};
+
+export function RenderTextWithEmojis({ text }: { text: string }) {
+    if (!text) return null;
+
+    // Pattern matches any of our shortcodes
+    const pattern = new RegExp(`(${Object.keys(CUSTOM_EMOJIS).join('|')})`, 'g');
+    const parts = text.split(pattern);
+
+    return (
+        <span className="inline-flex items-center flex-wrap" style={{ gap: '2px' }}>
+            {parts.map((part, i) => {
+                if (CUSTOM_EMOJIS[part]) {
+                    return <span key={i} className="inline-flex align-middle relative overflow-hidden rounded-full p-0.5" style={{ background: 'var(--color-glass-btn)' }}>{CUSTOM_EMOJIS[part]}</span>;
+                }
+                return <span key={i} className="whitespace-pre-wrap">{part}</span>;
+            })}
+        </span>
+    );
+}
+
+export function CustomEmojiPicker({ onSelect }: { onSelect: (emoji: string) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const pickerRef = useRef<HTMLDivElement>(null);
+
+    // Close picker when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    return (
+        <div className="relative" ref={pickerRef}>
+            <button
+                type="button"
+                className="flex items-center justify-center p-2 rounded-full transition-colors"
+                style={{ color: isOpen ? 'var(--color-accent)' : 'var(--color-muted)', background: isOpen ? 'var(--color-glass-btn)' : 'transparent' }}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <Smile size={18} />
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-full mb-2 left-0 z-50 p-2 rounded-xl border flex gap-1 shadow-lg overflow-x-auto max-w-[280px]"
+                        style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
+                    >
+                        {Object.entries(CUSTOM_EMOJIS).map(([shortcode, icon]) => (
+                            <button
+                                key={shortcode}
+                                type="button"
+                                className="flex-shrink-0 p-2 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center"
+                                onClick={() => {
+                                    onSelect(shortcode);
+                                    setIsOpen(false);
+                                }}
+                                title={shortcode}
+                            >
+                                {icon}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }

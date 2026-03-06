@@ -98,6 +98,10 @@ model User {
   industryProfile IndustryProfile?
   sentMessages    ProposalMessage[]
   auditLogs       AuditLog[]
+  notifications   Notification[]
+  followers       Follow[]         @relation("UserFollowers")
+  following       Follow[]         @relation("UserFollows")
+  listingMessages ListingMessage[]
 
   @@map("users")
 }
@@ -378,10 +382,25 @@ model Listing {
 
   artistSeller   ArtistProfile?   @relation(fields: [sellerId], references: [id], map: "listing_artist_fkey")
   industrySeller IndustryProfile? @relation(fields: [sellerId], references: [id], map: "listing_industry_fkey")
+  messages       ListingMessage[]
 
   @@index([category])
   @@index([sellerId])
   @@map("listings")
+}
+
+model ListingMessage {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([senderId])
+  @@map("listing_messages")
 }
 
 // ============================================================
@@ -445,4 +464,51 @@ model CollabInterest {
 
   @@index([collabId])
   @@map("collab_interests")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+enum NotificationType {
+  NEW_PROPOSAL
+  PROPOSAL_RESPONSE
+  NEW_MESSAGE
+  COLLAB_INTEREST
+  MARKETPLACE_INTERACT
+  NEW_FOLLOWER
+  NEW_LIKE
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  read      Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+// ============================================================
+// CONNECTIONS (FOLLOWS)
+// ============================================================
+
+model Follow {
+  followerId  String
+  follower    User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
 }

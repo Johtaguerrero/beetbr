@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Proposal } from '@/lib/store';
 import { Avatar, StatusBadge, ScoreBeetBadge, EmptyState, Skeleton } from '@/components/ui';
 
@@ -35,7 +35,7 @@ export default function IndustryDeals() {
     };
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
                 <div className="mb-5 flex items-center justify-between">
                     <div>
@@ -159,6 +159,6 @@ export default function IndustryDeals() {
                     </div>
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }

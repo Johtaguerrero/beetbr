@@ -2,7 +2,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ProposalType } from '@/lib/store';
 import { Avatar, Spinner } from '@/components/ui';
 
@@ -64,7 +64,7 @@ function NewProposalContent() {
     };
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-2xl px-4 py-6 pb-24 lg:px-6 lg:pb-6 overflow-y-auto max-h-screen">
                 <div className="mb-6 flex items-center gap-3">
                     <button onClick={() => router.back()} className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-beet-muted">←</button>
@@ -184,7 +184,7 @@ function NewProposalContent() {
                     </button>
                 </form>
             </div>
-        </AppShell>
+        </>
     );
 }
 

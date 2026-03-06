@@ -109,57 +109,53 @@ const FEATURES = [
     },
 ];
 
-// ── Background slow-motion sequence ──────────────────────────
+// ── Background scroll-driven sequence ──────────────────────────
 function BackgroundSequence() {
     const [frame, setFrame] = useState(1);
 
-    // Preload next image to reduce flickering
     useEffect(() => {
-        const next1 = (frame % 40) + 1;
-        const next2 = ((frame + 1) % 40) + 1;
-        new Image().src = `/backgrounds/${next1}.jpg`;
-        new Image().src = `/backgrounds/${next2}.jpg`;
-    }, [frame]);
-
-    useEffect(() => {
-        const frameTime = 200; // Slower frame rate for true slow-motion (5 fps)
-        let lastTime = performance.now();
-        let animationFrameId: number;
-
-        const loop = (time: number) => {
-            if (time - lastTime >= frameTime) {
-                setFrame(f => (f % 40) + 1);
-                lastTime = time;
-            }
-            animationFrameId = requestAnimationFrame(loop);
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            if (maxScroll <= 0) return;
+            const scrollFraction = scrollTop / maxScroll;
+            const frameIndex = Math.max(
+                1,
+                Math.min(40, Math.ceil(scrollFraction * 40))
+            );
+            setFrame(frameIndex);
         };
 
-        animationFrameId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(animationFrameId);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll(); // Initial check
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Preload frames to prevent flickering
+    useEffect(() => {
+        const preloadImages = () => {
+            for (let i = 1; i <= 40; i++) {
+                const img = new Image();
+                img.src = `/background/ezgif-frame-${i.toString().padStart(3, '0')}.jpg`;
+            }
+        };
+        preloadImages();
     }, []);
 
     return (
         <div
-            className="absolute inset-0 pointer-events-none filter contrast-125"
+            className="fixed inset-0 pointer-events-none filter contrast-110 brightness-75"
             style={{
                 zIndex: 0,
-                backgroundImage: `url(/backgrounds/${frame}.jpg)`,
-                backgroundSize: 'cover', // standard fallback
-                backgroundPosition: 'center', // center subject in frame
-                opacity: 0.5, // Less transparency
-                transition: 'background-image 0s',
+                backgroundImage: `url(/background/ezgif-frame-${frame.toString().padStart(3, '0')}.jpg)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.7,
+                transition: 'background-image 0.05s linear',
             }}
         >
-            {/* Adding an extra layer for mobile to ensure the center focal point isn't lost */}
-            <div className="md:hidden absolute inset-0 bg-black/40" />
-            <style jsx>{`
-                @media (max-width: 768px) {
-                   div {
-                       /* Shift background to the left on mobile */
-                       background-position: left center !important; 
-                   }
-                }
-            `}</style>
+            {/* Dark gradient overlay for readability */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 100%)' }} />
         </div>
     );
 }

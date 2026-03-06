@@ -1204,6 +1204,10 @@ select.beet-input {
   box-shadow: 0 0 6px var(--color-accent-glow);
 }
 
+.waveform-bar.paused {
+  animation-play-state: paused;
+}
+
 @keyframes wave {
   from {
     transform: scaleY(0.2);

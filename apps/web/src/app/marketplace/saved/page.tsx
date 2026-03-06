@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
 import { ScoreBeetBadge, EmptyState } from '@/components/ui';
 
@@ -18,7 +18,7 @@ export default function SavedListings() {
     );
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-2xl px-4 py-6 pb-24 lg:px-6 lg:pb-6 space-y-5">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--color-primary-text,white)]">📚 Meus Interesses</h1>
@@ -127,6 +127,6 @@ export default function SavedListings() {
                     </>
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }

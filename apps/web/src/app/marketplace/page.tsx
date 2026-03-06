@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES, type Listing } from '@/lib/store';
 import { ScoreBeetBadge, Skeleton } from '@/components/ui';
 
@@ -113,7 +113,7 @@ export default function MarketplaceHome() {
     };
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-5xl px-4 py-6 pb-28 lg:px-6 lg:pb-6 space-y-8">
                 {/* Hero */}
                 <div style={{
@@ -206,7 +206,7 @@ export default function MarketplaceHome() {
                     })
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }
 

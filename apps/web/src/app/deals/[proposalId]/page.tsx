@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Proposal, type Message } from '@/lib/store';
 import { Avatar, StatusBadge, ScoreBeetBadge, Spinner } from '@/components/ui';
 
@@ -61,13 +61,13 @@ export default function DealRoom() {
     }, [proposal?.messages]);
 
     if (!proposal) return (
-        <AppShell>
+        <>
             <div className="flex h-screen items-center justify-center flex-col gap-4">
                 <p className="text-2xl">📋</p>
                 <p className="text-white font-semibold">Proposta não encontrada</p>
                 <button onClick={() => router.back()} className="btn-outline text-sm">Voltar</button>
             </div>
-        </AppShell>
+        </>
     );
 
     const handleSend = () => {
@@ -99,7 +99,7 @@ export default function DealRoom() {
     };
 
     return (
-        <AppShell noPadding>
+        <>
             <div className="md:flex md:h-screen md:items-center md:justify-center">
                 <div className="flex flex-col overflow-hidden w-full md:max-w-[480px] h-[calc(100dvh-64px-80px)] md:h-[calc(100vh-2rem)] md:my-4 md:rounded-2xl md:border" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
                     {/* Left panel */}
@@ -259,6 +259,6 @@ export default function DealRoom() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

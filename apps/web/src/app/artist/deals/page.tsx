@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Proposal } from '@/lib/store';
 import { Avatar, StatusBadge, ScoreBeetBadge, EmptyState, Skeleton } from '@/components/ui';
 
@@ -109,7 +109,7 @@ export default function ArtistDeals() {
     };
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
                 <div className="mb-5">
                     <h1 className="text-2xl font-bold text-white">Minhas Negociações</h1>
@@ -156,6 +156,6 @@ export default function ArtistDeals() {
                     </div>
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
+import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MOCK_ARTISTS } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState } from '@/components/ui';
 
@@ -40,7 +40,7 @@ export default function Rankings() {
     const rankings = getRankings();
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
                 {/* Page header */}
                 <div className="mb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 20 }}>
@@ -115,7 +115,7 @@ export default function Rankings() {
                     </div>
                 )}
             </div>
-        </AppShell>
+        </>
     );
 }
 
