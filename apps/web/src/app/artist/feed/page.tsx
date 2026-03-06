@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppShell, useAuthGuard } from '@/components/shell/AppShell';
@@ -438,10 +439,10 @@ function PostCard({ post }: { post: Post }) {
 
                 {/* Comment */}
                 <button
-                    onClick={() => setShowComments(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
+                    onClick={() => setShowComments(!showComments)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: showComments ? 'var(--color-primary-text)' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-primary-text)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-muted)')}
+                    onMouseLeave={e => { if (!showComments) e.currentTarget.style.color = 'var(--color-muted)'; }}
                 >
                     <MessageCircle size={20} strokeWidth={2} />
                     <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', fontWeight: 700 }}>{post.comments}</span>
@@ -456,8 +457,9 @@ function PostCard({ post }: { post: Post }) {
                         style={{
                             width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-glass-btn)',
-                            color: 'var(--color-muted)', border: 'none', cursor: 'pointer'
+                            color: 'var(--color-muted)', cursor: 'pointer'
                         }}
+                        onClick={() => alert("Compartilhado!")}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-nav-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-muted)'; }}
                     >
@@ -466,7 +468,34 @@ function PostCard({ post }: { post: Post }) {
                 </div>
             </div>
 
-            <CommentSheet isOpen={showComments} onClose={() => setShowComments(false)} />
+            {/* ── INLINE COMMENTS ── */}
+            <AnimatePresence>
+                {showComments && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        style={{ overflow: 'hidden', borderTop: '1px solid var(--color-nav-border)' }}
+                    >
+                        <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.02)' }}>
+                            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                                <Avatar name="Você" size="sm" />
+                                <div style={{ flex: 1, display: 'flex', gap: 8 }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Adicione um comentário..."
+                                        style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--color-nav-border)', borderRadius: 20, padding: '8px 16px', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: 13, outline: 'none' }}
+                                    />
+                                    <button style={{ background: 'var(--color-accent)', color: '#000', border: 'none', borderRadius: 20, padding: '0 16px', fontWeight: 700, fontFamily: 'Space Mono, monospace', fontSize: 11, cursor: 'pointer' }}>
+                                        ENVIAR
+                                    </button>
+                                </div>
+                            </div>
+                            <EmptyState icon="💬" title="Nenhum comentário" description="Seja o primeiro a comentar!" />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.article>
     );
 }
@@ -740,37 +769,48 @@ export default function FeedPage() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   STORY VIEWER MODAL — full-screen with timer, progress, interactions
+   STORY VIEWER MODAL — 9:16 layout with timer, chat integration
 ══════════════════════════════════════════════════════════ */
 function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev }: {
     story: Story; stories: Story[]; storyIndex: number;
     onClose: () => void; onNext: () => void; onPrev: () => void;
 }) {
+    const router = useRouter();
     const [progress, setProgress] = useState(0);
     const [liked, setLiked] = useState(false);
     const [paused, setPaused] = useState(false);
     const [muted, setMuted] = useState(true);
-    const [showComments, setShowComments] = useState(false);
-    const DURATION = 5000; // 5 seconds per story
+    const [duration, setDuration] = useState(story.mediaType === 'VIDEO' ? 45000 : 25000); // 45s for video, 25s for img
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         setProgress(0);
         setLiked(false);
         setPaused(false);
-        setShowComments(false);
-    }, [story.id]);
+        setDuration(story.mediaType === 'VIDEO' ? 45000 : 25000);
+    }, [story.id, story.mediaType]);
 
     useEffect(() => {
-        if (paused || showComments) return;
+        if (paused) return;
         const interval = setInterval(() => {
             setProgress(prev => {
-                const next = prev + (100 / (DURATION / 50));
+                const step = 100 / (duration / 50);
+                const next = prev + step;
                 if (next >= 100) { onNext(); return 0; }
                 return next;
             });
         }, 50);
         return () => clearInterval(interval);
-    }, [paused, story.id, onNext]);
+    }, [paused, story.id, onNext, duration]);
+
+    const handleVideoMetadata = () => {
+        if (videoRef.current) {
+            const vidDurationMs = Math.floor(videoRef.current.duration * 1000);
+            if (vidDurationMs > 0 && vidDurationMs < 45000) {
+                setDuration(vidDurationMs);
+            }
+        }
+    };
 
     const handleTap = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -788,123 +828,149 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
             exit={{ opacity: 0 }}
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
-                background: '#000', display: 'flex',
+                background: 'rgba(0,0,0,0.95)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
             }}
+            onClick={onClose}
         >
-            {/* Progress bars */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '8px 8px 0', zIndex: 10 }}>
-                {stories.map((s, i) => (
-                    <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
-                        <div style={{
-                            height: '100%', borderRadius: 2,
-                            background: 'white',
-                            width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%',
-                            transition: i === storyIndex ? 'none' : 'width 0.3s',
-                        }} />
-                    </div>
-                ))}
-            </div>
-
-            {/* Header */}
-            <div style={{ position: 'absolute', top: 18, left: 12, right: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar name={story.artist?.stageName || 'Artist'} size="sm" />
-                    <div>
-                        <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white' }}>
-                            {story.artist?.stageName || 'Artist'}
-                        </p>
-                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>
-                            {new Date(story.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                            {paused && ' · PAUSADO'}
-                        </p>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {story.mediaType === 'VIDEO' && (
-                        <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} style={{
-                            color: 'white', padding: 8,
-                            background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
-                            border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', lineHeight: 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                        </button>
-                    )}
-                    <button onClick={onClose} style={{
-                        color: 'white', fontSize: 20, padding: 8,
-                        background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
-                        border: 'none', cursor: 'pointer', lineHeight: 1, width: 36, height: 36,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>✕</button>
-                </div>
-            </div>
-
-            {/* Media — tap zones */}
-            <div onClick={handleTap} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                {story.mediaType === 'VIDEO' ? (
-                    <video src={story.mediaUrl} autoPlay muted={muted} playsInline
-                        style={{ maxHeight: '100vh', maxWidth: '100vw', width: '100%', height: '100%', objectFit: 'contain' }}
-                        onClick={e => e.stopPropagation()}
-                    />
-                ) : (
-                    <img src={story.mediaUrl} alt="Story"
-                        style={{ maxHeight: '100vh', maxWidth: '100vw', width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                )}
-            </div>
-
-            {/* Bottom interaction bar */}
             <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-                padding: '40px 20px 24px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            }}>
-                {/* Like */}
-                <motion.button whileTap={{ scale: 0.8 }}
-                    onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-                    style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: liked ? '#FF0055' : 'white',
-                    }}>
-                    <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2}
-                        style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none' }} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>
-                        {liked ? 'CURTIU' : 'CURTIR'}
-                    </span>
-                </motion.button>
+                position: 'relative',
+                width: '100vw',
+                maxWidth: 480,
+                height: '100vh',
+                maxHeight: 'min(100vh, 853px)',
+                aspectRatio: '9/16',
+                background: '#111',
+                overflow: 'hidden',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '0 0 50px rgba(0,0,0,0.8)'
+            }} onClick={e => e.stopPropagation()}>
+                {/* Progress bars */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '8px 8px 0', zIndex: 10 }}>
+                    {stories.map((s, i) => (
+                        <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                            <div style={{
+                                height: '100%', borderRadius: 2,
+                                background: 'white',
+                                width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%',
+                                transition: i === storyIndex ? 'none' : 'width 0.3s',
+                            }} />
+                        </div>
+                    ))}
+                </div>
 
-                {/* Comment */}
-                <button onClick={(e) => e.stopPropagation()} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                {/* Header */}
+                <div style={{ position: 'absolute', top: 18, left: 12, right: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Avatar name={story.artist?.stageName || 'Artist'} size="sm" />
+                        <div>
+                            <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white' }}>
+                                {story.artist?.stageName || 'Artist'}
+                            </p>
+                            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>
+                                {new Date(story.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                {paused && ' · PAUSADO'}
+                            </p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {story.mediaType === 'VIDEO' && (
+                            <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} style={{
+                                color: 'white', padding: 8,
+                                background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                                border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', lineHeight: 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                            </button>
+                        )}
+                        <button onClick={onClose} style={{
+                            color: 'white', fontSize: 20, padding: 8,
+                            background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
+                            border: 'none', cursor: 'pointer', lineHeight: 1, width: 36, height: 36,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>✕</button>
+                    </div>
+                </div>
+
+                {/* Media — tap zones */}
+                <div onClick={handleTap} style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
+                    {story.mediaType === 'VIDEO' ? (
+                        <video
+                            ref={videoRef}
+                            src={story.mediaUrl}
+                            autoPlay
+                            muted={muted}
+                            playsInline
+                            onLoadedMetadata={handleVideoMetadata}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            onClick={e => e.stopPropagation()}
+                        />
+                    ) : (
+                        <img src={story.mediaUrl} alt="Story"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                    )}
+                </div>
+
+                {/* Bottom interaction bar */}
+                <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                    padding: '40px 20px 24px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                    <MessageCircle size={26} strokeWidth={2} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>COMENTAR</span>
-                </button>
+                    {/* Like */}
+                    <motion.button whileTap={{ scale: 0.8 }}
+                        onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+                        style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: liked ? '#FF0055' : 'white',
+                        }}>
+                        <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2}
+                            style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none' }} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>
+                            {liked ? 'CURTIU' : 'CURTIR'}
+                        </span>
+                    </motion.button>
 
-                {/* Share */}
-                <button onClick={(e) => e.stopPropagation()} style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'white',
-                }}>
-                    <Share2 size={26} strokeWidth={2} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>ENVIAR</span>
-                </button>
+                    {/* Comment - Redirects to DM */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/marketplace/chat/${story.artistId}`); onClose(); }}
+                        style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                        }}
+                    >
+                        <MessageCircle size={26} strokeWidth={2} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>CHAT</span>
+                    </button>
 
-                {/* Zap/fire */}
-                <motion.button whileTap={{ scale: 0.8 }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: 'var(--color-accent)',
-                    }}>
-                    <Zap size={26} fill="var(--color-accent)" strokeWidth={0} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>BOOST</span>
-                </motion.button>
+                    {/* Share */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); alert('Link do story copiado!'); }}
+                        style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                        }}
+                    >
+                        <Share2 size={26} strokeWidth={2} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>ENVIAR</span>
+                    </button>
+
+                    {/* Zap/fire */}
+                    <motion.button whileTap={{ scale: 0.8 }}
+                        onClick={(e) => { e.stopPropagation(); alert('Boost enviado!'); }}
+                        style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--color-accent)',
+                        }}>
+                        <Zap size={26} fill="var(--color-accent)" strokeWidth={0} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>BOOST</span>
+                    </motion.button>
+                </div>
             </div>
         </motion.div>
     );
