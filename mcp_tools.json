@@ -1,0 +1,1221 @@
+{
+  "result": {
+    "tools": [
+      {
+        "name": "get_version",
+        "description": "Coolify API version",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_mcp_version",
+        "description": "MCP server version",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_infrastructure_overview",
+        "description": "Overview of all resources with counts",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "diagnose_app",
+        "description": "App diagnostics by UUID/name/domain",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "diagnose_server",
+        "description": "Server diagnostics by UUID/name/IP",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "find_issues",
+        "description": "Scan infrastructure for problems",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "list_servers",
+        "description": "List servers (summary)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          }
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_server",
+        "description": "Server details",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "server_resources",
+        "description": "Resources on server",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "server_domains",
+        "description": "Domains on server",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "validate_server",
+        "description": "Validate server connection",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "projects",
+        "description": "Manage projects: list/get/create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "environments",
+        "description": "Manage environments: list/get/create/delete (get includes dragonfly/keydb/clickhouse DBs missing from API)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "create",
+                "delete"
+              ]
+            },
+            "project_uuid": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "project_uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "list_applications",
+        "description": "List apps (summary)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          }
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_application",
+        "description": "App details",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "application",
+        "description": "Manage app: create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create_public",
+                "create_github",
+                "create_key",
+                "create_dockerimage",
+                "update",
+                "delete"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "project_uuid": {
+              "type": "string"
+            },
+            "server_uuid": {
+              "type": "string"
+            },
+            "github_app_uuid": {
+              "type": "string"
+            },
+            "private_key_uuid": {
+              "type": "string"
+            },
+            "git_repository": {
+              "type": "string"
+            },
+            "git_branch": {
+              "type": "string"
+            },
+            "environment_name": {
+              "type": "string"
+            },
+            "environment_uuid": {
+              "type": "string"
+            },
+            "build_pack": {
+              "type": "string"
+            },
+            "ports_exposes": {
+              "type": "string"
+            },
+            "docker_registry_image_name": {
+              "type": "string"
+            },
+            "docker_registry_image_tag": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "fqdn": {
+              "type": "string"
+            },
+            "health_check_enabled": {
+              "type": "boolean"
+            },
+            "health_check_path": {
+              "type": "string"
+            },
+            "health_check_port": {
+              "type": "number"
+            },
+            "health_check_host": {
+              "type": "string"
+            },
+            "health_check_method": {
+              "type": "string"
+            },
+            "health_check_return_code": {
+              "type": "number"
+            },
+            "health_check_scheme": {
+              "type": "string"
+            },
+            "health_check_response_text": {
+              "type": "string"
+            },
+            "health_check_interval": {
+              "type": "number"
+            },
+            "health_check_timeout": {
+              "type": "number"
+            },
+            "health_check_retries": {
+              "type": "number"
+            },
+            "health_check_start_period": {
+              "type": "number"
+            },
+            "delete_volumes": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "application_logs",
+        "description": "Get app logs",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            },
+            "lines": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "list_databases",
+        "description": "List databases (summary)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          }
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_database",
+        "description": "Database details",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "database",
+        "description": "Manage database: create/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "delete"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "postgresql",
+                "mysql",
+                "mariadb",
+                "mongodb",
+                "redis",
+                "keydb",
+                "clickhouse",
+                "dragonfly"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "server_uuid": {
+              "type": "string"
+            },
+            "project_uuid": {
+              "type": "string"
+            },
+            "environment_name": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "is_public": {
+              "type": "boolean"
+            },
+            "public_port": {
+              "type": "number"
+            },
+            "instant_deploy": {
+              "type": "boolean"
+            },
+            "delete_volumes": {
+              "type": "boolean"
+            },
+            "postgres_user": {
+              "type": "string"
+            },
+            "postgres_password": {
+              "type": "string"
+            },
+            "postgres_db": {
+              "type": "string"
+            },
+            "mysql_root_password": {
+              "type": "string"
+            },
+            "mysql_user": {
+              "type": "string"
+            },
+            "mysql_password": {
+              "type": "string"
+            },
+            "mysql_database": {
+              "type": "string"
+            },
+            "mariadb_root_password": {
+              "type": "string"
+            },
+            "mariadb_user": {
+              "type": "string"
+            },
+            "mariadb_password": {
+              "type": "string"
+            },
+            "mariadb_database": {
+              "type": "string"
+            },
+            "mongo_initdb_root_username": {
+              "type": "string"
+            },
+            "mongo_initdb_root_password": {
+              "type": "string"
+            },
+            "mongo_initdb_database": {
+              "type": "string"
+            },
+            "redis_password": {
+              "type": "string"
+            },
+            "keydb_password": {
+              "type": "string"
+            },
+            "clickhouse_admin_user": {
+              "type": "string"
+            },
+            "clickhouse_admin_password": {
+              "type": "string"
+            },
+            "dragonfly_password": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "list_services",
+        "description": "List services (summary)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          }
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "get_service",
+        "description": "Service details",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "service",
+        "description": "Manage service: create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "server_uuid": {
+              "type": "string"
+            },
+            "project_uuid": {
+              "type": "string"
+            },
+            "environment_name": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "instant_deploy": {
+              "type": "boolean"
+            },
+            "docker_compose_raw": {
+              "description": "Raw docker-compose YAML for custom services (auto base64-encoded)",
+              "type": "string"
+            },
+            "delete_volumes": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "control",
+        "description": "Start/stop/restart app, database, or service",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "resource": {
+              "type": "string",
+              "enum": [
+                "application",
+                "database",
+                "service"
+              ]
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "start",
+                "stop",
+                "restart"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "resource",
+            "action",
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "env_vars",
+        "description": "Manage env vars for app or service",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "resource": {
+              "type": "string",
+              "enum": [
+                "application",
+                "service"
+              ]
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "env_uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "resource",
+            "action",
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "list_deployments",
+        "description": "List deployments (summary)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number"
+            },
+            "per_page": {
+              "type": "number"
+            }
+          }
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "deploy",
+        "description": "Deploy by tag/UUID",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "tag_or_uuid": {
+              "type": "string"
+            },
+            "force": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "tag_or_uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "deployment",
+        "description": "Manage deployment: get/cancel/list_for_app (logs excluded by default, use lines param to include)",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "get",
+                "cancel",
+                "list_for_app"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "lines": {
+              "type": "number"
+            },
+            "page": {
+              "type": "number"
+            },
+            "max_chars": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "action",
+            "uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "private_keys",
+        "description": "Manage SSH keys: list/get/create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "private_key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "github_apps",
+        "description": "Manage GitHub Apps: list/get/create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            },
+            "organization": {
+              "type": "string"
+            },
+            "api_url": {
+              "type": "string"
+            },
+            "html_url": {
+              "type": "string"
+            },
+            "custom_user": {
+              "type": "string"
+            },
+            "custom_port": {
+              "type": "number"
+            },
+            "app_id": {
+              "type": "number"
+            },
+            "installation_id": {
+              "type": "number"
+            },
+            "client_id": {
+              "type": "string"
+            },
+            "client_secret": {
+              "type": "string"
+            },
+            "webhook_secret": {
+              "type": "string"
+            },
+            "private_key_uuid": {
+              "type": "string"
+            },
+            "is_system_wide": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "database_backups",
+        "description": "Manage backups: list_schedules/get_schedule/list_executions/get_execution/create/update/delete",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list_schedules",
+                "get_schedule",
+                "list_executions",
+                "get_execution",
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "database_uuid": {
+              "type": "string"
+            },
+            "backup_uuid": {
+              "type": "string"
+            },
+            "execution_uuid": {
+              "type": "string"
+            },
+            "frequency": {
+              "type": "string"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "save_s3": {
+              "type": "boolean"
+            },
+            "s3_storage_uuid": {
+              "type": "string"
+            },
+            "databases_to_backup": {
+              "type": "string"
+            },
+            "dump_all": {
+              "type": "boolean"
+            },
+            "database_backup_retention_days_locally": {
+              "type": "number"
+            },
+            "database_backup_retention_days_s3": {
+              "type": "number"
+            },
+            "database_backup_retention_amount_locally": {
+              "type": "number"
+            },
+            "database_backup_retention_amount_s3": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "action",
+            "database_uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "teams",
+        "description": "Manage teams: list/get/get_members/get_current/get_current_members",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "get_members",
+                "get_current",
+                "get_current_members"
+              ]
+            },
+            "id": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "cloud_tokens",
+        "description": "Manage cloud provider tokens (Hetzner/DigitalOcean): list/get/create/update/delete/validate",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "get",
+                "create",
+                "update",
+                "delete",
+                "validate"
+              ]
+            },
+            "uuid": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "string",
+              "enum": [
+                "hetzner",
+                "digitalocean"
+              ]
+            },
+            "token": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "search_docs",
+        "description": "Search Coolify documentation for how-to guides, configuration, troubleshooting",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            },
+            "limit": {
+              "description": "Max results (default 5)",
+              "type": "number"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "restart_project_apps",
+        "description": "Restart all apps in project",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "project_uuid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "project_uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "bulk_env_update",
+        "description": "Update env var across multiple apps",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "app_uuids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "is_build_time": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "app_uuids",
+            "key",
+            "value"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "stop_all_apps",
+        "description": "EMERGENCY: Stop all running apps",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "confirm": {
+              "type": "boolean",
+              "const": true
+            }
+          },
+          "required": [
+            "confirm"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      },
+      {
+        "name": "redeploy_project",
+        "description": "Redeploy all apps in project",
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "project_uuid": {
+              "type": "string"
+            },
+            "force": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "project_uuid"
+          ]
+        },
+        "execution": {
+          "taskSupport": "forbidden"
+        }
+      }
+    ]
+  },
+  "jsonrpc": "2.0",
+  "id": 2
+}

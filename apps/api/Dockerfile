@@ -1,5 +1,8 @@
 FROM node:22-alpine
 
+# Instala openssl, que é necessário para o Prisma no Alpine Linux
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copy everything (monorepo)
