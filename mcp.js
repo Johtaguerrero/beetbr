@@ -42,10 +42,9 @@ setTimeout(() => {
       id: msgId++,
       method: 'tools/call',
       params: {
-        name: 'deploy',
+        name: 'get_application',
         arguments: {
-          tag_or_uuid: 'fw8w8s8w4o0c8co88g40kk8w',
-          force: true
+          uuid: 'fw8w8s8w4o0c8co88g40kk8w'
         }
       }
     }) + '\n');
