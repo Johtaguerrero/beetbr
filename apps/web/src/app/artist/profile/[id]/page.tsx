@@ -114,7 +114,7 @@ export default function ArtistProfilePage() {
                         onClick={() => isSelf && coverInputRef.current?.click()}
                     >
                         {artist.coverUrl ? (
-                            <img src={artist.coverUrl} className="w-full h-full object-cover" alt="Banner" />
+                            <img src={api.getMediaUrl(artist.coverUrl)} className="w-full h-full object-cover" alt="Banner" />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 60%), #181818` }} />
                         )}

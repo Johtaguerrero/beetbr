@@ -90,7 +90,7 @@ export default function IndustryProfilePage() {
                     onClick={() => isSelf && coverInputRef.current?.click()}
                 >
                     {profile.coverUrl ? (
-                        <img src={profile.coverUrl} className="w-full h-full object-cover" alt="Banner" />
+                        <img src={api.getMediaUrl(profile.coverUrl)} className="w-full h-full object-cover" alt="Banner" />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,0,255,0.1) 0%, rgba(0,0,0,0) 60%), #121212` }} />
                     )}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story } from '@/lib/store';
+import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
 import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2 } from 'lucide-react';
 
@@ -447,11 +448,11 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                 )}
 
                 {post.mediaUrl && post.type === 'VIDEO' && (
-                    <video ref={mediaRef as any} controls src={post.mediaUrl} preload="metadata" playsInline style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
+                    <video ref={mediaRef as any} controls src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
                 )}
 
                 {post.mediaUrl && (post.type === 'LYRIC' || post.type === 'IMAGE') && (
-                    <img src={post.mediaUrl} alt="Post media" style={{ width: '100%', borderRadius: '4px', marginBottom: 12, objectFit: 'contain', maxHeight: '500px', background: 'var(--color-nav-bg)' }} />
+                    <img src={api.getMediaUrl(post.mediaUrl)} alt="Post media" style={{ width: '100%', borderRadius: '4px', marginBottom: 12, objectFit: 'contain', maxHeight: '500px', background: 'var(--color-nav-bg)' }} />
                 )}
 
                 {post.type === 'TRACK' && (

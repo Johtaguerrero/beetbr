@@ -84,6 +84,8 @@ export function StatusBadge({ status }: { status: string }) {
     return <span className={cfg.className}>{cfg.label}</span>;
 }
 
+import { api } from '@/lib/api';
+
 // ── Avatar ────────────────────────────────────────────────────
 interface AvatarProps {
     name: string;
@@ -96,10 +98,13 @@ export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry
     const sizes = { sm: 'h-8 w-8 text-sm', md: 'h-10 w-10 text-base', lg: 'h-14 w-14 text-xl', xl: 'h-20 w-20 text-3xl' };
     const bg = isIndustry ? 'rgba(0,87,255,0.15)' : 'rgba(0,255,102,0.15)';
     
+    // Resolve full URL
+    const fullUrl = api.getMediaUrl(imageUrl);
+    
     return (
         <div className={`flex flex-shrink-0 items-center justify-center rounded-full overflow-hidden ${sizes[size]}`} style={{ background: bg }}>
-            {imageUrl ? (
-                <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+            {fullUrl ? (
+                <img src={fullUrl} alt={name} className="h-full w-full object-cover" />
             ) : (
                 emoji
             )}
@@ -202,7 +207,7 @@ export const TrackPlayer = forwardRef<HTMLAudioElement, { title?: string; url?: 
             <div className="flex flex-1 flex-col gap-1.5 w-full">
                 {title && <p className="text-[14px] font-bold text-white font-['Space_Grotesk'] leading-tight">{title}</p>}
 
-                <audio ref={audioRef} src={url} preload="metadata" className="hidden" />
+                <audio ref={audioRef} src={api.getMediaUrl(url)} preload="metadata" className="hidden" />
 
                 <div className="flex items-center gap-3 w-full">
                     {/* Play/Pause Button */}

@@ -172,6 +172,13 @@ class ApiClient {
         create: (data: object) => this.post('/collaborations', data),
         expressInterest: (collabId: string, data: { message: string }) => this.post(`/collaborations/${collabId}/interest`, data),
     };
+    getMediaUrl(path: string | null | undefined): string | undefined {
+        if (!path) return undefined;
+        if (path.startsWith('http')) return path;
+        // API_BASE is typically http://domain:port/api, we want http://domain:port/path
+        const base = API_BASE.replace('/api', '');
+        return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    }
 }
 
 export const api = new ApiClient();
