@@ -6,6 +6,7 @@ const nextConfig = {
             { protocol: 'http', hostname: 'localhost', port: '9000', pathname: '/**' },
         ],
     },
+    output: 'standalone',
     async rewrites() {
         return [
             {
