@@ -2,7 +2,7 @@
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore, DEMO_ARTIST_EMAIL, DEMO_INDUSTRY_EMAIL, DEMO_PASSWORD } from '@/lib/store';
+import { useStore } from '@/lib/store';
 import { setAuthCookies } from '@/components/shell/AppShell';
 import { Spinner } from '@/components/ui';
 import { Zap, Mic2, Building2, AlertTriangle, ArrowRight, Terminal } from 'lucide-react';
@@ -79,22 +79,6 @@ function AuthContent() {
         }
     };
 
-    const enterDemo = async (demoRole: Role) => {
-        setRole(demoRole);
-        setLoading(true);
-        setError('');
-        try {
-            const demoEmail = demoRole === 'ARTIST' ? DEMO_ARTIST_EMAIL : DEMO_INDUSTRY_EMAIL;
-            if (demoRole === 'ARTIST') await loginAsArtist(demoEmail, DEMO_PASSWORD);
-            else await loginAsIndustry(demoEmail, DEMO_PASSWORD);
-            setAuthCookies(demoRole);
-            router.push(demoRole === 'ARTIST' ? '/artist/feed' : '/industry/dashboard');
-        } catch (err: any) {
-            setError(`// ${(err.message || 'ERRO INESPERADO').toUpperCase()}`);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="relative flex min-h-screen overflow-hidden" style={{ background: 'var(--color-bg)' }}>
@@ -174,49 +158,7 @@ function AuthContent() {
                         <p className="text-[9px] font-mono text-beet-muted tracking-widest mt-1">A VITRINE DA NOVA MÚSICA BR</p>
                     </div>
 
-                    {/* ═══ DEMO ACCESS ═══ */}
-                    <div className="mb-5 overflow-hidden" style={{
-                        border: '1px solid rgba(255,230,0,0.2)',
-                        borderLeft: '2px solid #FFE600',
-                        borderRadius: '2px',
-                        background: 'rgba(255,230,0,0.04)',
-                    }}>
-                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-yellow-500/10">
-                            <Terminal size={11} className="text-yellow-400 flex-shrink-0" />
-                            <p className="text-[9px] font-mono font-bold text-yellow-400 tracking-widest uppercase">ACCESS_DEMO.sh — execute para entrar</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-px bg-white/5">
-                            <button
-                                onClick={() => enterDemo('ARTIST')}
-                                disabled={loading}
-                                className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-mono font-bold transition-all disabled:opacity-40 group"
-                                style={{ background: 'var(--color-bg)', color: '#00FF88' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,255,136,0.08)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'var(--color-bg)')}
-                            >
-                                {loading ? <Spinner size="sm" /> : <Mic2 size={13} />}
-                                $ artista
-                            </button>
-                            <button
-                                onClick={() => enterDemo('INDUSTRY')}
-                                disabled={loading}
-                                className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-mono font-bold transition-all disabled:opacity-40"
-                                style={{ background: 'var(--color-bg)', color: '#00E5FF' }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,229,255,0.08)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'var(--color-bg)')}
-                            >
-                                {loading ? <Spinner size="sm" /> : <Building2 size={13} />}
-                                $ empresa
-                            </button>
-                        </div>
-                    </div>
 
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 mb-5">
-                        <div className="flex-1 h-px" style={{ background: 'var(--color-nav-border)' }} />
-                        <span className="text-[8px] font-mono tracking-[0.2em] text-beet-muted">OU CONTINUE</span>
-                        <div className="flex-1 h-px" style={{ background: 'var(--color-nav-border)' }} />
-                    </div>
 
                     {/* Google Login Button */}
                     <div className="mb-6 flex justify-center">
@@ -311,7 +253,7 @@ function AuthContent() {
 
                     {/* Version tag */}
                     <p className="mt-6 text-center text-[8px] font-mono tracking-widest text-beet-muted opacity-40">
-                        BEATBR v2.0 — SISTEMA DEMO ATIVO
+                        BEATBR v2.0 — SISTEMA ONLINE
                     </p>
                 </motion.div>
             </div>

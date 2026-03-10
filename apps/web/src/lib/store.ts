@@ -46,11 +46,6 @@ export type {
 export type CollabType = CollabPost['type'];
 export type CollabMode = 'online' | 'presencial' | 'hibrido';
 
-// ── Demo Credentials (bypass API) ────────────────────────────
-export const DEMO_ARTIST_EMAIL = 'artista@demo.com';
-export const DEMO_INDUSTRY_EMAIL = 'empresa@demo.com';
-export const DEMO_PASSWORD = 'Demo123!';
-
 export type UserRole = 'ARTIST' | 'INDUSTRY';
 
 export interface AuthUser {
@@ -408,19 +403,6 @@ export const useStore = create<BeetrStore>()(
             collabThreads: [],
 
             loginAsArtist: async (email, password) => {
-                // Demo bypass — no API needed
-                if (email === DEMO_ARTIST_EMAIL && password === DEMO_PASSWORD) {
-                    const user: AuthUser = { id: 'user-artist-1', email, role: 'ARTIST' };
-                    set({
-                        currentUser: user,
-                        artistProfile: MOCK_ARTISTS[0],
-                        isAuthenticated: true,
-                        accessToken: 'demo-token',
-                        refreshToken: 'demo-refresh',
-                    });
-                    get().addToast({ message: `Bem-vindo, ${MOCK_ARTISTS[0].stageName}! (Demo)`, type: 'success' });
-                    return;
-                }
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
                 set({ currentUser: user, artistProfile: profile, isAuthenticated: true, accessToken, refreshToken });
@@ -428,19 +410,6 @@ export const useStore = create<BeetrStore>()(
             },
 
             loginAsIndustry: async (email, password) => {
-                // Demo bypass — no API needed
-                if (email === DEMO_INDUSTRY_EMAIL && password === DEMO_PASSWORD) {
-                    const user: AuthUser = { id: 'user-industry-1', email, role: 'INDUSTRY' };
-                    set({
-                        currentUser: user,
-                        industryProfile: MOCK_INDUSTRY as any,
-                        isAuthenticated: true,
-                        accessToken: 'demo-token',
-                        refreshToken: 'demo-refresh',
-                    });
-                    get().addToast({ message: `Bem-vinda, ${(MOCK_INDUSTRY as any).companyName}! (Demo)`, type: 'success' });
-                    return;
-                }
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
                 set({ currentUser: user, industryProfile: profile, isAuthenticated: true, accessToken, refreshToken });
