@@ -26,6 +26,10 @@ RUN ls -la apps/api/dist/ && test -f apps/api/dist/index.js
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
+# Make entrypoint script executable
+RUN chmod +x apps/api/entrypoint.sh
+
 EXPOSE 4000
 
-CMD ["node", "apps/api/dist/index.js"]
+# Use the entrypoint script to start the API
+ENTRYPOINT ["sh", "apps/api/entrypoint.sh"]
