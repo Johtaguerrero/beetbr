@@ -6,6 +6,7 @@ import { useStore, DEMO_ARTIST_EMAIL, DEMO_INDUSTRY_EMAIL, DEMO_PASSWORD } from 
 import { setAuthCookies } from '@/components/shell/AppShell';
 import { Spinner } from '@/components/ui';
 import { Zap, Mic2, Building2, AlertTriangle, ArrowRight, Terminal } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 type Tab = 'login' | 'register';
 type Role = 'ARTIST' | 'INDUSTRY';
@@ -21,7 +22,22 @@ function AuthContent() {
     const [error, setError] = useState('');
     const params = useSearchParams();
     const router = useRouter();
-    const { loginAsArtist, loginAsIndustry, registerArtist, registerIndustry } = useStore();
+    const { loginAsArtist, loginAsIndustry, registerArtist, registerIndustry, loginWithGoogle } = useStore();
+
+    const handleGoogleSuccess = async (response: CredentialResponse) => {
+        if (!response.credential) return;
+        setLoading(true);
+        setError('');
+        try {
+            await loginWithGoogle(response.credential, role);
+            setAuthCookies(role);
+            router.push(role === 'ARTIST' ? '/artist/feed' : '/industry/dashboard');
+        } catch (err: any) {
+            setError(`// ${(err.message || 'ERRO GOOGLE AUTH').toUpperCase()}`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const r = params.get('role') as Role;
@@ -200,6 +216,18 @@ function AuthContent() {
                         <div className="flex-1 h-px" style={{ background: 'var(--color-nav-border)' }} />
                         <span className="text-[8px] font-mono tracking-[0.2em] text-beet-muted">OU CONTINUE</span>
                         <div className="flex-1 h-px" style={{ background: 'var(--color-nav-border)' }} />
+                    </div>
+
+                    {/* Google Login Button */}
+                    <div className="mb-6 flex justify-center">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setError('// FALHA NO LOGIN GOOGLE')}
+                            useOneTap
+                            theme="filled_black"
+                            shape="rectangular"
+                            text="signin_with"
+                        />
                     </div>
 
                     {/* Tab toggle */}

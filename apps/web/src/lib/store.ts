@@ -328,6 +328,7 @@ interface BeetrStore {
 
     loginAsArtist: (email: string, password: string) => Promise<void>;
     loginAsIndustry: (email: string, password: string) => Promise<void>;
+    loginWithGoogle: (idToken: string, role?: UserRole) => Promise<void>;
     registerArtist: (data: { email: string; password: string; stageName: string }) => Promise<void>;
     registerIndustry: (data: { email: string; password: string; companyName: string }) => Promise<void>;
     logout: () => void;
@@ -444,6 +445,21 @@ export const useStore = create<BeetrStore>()(
                 const { user, accessToken, refreshToken, profile } = res.data;
                 set({ currentUser: user, industryProfile: profile, isAuthenticated: true, accessToken, refreshToken });
                 get().addToast({ message: `Bem-vindo, ${profile.companyName}!`, type: 'success' });
+            },
+
+            loginWithGoogle: async (idToken, role) => {
+                const res: any = await api.auth.google({ idToken, role });
+                const { user, accessToken, refreshToken, profile } = res.data;
+                set({
+                    currentUser: user,
+                    artistProfile: user.role === 'ARTIST' ? profile : null,
+                    industryProfile: user.role === 'INDUSTRY' ? profile : null,
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
+                });
+                const name = profile.stageName || profile.companyName;
+                get().addToast({ message: `Bem-vindo, ${name}!`, type: 'success' });
             },
 
             registerArtist: async (data) => {

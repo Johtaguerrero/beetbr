@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppShellWrapper } from '@/components/shell/AppShellWrapper';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export const metadata: Metadata = {
     title: 'BeatBR — A vitrine da nova música brasileira',
@@ -23,9 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <meta name="theme-color" content="#0B0B0B" />
             </head>
             <body>
-                <AppShellWrapper>
-                    {children}
-                </AppShellWrapper>
+                <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+                    <AppShellWrapper>
+                        {children}
+                    </AppShellWrapper>
+                </GoogleOAuthProvider>
             </body>
         </html>
     );

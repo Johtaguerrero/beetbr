@@ -96,6 +96,7 @@ class ApiClient {
     auth = {
         login: (data: { email: string; password: string }) => this.post('/auth/login', data),
         register: (data: object) => this.post('/auth/register', data),
+        google: (data: { idToken: string; role?: string }) => this.post('/auth/google', data),
         logout: (refreshToken: string) => this.post('/auth/logout', { refreshToken }),
     };
 

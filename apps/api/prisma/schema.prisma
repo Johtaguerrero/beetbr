@@ -84,9 +84,11 @@ enum ContractStatus {
 model User {
   id               String     @id @default(uuid())
   email            String     @unique
-  passwordHash     String
+  passwordHash     String?
+  googleId         String?    @unique
   role             UserRole
   verified         Boolean    @default(false)
+  emailVerifiedAt  DateTime?
   status           UserStatus @default(ACTIVE)
   refreshToken     String?
   resetToken       String?
