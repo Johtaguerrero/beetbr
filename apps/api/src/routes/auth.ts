@@ -210,9 +210,15 @@ authRouter.post('/google', async (req: Request, res: Response) => {
                 profile: user.artistProfile ?? user.industryProfile,
             },
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Erro no login Google:', error);
-        return res.status(401).json({ success: false, error: { code: 'INVALID_GOOGLE_TOKEN', message: 'Token do Google inválido ou expirado' } });
+        return res.status(error.message?.includes('audience') ? 401 : 500).json({ 
+            success: false, 
+            error: { 
+                code: 'INVALID_GOOGLE_TOKEN', 
+                message: `Erro na autenticação: ${error.message || 'Token do Google inválido ou expirado'}` 
+            } 
+        });
     }
 });
 
