@@ -64,9 +64,8 @@ export default function ArtistProfilePage() {
                 {/* Cover */}
                 <div className="relative mb-6">
                     <div className="h-40 rounded-xl2 bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 60%), #181818` }} />
-                    <div className="absolute -bottom-8 left-5 flex h-20 w-20 items-center justify-center rounded-xl border-4 border-beet-black text-4xl"
-                        style={{ background: 'rgba(0,255,102,0.15)', borderColor: 'var(--color-bg)' }}>
-                        🎤
+                    <div className="absolute -bottom-8 left-5">
+                        <Avatar name={artist.stageName} imageUrl={artist.avatarUrl} size="xl" emoji="🎤" />
                     </div>
                     {isSelf && (
                         <button className="absolute right-4 top-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white hover:bg-black/70 transition-colors">
@@ -83,13 +82,13 @@ export default function ArtistProfilePage() {
                                 <h1 className="font-display text-2xl font-black text-white">{artist.stageName}</h1>
                                 {artist.verified && <span className="text-beet-blue text-lg">✓</span>}
                             </div>
-                            <p className="mt-0.5 text-sm text-beet-muted">📍 {artist.city}, {artist.state}</p>
+                            <p className="mt-0.5 text-sm text-beet-muted">📍 {artist.city || 'Brasil'}, {artist.state || 'BR'}</p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
-                                {artist.genres.map((g) => <span key={g} className="beet-pill text-xs">{g}</span>)}
+                                {(artist.genres || []).map((g) => <span key={g} className="beet-pill text-xs">{g}</span>)}
                             </div>
                         </div>
                         <div className="flex flex-col gap-2 items-end">
-                            <ScoreBeetBadge score={artist.scoreBeet} size="lg" />
+                            <ScoreBeetBadge score={artist.scoreBeet || 0} size="lg" />
                             {isIndustry && (
                                 <Link href={`/industry/proposals/new?artistId=${artist.id}&artistName=${encodeURIComponent(artist.stageName)}`}
                                     className="btn-accent px-5 py-2.5 text-sm">
@@ -105,7 +104,7 @@ export default function ArtistProfilePage() {
                         {[
                             { label: 'Seguidores', value: artist.followersCount?.toLocaleString('pt-BR') || '0' },
                             { label: 'Plays', value: artist.playsTotal ? (artist.playsTotal >= 1000000 ? `${(artist.playsTotal / 1000000).toFixed(1)}M` : `${Math.round(artist.playsTotal / 1000)}k`) : '0' },
-                            { label: 'Posts', value: useStore.getState().posts.filter((p) => p.artistId === artist.id).length.toString() },
+                            { label: 'Posts', value: (useStore.getState().posts || []).filter((p) => p.artistId === artist.id).length.toString() },
                         ].map((stat) => (
                             <div key={stat.label}>
                                 <p className="font-black text-white">{stat.value}</p>
@@ -117,30 +116,30 @@ export default function ArtistProfilePage() {
 
                 {/* Score Beet details */}
                 <motion.div className="beet-card mb-5 p-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <p className="section-title mb-4">Score Beet · {Math.round(artist.scoreBeet)}</p>
+                    <p className="section-title mb-4">Score Beet · {Math.round(artist.scoreBeet || 0)}</p>
                     <div className="space-y-3">
-                        <MetricBar label="Engajamento" value={artist.metrics.engagement} max={20} />
-                        <MetricBar label="Crescimento semanal" value={artist.metrics.weeklyGrowth} max={30} color="var(--color-accent-2)" />
-                        <MetricBar label="Retenção" value={artist.metrics.retention} max={100} color="#4D88FF" />
-                        <MetricBar label="Consistência" value={artist.metrics.consistency} max={100} color="#FFD400" />
+                        <MetricBar label="Engajamento" value={artist.metrics?.engagement || 0} max={20} />
+                        <MetricBar label="Crescimento semanal" value={artist.metrics?.weeklyGrowth || 0} max={30} color="var(--color-accent-2)" />
+                        <MetricBar label="Retenção" value={artist.metrics?.retention || 0} max={100} color="#4D88FF" />
+                        <MetricBar label="Consistência" value={artist.metrics?.consistency || 0} max={100} color="#FFD400" />
                     </div>
                 </motion.div>
 
                 {/* Recent posts */}
                 <div>
                     <p className="section-title mb-3">Publicações recentes</p>
-                    {useStore.getState().posts.filter((p) => p.artistId === artist.id).length === 0 ? (
+                    {((useStore.getState().posts || []).filter((p) => p.artistId === artist.id)).length === 0 ? (
                         <EmptyState icon="🎵" title="Nenhuma publicação ainda" />
                     ) : (
                         <div className="space-y-3">
-                            {useStore.getState().posts.filter((p) => p.artistId === artist.id).slice(0, 3).map((post) => (
+                            {(useStore.getState().posts || []).filter((p) => p.artistId === artist.id).slice(0, 3).map((post) => (
                                 <div key={post.id} className="beet-card p-4">
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-beet-muted">{post.type === 'TRACK' ? '🎵' : post.type === 'VIDEO' ? '🎬' : '📝'}</span>
                                         <p className="flex-1 text-sm text-beet-gray">{post.text?.slice(0, 80)}...</p>
                                     </div>
                                     {post.type === 'TRACK' && <TrackPlayer />}
-                                    <p className="mt-2 text-xs text-beet-muted">🎵 {post.plays.toLocaleString('pt-BR')} plays · ❤️ {post.likes}</p>
+                                    <p className="mt-2 text-xs text-beet-muted">🎵 {(post.plays || 0).toLocaleString('pt-BR')} plays · ❤️ {post.likes || 0}</p>
                                 </div>
                             ))}
                         </div>

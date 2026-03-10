@@ -89,14 +89,20 @@ interface AvatarProps {
     name: string;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     emoji?: string;
+    imageUrl?: string | null;
     isIndustry?: boolean;
 }
-export function Avatar({ name, size = 'md', emoji = '🎤', isIndustry = false }: AvatarProps) {
+export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry = false }: AvatarProps) {
     const sizes = { sm: 'h-8 w-8 text-sm', md: 'h-10 w-10 text-base', lg: 'h-14 w-14 text-xl', xl: 'h-20 w-20 text-3xl' };
     const bg = isIndustry ? 'rgba(0,87,255,0.15)' : 'rgba(0,255,102,0.15)';
+    
     return (
-        <div className={`flex flex-shrink-0 items-center justify-center rounded-full ${sizes[size]}`} style={{ background: bg }}>
-            {emoji}
+        <div className={`flex flex-shrink-0 items-center justify-center rounded-full overflow-hidden ${sizes[size]}`} style={{ background: bg }}>
+            {imageUrl ? (
+                <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+            ) : (
+                emoji
+            )}
         </div>
     );
 }

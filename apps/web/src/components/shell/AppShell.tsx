@@ -361,16 +361,16 @@ function Sidebar() {
             <div className="p-3 mt-auto space-y-2" style={{ borderTop: '1px solid var(--color-nav-border)' }}>
                 {sidebarExpanded ? (
                     <div className="flex items-center gap-2 rounded-xl p-2.5 transition-all cursor-pointer glint" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }}>
-                        <Avatar name={displayName} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
+                        <Avatar name={displayName} imageUrl={isIndustry ? industryProfile?.logoUrl : artistProfile?.avatarUrl} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-xs font-bold text-white">{displayName}</p>
-                            {!isIndustry && artistProfile && <ScoreBeetBadge score={artistProfile.scoreBeet} />}
+                            {!isIndustry && artistProfile && <ScoreBeetBadge score={artistProfile.scoreBeet || 0} />}
                             {isIndustry && <p className="text-[10px]" style={{ color: 'var(--color-blue)' }}>{industryProfile?.type}</p>}
                         </div>
                     </div>
                 ) : (
                     <div className="flex justify-center rounded-xl p-2 mb-2 transition-all cursor-pointer glint" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }} title={displayName}>
-                        <Avatar name={displayName} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
+                        <Avatar name={displayName} imageUrl={isIndustry ? industryProfile?.logoUrl : artistProfile?.avatarUrl} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
                     </div>
                 )}
                 <div className={`flex ${sidebarExpanded ? 'gap-2' : 'flex-col gap-2'}`}>
