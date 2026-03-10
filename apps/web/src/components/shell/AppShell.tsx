@@ -471,7 +471,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, noPadding = false }: AppShellProps) {
-    const { currentUser, notifications, theme, toggleTheme, showNotifications, toggleNotifications } = useStore();
+    const { currentUser, isAuthenticated, notifications, theme, toggleTheme, showNotifications, toggleNotifications } = useStore();
     const isIndustry = currentUser?.role === 'INDUSTRY';
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -484,6 +484,17 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
             document.body.classList.remove('theme-light');
         }
     }, [theme]);
+
+    if (isAuthenticated && !currentUser) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+                <div className="flex flex-col items-center gap-4">
+                    <Spinner size="lg" />
+                    <p className="font-mono text-[10px] tracking-[0.2em] text-beet-muted animate-pulse">SINCRONIZANDO PERFIL...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`flex min-h-screen ${isIndustry ? 'theme-industry' : ''}`}>

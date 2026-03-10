@@ -419,15 +419,18 @@ export const useStore = create<BeetrStore>()(
             loginWithGoogle: async (idToken, role) => {
                 const res: any = await api.auth.google({ idToken, role });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({
+                
+                // Limpa perfis antigos para evitar misturar estados
+                set({ 
                     currentUser: user,
                     artistProfile: user.role === 'ARTIST' ? profile : null,
                     industryProfile: user.role === 'INDUSTRY' ? profile : null,
-                    isAuthenticated: true,
-                    accessToken,
-                    refreshToken
+                    isAuthenticated: true, 
+                    accessToken, 
+                    refreshToken 
                 });
-                const name = profile.stageName || profile.companyName;
+                
+                const name = profile?.stageName || profile?.companyName || user.email;
                 get().addToast({ message: `Bem-vindo, ${name}!`, type: 'success' });
             },
 

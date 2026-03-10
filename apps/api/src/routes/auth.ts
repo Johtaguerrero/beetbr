@@ -164,7 +164,7 @@ authRouter.post('/google', async (req: Request, res: Response) => {
                     email,
                     googleId,
                     role: role as 'ARTIST' | 'INDUSTRY',
-                    verified: true, // Google accounts are verified
+                    verified: true,
                     emailVerifiedAt: new Date(),
                     artistProfile: role === 'ARTIST' ? {
                         create: {
@@ -188,11 +188,27 @@ authRouter.post('/google', async (req: Request, res: Response) => {
                 },
                 include: { artistProfile: true, industryProfile: true },
             });
-        } else if (!user.googleId) {
-            // Se o usuário já existia por email mas não tinha Google vinculado
+        } else {
+            // Sincroniza dados do Google (nome/foto) sempre que logar
+            const updateData: any = { googleId, emailVerifiedAt: user.emailVerifiedAt || new Date() };
+            
             user = await prisma.user.update({
                 where: { id: user.id },
-                data: { googleId, emailVerifiedAt: user.emailVerifiedAt || new Date() },
+                data: {
+                    ...updateData,
+                    artistProfile: user.role === 'ARTIST' ? {
+                        upsert: {
+                            create: { stageName: name || 'Artista', avatarUrl: picture, genres: [], city: '', state: 'SP' },
+                            update: { avatarUrl: picture } // Mantém o stageName original se já existir, mas atualiza a foto
+                        }
+                    } : undefined,
+                    industryProfile: user.role === 'INDUSTRY' ? {
+                        upsert: {
+                            create: { companyName: name || 'Empresa', logoUrl: picture, type: 'OTHER', niches: [], city: '', state: 'SP' },
+                            update: { logoUrl: picture }
+                        }
+                    } : undefined,
+                },
                 include: { artistProfile: true, industryProfile: true },
             });
         }
