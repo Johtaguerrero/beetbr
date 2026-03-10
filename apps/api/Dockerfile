@@ -23,8 +23,8 @@ RUN npm run build -w apps/api
 # Verify dist was created
 RUN ls -la apps/api/dist/ && test -f apps/api/dist/index.js
 
-# Create uploads directory
-RUN mkdir -p /app/uploads
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 
 # Make entrypoint script executable
 RUN chmod +x apps/api/entrypoint.sh

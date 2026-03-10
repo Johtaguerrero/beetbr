@@ -9,7 +9,7 @@ uploadsRouter.post('/', authenticate, upload.single('file'), (req: AuthRequest, 
         return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Nenhum arquivo enviado' } });
     }
 
-    const fileUrl = `${process.env.API_URL || 'http://localhost:4000'}/uploads/${req.file.filename}`;
+    const fileUrl = `/api/uploads/${req.file.filename}`;
 
     return res.json({
         success: true,

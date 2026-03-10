@@ -35,8 +35,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// Static files (Uploads)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Static files (Uploads) - Moved inside /api to work better with proxies
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // ── Global Rate Limiting ──────────────────────────────────────
 app.use('/api/', apiLimiter);

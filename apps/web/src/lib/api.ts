@@ -175,9 +175,24 @@ class ApiClient {
     getMediaUrl(path: string | null | undefined): string | undefined {
         if (!path) return undefined;
         if (path.startsWith('http')) return path;
-        // API_BASE is typically http://domain:port/api, we want http://domain:port/path
-        const base = API_BASE.replace('/api', '');
-        return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+
+        try {
+            const origin = new URL(API_BASE).origin;
+            // If path already starts with /api/, just prepend origin
+            if (path.startsWith('/api/')) {
+                return `${origin}${path}`;
+            }
+            // If path starts with uploads/ (legacy), prepend /api/
+            if (path.startsWith('uploads/') || path.startsWith('/uploads/')) {
+                const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                return `${origin}/api${cleanPath}`;
+            }
+            // Generic fallback
+            return `${origin}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+        } catch (e) {
+            console.error('Invalid API_BASE for URL resolution', e);
+            return path;
+        }
     }
 }
 
