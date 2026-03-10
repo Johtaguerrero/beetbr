@@ -237,7 +237,7 @@ function StoryBubble({ story, isAdd, onSelect }: { story?: Story; isAdd?: boolea
                 boxShadow: seen ? 'none' : '0 0 16px rgba(0,255,136,0.35)',
             }}>
                 <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-bg)' }}>
-                    <Avatar name={story.artist?.stageName || 'Artist'} size="lg" />
+                    <Avatar name={story.artist?.stageName || 'Artist'} imageUrl={story.artist?.avatarUrl} size="lg" />
                 </div>
             </div>
             <span style={{
@@ -399,7 +399,7 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
             {/* ── HEADER ── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 12px', borderBottom: '1px solid var(--color-nav-border)' }}>
                 <Link href={`/artist/profile/${post.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                    <Avatar name={post.artist?.stageName || 'Artist'} size="md" />
+                    <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             {/* BIG name */}
@@ -775,7 +775,7 @@ export default function FeedPage() {
                                 borderLeft: '2px solid var(--color-accent)',
                                 borderRadius: '2px',
                             }}>
-                                <Avatar name={artistProfile.stageName} size="md" />
+                                <Avatar name={artistProfile.stageName} imageUrl={artistProfile.avatarUrl} size="md" />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1, letterSpacing: '-0.01em' }}>{artistProfile.stageName}</p>
                                     <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'var(--color-muted)', letterSpacing: '0.08em', marginTop: 4 }}>@{artistProfile.stageName.toLowerCase().replace(' ', '')}</p>

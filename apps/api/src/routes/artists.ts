@@ -75,7 +75,7 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
     const artist = await prisma.artistProfile.findUnique({ where: { userId: req.user!.userId } });
     if (!artist) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Perfil não encontrado' } });
 
-    const { stageName, genres, city, state, bio, availableForBooking, contactVisibility, instagram, website } = req.body;
+    const { stageName, genres, city, state, bio, availableForBooking, contactVisibility, instagram, website, avatarUrl, coverUrl } = req.body;
 
     const updated = await prisma.artistProfile.update({
         where: { id: artist.id },
@@ -89,6 +89,8 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
             ...(contactVisibility !== undefined && { contactVisibility }),
             ...(instagram !== undefined && { instagram }),
             ...(website !== undefined && { website }),
+            ...(avatarUrl !== undefined && { avatarUrl }),
+            ...(coverUrl !== undefined && { coverUrl }),
         },
     });
 

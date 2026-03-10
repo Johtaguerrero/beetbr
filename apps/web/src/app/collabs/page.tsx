@@ -239,7 +239,7 @@ function CollabCard({ collab, index }: { collab: CollabPost; index: number }) {
                 {/* ── Author row ── */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <Avatar name={collab.authorName} size="sm" />
+                        <Avatar name={collab.authorName} imageUrl={collab.authorAvatarUrl} size="sm" />
                         <div>
                             <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-sm text-white leading-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>

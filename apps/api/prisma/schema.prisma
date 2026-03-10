@@ -157,6 +157,7 @@ model IndustryProfile {
   city        String
   state       String       @db.Char(2)
   logoUrl     String?
+  coverUrl    String?
   website     String?
   instagram   String?
   verified    Boolean      @default(false)

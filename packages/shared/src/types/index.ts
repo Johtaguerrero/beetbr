@@ -53,6 +53,7 @@ export interface IndustryProfile {
     city: string;
     state: string;
     logoUrl?: string;
+    coverUrl?: string;
     website?: string;
     instagram?: string;
     verified: boolean;

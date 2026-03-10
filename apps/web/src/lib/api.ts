@@ -115,6 +115,11 @@ class ApiClient {
         updateMe: (data: object) => this.patch('/artists/me', data),
     };
 
+    // ── Industry ────────────────────────────────────────────────
+    industry = {
+        updateMe: (data: object) => this.patch('/industry/me', data),
+    };
+
     // ── Discover & Rankings ──────────────────────────────────────
     discover = {
         search: (params: Record<string, string | number | boolean>) =>

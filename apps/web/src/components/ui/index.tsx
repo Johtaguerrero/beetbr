@@ -364,3 +364,59 @@ export function CustomEmojiPicker({ onSelect }: { onSelect: (emoji: string) => v
         </div>
     );
 }
+
+// ── Modal ─────────────────────────────────────────────────────
+interface ModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    children: React.ReactNode;
+}
+
+export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+    // Prevent scroll on body when modal is open
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = 'auto';
+        return () => { document.body.style.overflow = 'auto'; };
+    }, [isOpen]);
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="fixed inset-0 bg-beet-black/80 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-beet-nav-border bg-beet-card shadow-2xl"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-beet-nav-border p-4">
+                            <h3 className="font-syne text-lg font-bold text-white uppercase tracking-tight">{title}</h3>
+                            <button
+                                onClick={onClose}
+                                className="rounded-full p-1.5 text-beet-muted hover:bg-white/5 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="max-height-[80vh] overflow-y-auto p-4 custom-scrollbar">
+                            {children}
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+}
+

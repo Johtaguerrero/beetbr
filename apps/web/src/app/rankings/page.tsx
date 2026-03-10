@@ -91,7 +91,7 @@ export default function Rankings() {
                                     </div>
 
                                     {/* Avatar */}
-                                    <Avatar name={artist.stageName} size="sm" />
+                                    <Avatar name={artist.stageName} imageUrl={artist.avatarUrl} size="sm" />
 
                                     {/* Info */}
                                     <div style={{ flex: 1, minWidth: 0 }}>

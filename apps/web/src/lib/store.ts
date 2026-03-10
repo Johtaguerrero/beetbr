@@ -329,7 +329,8 @@ interface BeetrStore {
     logout: () => void;
     setAccessToken: (token: string) => void;
 
-    updateArtistProfile: (data: Partial<ArtistProfile>) => void;
+    updateArtistProfile: (data: Partial<ArtistProfile>) => Promise<void>;
+    updateIndustryProfile: (data: Partial<IndustryProfile>) => Promise<void>;
     togglePostLike: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
@@ -451,7 +452,21 @@ export const useStore = create<BeetrStore>()(
             logout: () => set({ currentUser: null, artistProfile: null, industryProfile: null, isAuthenticated: false, accessToken: null, refreshToken: null }),
             setAccessToken: (token) => set({ accessToken: token }),
 
-            updateArtistProfile: (data) => set((s) => ({ artistProfile: s.artistProfile ? { ...s.artistProfile, ...data } : null })),
+            updateArtistProfile: async (data: any) => {
+                await api.artists.updateMe(data);
+                set((state) => ({
+                    artistProfile: state.artistProfile ? { ...state.artistProfile, ...data } : null
+                }));
+                get().addToast({ message: 'Perfil atualizado!', type: 'success' });
+            },
+
+            updateIndustryProfile: async (data: any) => {
+                await api.industry.updateMe(data);
+                set((state) => ({
+                    industryProfile: state.industryProfile ? { ...state.industryProfile, ...data } : null
+                }));
+                get().addToast({ message: 'Perfil da empresa atualizado!', type: 'success' });
+            },
 
             fetchFeed: async (page = 1) => {
                 const { accessToken } = get();

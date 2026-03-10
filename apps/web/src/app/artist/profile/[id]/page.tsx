@@ -1,11 +1,13 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ArtistProfile } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, TrackPlayer, Skeleton, EmptyState } from '@/components/ui';
+import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
+import { api } from '@/lib/api';
 
 function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color?: string }) {
     const pct = Math.min((value / max) * 100, 100);
@@ -25,28 +27,72 @@ function MetricBar({ label, value, max = 100, color }: { label: string; value: n
 export default function ArtistProfilePage() {
     useAuthGuard();
     const params = useParams<{ id: string }>();
-    const { artists, currentUser, artistProfile: myProfile, proposals } = useStore();
+    const { artists, currentUser, artistProfile: myProfile, updateArtistProfile } = useStore();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [artist, setArtist] = useState<ArtistProfile | null>(null);
-    const isSelf = params.id === 'me';
+    const [uploading, setUploading] = useState<{ avatar?: boolean; cover?: boolean }>({});
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const coverInputRef = useRef<HTMLInputElement>(null);
+
+    const isSelf = params.id === 'me' || (currentUser && params.id === currentUser.id) || (myProfile && params.id === myProfile.id);
 
     useEffect(() => {
-        setTimeout(() => {
-            const foundArtist = isSelf ? myProfile : artists.find((a) => a.id === params.id) || null;
-            setArtist(foundArtist);
-            setLoading(false);
-        }, 400);
+        const fetchArtist = async () => {
+            setLoading(true);
+            try {
+                if (isSelf || params.id === 'me') {
+                    setArtist(myProfile);
+                } else {
+                    const foundArtist = artists.find((a) => a.id === params.id);
+                    if (foundArtist) {
+                        setArtist(foundArtist);
+                    } else {
+                        // Try fetching from API if not in store
+                        const res: any = await api.artists.getPublic(params.id);
+                        setArtist(res.data);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching artist:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchArtist();
     }, [params.id, isSelf, artists, myProfile]);
 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(prev => ({ ...prev, [type]: true }));
+        try {
+            const { url } = await api.upload(file);
+            await updateArtistProfile({ [type === 'avatar' ? 'avatarUrl' : 'coverUrl']: url });
+            // Update local state is handled by useEffect listening to myProfile
+        } catch (err) {
+            console.error(`Error uploading ${type}:`, err);
+            alert(`Erro ao carregar ${type}. Tente novamente.`);
+        } finally {
+            setUploading(prev => ({ ...prev, [type]: false }));
+        }
+    };
+
     if (loading) return (
-        <>
-            <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-                <Skeleton className="h-48 rounded-xl" />
-                <Skeleton className="h-32 rounded-xl" />
-                <Skeleton className="h-40 rounded-xl" />
+        <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+            <Skeleton className="h-48 rounded-xl" />
+            <div className="flex gap-4 items-end -mt-12 ml-6">
+                <Skeleton className="h-24 w-24 rounded-full" />
+                <div className="space-y-2 mb-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-32" />
+                </div>
             </div>
-        </>
+            <Skeleton className="h-40 rounded-xl" />
+        </div>
     );
 
     if (!artist) return (
@@ -63,16 +109,60 @@ export default function ArtistProfilePage() {
             <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
                 {/* Cover */}
                 <div className="relative mb-6">
-                    <div className="h-40 rounded-xl2 bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 60%), #181818` }} />
-                    <div className="absolute -bottom-8 left-5">
-                        <Avatar name={artist.stageName} imageUrl={artist.avatarUrl} size="xl" emoji="🎤" />
+                    <div 
+                        className={`h-40 rounded-xl bg-beet-dark overflow-hidden group ${isSelf ? 'cursor-pointer' : ''}`}
+                        onClick={() => isSelf && coverInputRef.current?.click()}
+                    >
+                        {artist.coverUrl ? (
+                            <img src={artist.coverUrl} className="w-full h-full object-cover" alt="Banner" />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 60%), #181818` }} />
+                        )}
+                        
+                        {isSelf && (
+                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="bg-black/50 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                    {uploading.cover ? 'Carregando...' : '📷 Alterar Banner'}
+                                </span>
+                            </div>
+                        )}
                     </div>
+
+                    <div className="absolute -bottom-8 left-5 group">
+                        <div 
+                            className={`relative ${isSelf ? 'cursor-pointer' : ''}`}
+                            onClick={() => isSelf && avatarInputRef.current?.click()}
+                        >
+                            <Avatar name={artist.stageName} imageUrl={artist.avatarUrl} size="xl" emoji="🎤" />
+                            {isSelf && (
+                                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                                        {uploading.avatar ? '...' : 'Trocar'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {isSelf && (
-                        <button className="absolute right-4 top-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white hover:bg-black/70 transition-colors">
+                        <div className="hidden">
+                            <input type="file" ref={avatarInputRef} onChange={(e) => handleFileChange(e, 'avatar')} accept="image/*" />
+                            <input type="file" ref={coverInputRef} onChange={(e) => handleFileChange(e, 'cover')} accept="image/*" />
+                        </div>
+                    )}
+                    
+                    {isSelf && (
+                        <button 
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="absolute right-4 top-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white hover:bg-black/70 transition-colors backdrop-blur-md border border-white/10"
+                        >
                             ✏️ Editar perfil
                         </button>
                     )}
                 </div>
+
+                <ProfileEditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} />
+
 
                 {/* Info */}
                 <div className="mb-5 pl-1 pt-9">

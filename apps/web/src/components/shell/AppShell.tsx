@@ -51,6 +51,7 @@ const INDUSTRY_NAV = [
     { label: 'Nova Proposta', href: '/industry/proposals/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
     { label: 'Negociações', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
     { label: 'Rankings', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
+    { label: 'Meu Perfil', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} /> },
     { divider: true },
     { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
     { label: 'Colaborações', href: '/collabs', icon: <Repeat2 size={IC} strokeWidth={2} /> },

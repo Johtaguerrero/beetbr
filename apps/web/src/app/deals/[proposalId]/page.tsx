@@ -11,15 +11,17 @@ const TYPE_LABELS: Record<string, string> = {
     MUSIC_VIDEO: 'Clipe', EVENT: 'Evento', OTHER: 'Outro',
 };
 
-function MessageBubble({ msg, myId }: { msg: Message; myId: string }) {
+function MessageBubble({ msg, myId, artistAvatar, industryLogo }: { msg: Message; myId: string, artistAvatar?: string, industryLogo?: string }) {
     const isMine = msg.senderId === myId;
+    const avatarUrl = msg.senderRole === 'ARTIST' ? artistAvatar : industryLogo;
+
     if (msg.isSystem) return (
         <div className="my-2 text-center text-xs text-beet-muted">{msg.message}</div>
     );
     return (
         <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
             className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-            <Avatar name={msg.senderName} size="sm" emoji={msg.senderRole === 'ARTIST' ? '🎤' : '🏢'} isIndustry={msg.senderRole === 'INDUSTRY'} />
+            <Avatar name={msg.senderName} imageUrl={avatarUrl} size="sm" emoji={msg.senderRole === 'ARTIST' ? '🎤' : '🏢'} isIndustry={msg.senderRole === 'INDUSTRY'} />
             <div className="max-w-[75%]">
                 {!isMine && <p className="mb-0.5 text-[10px] text-beet-muted">{msg.senderName}</p>}
                 <div className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
@@ -125,14 +127,14 @@ export default function DealRoom() {
                             {/* Participants */}
                             <div className="beet-card p-3 space-y-2.5">
                                 <div className="flex items-center gap-2">
-                                    <Avatar name={proposal.industryName || 'Empresa'} size="sm" emoji="🏢" isIndustry />
+                                    <Avatar name={proposal.industryName || 'Empresa'} imageUrl={proposal.industry?.logoUrl} size="sm" emoji="🏢" isIndustry />
                                     <div>
                                         <p className="text-xs font-semibold text-white">{proposal.industryName || 'Empresa'}</p>
                                         <p className="text-[10px] text-beet-muted">Empresa</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Avatar name={proposal.artistName || 'Artista'} size="sm" emoji="🎤" />
+                                    <Avatar name={proposal.artistName || 'Artista'} imageUrl={proposal.artist?.avatarUrl} size="sm" emoji="🎤" />
                                     <div>
                                         <p className="text-xs font-semibold text-white">{proposal.artistName || 'Artista'}</p>
                                         <div className="flex items-center gap-1">
@@ -237,7 +239,7 @@ export default function DealRoom() {
                                 </div>
                             )}
                             {proposal.messages.map((msg) => (
-                                <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} />
+                                <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} artistAvatar={proposal.artist?.avatarUrl} industryLogo={proposal.industry?.logoUrl} />
                             ))}
                             <div ref={messagesEndRef} />
                         </div>

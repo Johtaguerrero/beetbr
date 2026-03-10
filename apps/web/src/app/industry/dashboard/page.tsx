@@ -90,7 +90,7 @@ export default function IndustryDashboard() {
                                             <Link href={`/deals/${p.id}`} key={p.id}
                                                 className="flex items-center justify-between rounded-xl p-2.5 hover:bg-white/5 transition-colors">
                                                 <div className="flex items-center gap-2">
-                                                    <Avatar name={p.artistName || 'Artista'} size="sm" emoji="🎤" />
+                                                    <Avatar name={p.artistName || 'Artista'} imageUrl={p.artist?.avatarUrl} size="sm" emoji="🎤" />
                                                     <div>
                                                         <p className="text-sm font-semibold text-white">{p.artistName}</p>
                                                         <p className="text-[10px] text-beet-muted">R$ {Number(p.amount).toLocaleString('pt-BR')}</p>
@@ -119,7 +119,7 @@ export default function IndustryDashboard() {
                                     <div className="space-y-3">
                                         {shortlistArtists.slice(0, 4).map((a) => (
                                             <div key={a.id} className="flex items-center gap-3">
-                                                <Avatar name={a.stageName} size="sm" emoji="🎤" />
+                                                <Avatar name={a.stageName} imageUrl={a.avatarUrl} size="sm" emoji="🎤" />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold text-white">{a.stageName}</p>
                                                     <p className="text-[10px] text-beet-muted">{a.genres.join(', ')} · {a.city}</p>
