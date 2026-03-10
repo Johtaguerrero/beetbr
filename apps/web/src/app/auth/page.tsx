@@ -253,7 +253,7 @@ function AuthContent() {
 
                     {/* Version tag */}
                     <p className="mt-6 text-center text-[8px] font-mono tracking-widest text-beet-muted opacity-40">
-                        BEATBR v2.0 — SISTEMA ONLINE
+                        BEATBR v2.0.1 — SISTEMA ONLINE
                     </p>
                 </motion.div>
             </div>
