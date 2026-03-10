@@ -1,7 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Flame, Heart, Music, Zap, Star, CheckCircle, Coffee, Rocket, Smile } from 'lucide-react';
+import { Flame, Heart, Music, Zap, Star, CheckCircle, Coffee, Rocket, Smile, X } from 'lucide-react';
 
 // ── Loading Spinner ───────────────────────────────────────────
 export function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
