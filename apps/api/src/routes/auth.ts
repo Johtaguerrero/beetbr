@@ -97,7 +97,7 @@ authRouter.post('/login', authLimiter, async (req: Request, res: Response) => {
         include: { artistProfile: true, industryProfile: true },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
         return res.status(401).json({ success: false, error: { code: 'INVALID_CREDENTIALS', message: 'Email ou senha incorretos' } });
     }
 
