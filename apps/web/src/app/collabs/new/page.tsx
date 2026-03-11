@@ -39,6 +39,8 @@ export default function NewCollabPage() {
         deadline: '',
         autoAccept: false,
         allowIndustry: true,
+        targetArtistId: null as string | null,
+        targetArtistName: '',
     });
 
     const [genreInput, setGenreInput] = useState('');
@@ -46,9 +48,10 @@ export default function NewCollabPage() {
     const nextStep = () => setStep(s => Math.min(s + 1, STEPS.length - 1));
     const prevStep = () => setStep(s => Math.max(s - 1, 0));
 
-    const handleCreate = () => {
-        const id = createCollabPost({ ...formData, status: 'ACTIVE' } as any);
-        router.push(`/collabs/${id}`);
+    const handleCreate = async () => {
+        const { targetArtistName, ...submitData } = formData;
+        const id = await createCollabPost({ ...submitData, status: 'ACTIVE' } as any);
+        if (id) router.push(`/collabs/${id}`);
     };
 
     const addGenre = () => {
@@ -256,6 +259,32 @@ export default function NewCollabPage() {
                                             <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-beet-green"></div>
                                         </label>
                                     </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>ARTISTA ALVO (OPCIONAL)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={formData.targetArtistName}
+                                            onChange={(e) => setFormData({ ...formData, targetArtistName: e.target.value })}
+                                            placeholder="Buscar artista específico..."
+                                            className="beet-input"
+                                        />
+                                        {formData.targetArtistName && !formData.targetArtistId && (
+                                            <div className="absolute top-full left-0 right-0 mt-2 beet-card p-2 z-50 max-h-48 overflow-y-auto">
+                                                {/* Aqui integraria um dropdown de busca real, por enquanto apenas simulamos ou usamos o ID se colado */}
+                                                <p className="meta-text p-2">Pressione ENTER para buscar...</p>
+                                            </div>
+                                        )}
+                                        {formData.targetArtistId && (
+                                            <div className="mt-2 flex items-center justify-between beet-pill active">
+                                                <span>Selecionado: {formData.targetArtistName}</span>
+                                                <button onClick={() => setFormData({ ...formData, targetArtistId: null, targetArtistName: '' })}>×</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="meta-text">Se deixado em branco, o anúncio será público para todos os artistas.</p>
                                 </div>
                             </div>
 

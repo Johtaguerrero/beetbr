@@ -13,7 +13,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function IndustryDeals() {
     useAuthGuard('INDUSTRY');
-    const { proposals, industryProfile, shortlist, artists } = useStore();
+    const { proposals, industryProfile, shortlist, artists, currentUser } = useStore();
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<'proposals' | 'shortlist'>('proposals');
@@ -23,7 +23,7 @@ export default function IndustryDeals() {
         return () => clearTimeout(t);
     }, []);
 
-    const myProposals = proposals.filter((p) => p.industryId === 'industry-demo' || p.industryId === 'industry-1');
+    const myProposals = proposals.filter((p) => p.industryId === currentUser?.id);
     const filtered = filter === 'all' ? myProposals : myProposals.filter((p) => p.status === filter);
     const shortlistArtists = artists.filter((a) => shortlist.includes(a.id));
 
@@ -112,15 +112,14 @@ export default function IndustryDeals() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-3 flex gap-2">
+                                        <div className="mt-4 flex gap-2">
                                             <Link href={`/deals/${p.id}`}
-                                                className="btn-outline flex-1 py-2 text-center text-xs">
-                                                💬 Abrir Deal Room
+                                                className="btn-accent flex-1 py-2.5 text-center text-[10px] font-black uppercase tracking-tighter">
+                                                💬 ABRIR DEAL ROOM
                                             </Link>
                                             <Link href={`/artist/profile/${p.artistId}`}
-                                                className="rounded-xl border px-3 py-2 text-xs text-beet-muted hover:text-white transition-colors"
-                                                style={{ borderColor: 'var(--color-border)' }}>
-                                                👤
+                                                className="rounded-xl border border-white/10 bg-white/5 flex items-center justify-center px-4 hover:bg-white/10 transition-colors">
+                                                <span className="text-xs">👤</span>
                                             </Link>
                                         </div>
                                     </motion.div>

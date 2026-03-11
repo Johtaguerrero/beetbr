@@ -302,6 +302,8 @@ export interface CollabPost {
     interestCount: number;
     chatCount: number;
     coverUrl?: string;
+    targetArtistId?: string;
+    targetArtist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl'>;
     deadline?: string;
     createdAt: string;
 }

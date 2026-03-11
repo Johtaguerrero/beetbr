@@ -34,28 +34,23 @@ const TC = 22; // tab icon size
 // ── Navigation config ─────────────────────────────────────────
 const ARTIST_NAV = [
     { label: 'Feed', href: '/artist/feed', icon: <Zap size={IC} strokeWidth={2} /> },
-    { label: 'Rankings', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
-    { label: 'Publicar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
-    { label: 'Negociações', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
-    { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} /> },
-    { divider: true },
+    { label: 'Explorar', href: '/marketplace', icon: <Search size={IC} strokeWidth={2} /> }, // Usando marketplace como explorar inicial
+    { label: 'Postar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
+    { collabTabs: true },
     { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
-    { label: 'Vender', href: '/artist/marketplace', icon: <Gem size={IC} strokeWidth={2} /> },
-    { collabTabs: true },  // ← inline tab group for Colaborações / Minhas Colabs
-    { label: 'Configurações', href: '/settings', icon: <Settings size={IC} strokeWidth={2} /> },
+    { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
+    { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
+    { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} /> },
 ];
 
 const INDUSTRY_NAV = [
     { label: 'Dashboard', href: '/industry/dashboard', icon: <LayoutDashboard size={IC} strokeWidth={2} /> },
-    { label: 'Descobrir', href: '/industry/discover', icon: <Search size={IC} strokeWidth={2} /> },
-    { label: 'Nova Proposta', href: '/industry/proposals/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
-    { label: 'Negociações', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
-    { label: 'Rankings', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
-    { label: 'Meu Perfil', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} /> },
-    { divider: true },
-    { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
-    { label: 'Colaborações', href: '/collabs', icon: <Repeat2 size={IC} strokeWidth={2} /> },
-    { label: 'Configurações', href: '/settings', icon: <Settings size={IC} strokeWidth={2} /> },
+    { label: 'Descobrir Artistas', href: '/industry/discover', icon: <Search size={IC} strokeWidth={2} /> },
+    { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
+    { label: 'Shortlist', href: '/industry/deals?tab=shortlist', icon: <Star size={IC} strokeWidth={2} /> },
+    { label: 'Propostas', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
+    { label: 'Mensagens', href: '/industry/messages', icon: <MessageSquare size={IC} strokeWidth={2} /> },
+    { label: 'Perfil da Empresa', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} /> },
 ];
 
 // ── Collab Tab Group (artist sidebar) ────────────────────────

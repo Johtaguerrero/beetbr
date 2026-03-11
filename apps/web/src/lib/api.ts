@@ -172,6 +172,13 @@ class ApiClient {
         remove: (artistId: string) => this.delete(`/shortlist/${artistId}`),
     };
 
+    // ── Social (Follows) ────────────────────────────────────────
+    social = {
+        follow: (userId: string) => this.post(`/social/follow/${userId}`),
+        unfollow: (userId: string) => this.delete(`/social/follow/${userId}`),
+        isFollowing: (userId: string) => this.get(`/social/is-following/${userId}`),
+    };
+
     // ── Contracts ───────────────────────────────────────────────
     contracts = {
         get: (proposalId: string) => this.get(`/contracts/${proposalId}`),

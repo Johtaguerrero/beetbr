@@ -80,24 +80,32 @@ export default function DealRoom() {
 
     const handleAccept = async () => {
         setActLoading(true);
-        await new Promise((r) => setTimeout(r, 600));
-        acceptProposal(proposalId);
-        setActLoading(false);
+        try {
+            await acceptProposal(proposalId);
+        } finally {
+            setActLoading(false);
+        }
     };
 
     const handleReject = async () => {
         if (!confirm('Recusar esta proposta?')) return;
         setActLoading(true);
-        await new Promise((r) => setTimeout(r, 600));
-        rejectProposal(proposalId);
-        setActLoading(false);
+        try {
+            await rejectProposal(proposalId);
+        } finally {
+            setActLoading(false);
+        }
     };
 
     const handleUploadContract = async () => {
         setUploading(true);
-        await new Promise((r) => setTimeout(r, 1200));
-        uploadContract(proposalId, `Contrato_v${proposal.contractVersions.length + 1}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
-        setUploading(false);
+        try {
+            // In a real scenario, this would be a file picker + api.upload
+            // For now, keeping the store action call but removing the artificial delay
+            await uploadContract(proposalId, `Contrato_v${proposal.contractVersions.length + 1}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (

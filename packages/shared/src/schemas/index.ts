@@ -121,6 +121,7 @@ export const CreateCollabPostSchema = z.object({
     location: z.string().optional(),
     remote: z.boolean().default(false),
     compensation: z.enum(['PAID', 'REV_SHARE', 'FREE', 'NEGOTIABLE']),
+    targetArtistId: z.string().uuid().optional().nullable(),
 });
 export type CreateCollabPostInput = z.infer<typeof CreateCollabPostSchema>;
 

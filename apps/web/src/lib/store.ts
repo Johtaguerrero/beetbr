@@ -308,6 +308,7 @@ interface BeetrStore {
     proposals: Proposal[];
     shortlist: string[];
     likedPosts: Set<string>;
+    followings: string[];
 
     listings: Listing[];
     savedListings: string[];
@@ -370,6 +371,9 @@ interface BeetrStore {
     addNotification: (notif: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void;
     markNotificationAsRead: (id: string) => void;
     clearAllNotifications: () => void;
+
+    toggleFollow: (userId: string) => Promise<void>;
+    isFollowing: (userId: string) => boolean;
 }
 
 export const useStore = create<BeetrStore>()(
@@ -399,6 +403,7 @@ export const useStore = create<BeetrStore>()(
             listings: MOCK_LISTINGS,
             savedListings: [],
             marketplaceChats: [],
+            followings: [],
             myListings: [],
             collabPosts: MOCK_COLLAB_POSTS,
             collabInterests: [],
@@ -408,13 +413,13 @@ export const useStore = create<BeetrStore>()(
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
                 // Limpa perfis antigos para evitar misturar estados
-                set({ 
-                    currentUser: user, 
-                    artistProfile: profile, 
-                    industryProfile: null, 
-                    isAuthenticated: true, 
-                    accessToken, 
-                    refreshToken 
+                set({
+                    currentUser: user,
+                    artistProfile: profile,
+                    industryProfile: null,
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
                 });
                 get().addToast({ message: `Bem-vindo, ${profile.stageName}!`, type: 'success' });
             },
@@ -423,13 +428,13 @@ export const useStore = create<BeetrStore>()(
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
                 // Limpa perfis antigos para evitar misturar estados
-                set({ 
-                    currentUser: user, 
-                    industryProfile: profile, 
-                    artistProfile: null, 
-                    isAuthenticated: true, 
-                    accessToken, 
-                    refreshToken 
+                set({
+                    currentUser: user,
+                    industryProfile: profile,
+                    artistProfile: null,
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
                 });
                 get().addToast({ message: `Bem-vindo, ${profile.companyName}!`, type: 'success' });
             },
@@ -437,17 +442,17 @@ export const useStore = create<BeetrStore>()(
             loginWithGoogle: async (idToken, role) => {
                 const res: any = await api.auth.google({ idToken, role });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                
+
                 // Limpa perfis antigos para evitar misturar estados
-                set({ 
+                set({
                     currentUser: user,
                     artistProfile: user.role === 'ARTIST' ? profile : null,
                     industryProfile: user.role === 'INDUSTRY' ? profile : null,
-                    isAuthenticated: true, 
-                    accessToken, 
-                    refreshToken 
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
                 });
-                
+
                 const name = profile?.stageName || profile?.companyName || user.email;
                 get().addToast({ message: `Bem-vindo, ${name}!`, type: 'success' });
             },
@@ -455,13 +460,13 @@ export const useStore = create<BeetrStore>()(
             registerArtist: async (data) => {
                 const res: any = await api.auth.register({ ...data, role: 'ARTIST' });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ 
-                    currentUser: user, 
-                    artistProfile: profile, 
-                    industryProfile: null, 
-                    isAuthenticated: true, 
-                    accessToken, 
-                    refreshToken 
+                set({
+                    currentUser: user,
+                    artistProfile: profile,
+                    industryProfile: null,
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
                 });
                 get().addToast({ message: 'Conta criada!', type: 'success' });
             },
@@ -469,13 +474,13 @@ export const useStore = create<BeetrStore>()(
             registerIndustry: async (data) => {
                 const res: any = await api.auth.register({ ...data, role: 'INDUSTRY' });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ 
-                    currentUser: user, 
-                    industryProfile: profile, 
-                    artistProfile: null, 
-                    isAuthenticated: true, 
-                    accessToken, 
-                    refreshToken 
+                set({
+                    currentUser: user,
+                    industryProfile: profile,
+                    artistProfile: null,
+                    isAuthenticated: true,
+                    accessToken,
+                    refreshToken
                 });
                 get().addToast({ message: 'Empresa registrada!', type: 'success' });
             },
@@ -678,39 +683,49 @@ export const useStore = create<BeetrStore>()(
                 }));
             },
 
-            acceptProposal: (proposalId) => {
-                const proposal = get().proposals.find(p => p.id === proposalId);
-                const sysMsg: Message = {
-                    id: `msg-sys-${Date.now()}`,
-                    proposalId,
-                    senderUserId: 'system',
-                    senderId: 'system',
-                    senderName: 'Sistema',
-                    senderRole: 'ARTIST' as any,
-                    message: '✅ Proposta aceita.',
-                    systemMessage: true,
-                    isSystem: true,
-                    createdAt: new Date().toISOString()
-                };
-                set((s) => ({
-                    proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'ACCEPTED', messages: [...((p as any).messages || []), sysMsg] } : p)
-                }));
-                get().addToast({ message: 'Proposta aceita!', type: 'success' });
-                if (proposal) {
-                    get().addNotification({ title: 'Proposta Aceita!', message: `O artista ${(proposal as any).artistName} aceitou sua proposta.`, type: 'deal', link: `/deals/${proposalId}` });
+            acceptProposal: async (proposalId) => {
+                try {
+                    await api.proposals.accept(proposalId);
+                    const proposal = get().proposals.find(p => p.id === proposalId);
+                    set((s) => ({
+                        proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'ACCEPTED' as any } : p)
+                    }));
+                    get().addToast({ message: 'Proposta aceita!', type: 'success' });
+                    if (proposal) {
+                        get().addNotification({
+                            title: 'Proposta Aceita!',
+                            message: `O artista ${(proposal as any).artistName || 'Artista'} aceitou sua proposta.`,
+                            type: 'deal',
+                            link: `/deals/${proposalId}`
+                        });
+                    }
+                } catch (error: any) {
+                    get().addToast({ message: error.message, type: 'error' });
                 }
             },
 
-            rejectProposal: (proposalId) => {
-                set((s) => ({
-                    proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'REJECTED' } : p)
-                }));
+            rejectProposal: async (proposalId) => {
+                try {
+                    await api.proposals.reject(proposalId);
+                    set((s) => ({
+                        proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'REJECTED' as any } : p)
+                    }));
+                    get().addToast({ message: 'Proposta recusada.', type: 'info' });
+                } catch (error: any) {
+                    get().addToast({ message: error.message, type: 'error' });
+                }
             },
 
-            cancelProposal: (proposalId) => {
-                set((s) => ({
-                    proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'CANCELLED' } : p)
-                }));
+            cancelProposal: async (proposalId) => {
+                try {
+                    await api.proposals.cancel(proposalId);
+                    set((s) => ({
+                        proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, status: 'CANCELLED' as any } : p)
+                    }));
+                    get().addToast({ message: 'Proposta cancelada.', type: 'info' });
+                } catch (error: any) {
+                    get().addToast({ message: error.message, type: 'error' });
+                }
             },
 
             uploadContract: (proposalId, fileName) => {
@@ -846,6 +861,27 @@ export const useStore = create<BeetrStore>()(
                 set((s) => ({ collabPosts: s.collabPosts.map((p) => p.id === id ? { ...p, status } : p) }));
             },
 
+            clearAllNotifications: () => set({ notifications: [] }),
+
+            toggleFollow: async (userId) => {
+                const { followings } = get();
+                const following = followings.includes(userId);
+                try {
+                    if (following) {
+                        await api.social.unfollow(userId);
+                        set({ followings: followings.filter(id => id !== userId) });
+                    } else {
+                        await api.social.follow(userId);
+                        set({ followings: [...followings, userId] });
+                    }
+                } catch (error: any) {
+                    // Silently fail or toast if critical
+                    console.error('Follow error:', error);
+                }
+            },
+
+            isFollowing: (userId) => get().followings.includes(userId),
+
             addToast: (toast) => {
                 const id = `toast-${Date.now()}`;
                 set((s) => ({ toasts: [...s.toasts, { ...toast, id }] }));
@@ -860,7 +896,6 @@ export const useStore = create<BeetrStore>()(
             },
 
             markNotificationAsRead: (id) => set((s) => ({ notifications: s.notifications.map((n) => n.id === id ? { ...n, read: true } : n) })),
-            clearAllNotifications: () => set({ notifications: [] }),
         }),
         {
             name: 'beatbr-store-v2',

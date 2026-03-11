@@ -11,6 +11,7 @@ collaborationsRouter.get('/', async (req, res) => {
         where: { status: 'ACTIVE' },
         include: {
             author: { select: { stageName: true, avatarUrl: true, genres: true } },
+            targetArtist: { select: { stageName: true, avatarUrl: true } },
             _count: { select: { interests: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -36,6 +37,7 @@ collaborationsRouter.post('/', authenticate, async (req: AuthRequest, res: Respo
         data: {
             ...validated.data,
             authorId: profile.id,
+            targetArtistId: validated.data.targetArtistId,
             type: validated.data.type as any,
             compensation: validated.data.compensation as any,
         },

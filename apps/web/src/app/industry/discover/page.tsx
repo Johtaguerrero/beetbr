@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ArtistProfile } from '@/lib/store';
 import { Avatar, ScoreBeetBadge, GenrePill, EmptyState } from '@/components/ui';
+import { api } from '@/lib/api';
 
 const GENRES = ['Funk', 'Trap', 'R&B', 'Pop', 'Sertanejo', 'Forró', 'Gospel', 'Rock', 'Eletrônico', 'Indie', 'MPB'];
 const STATES = ['SP', 'RJ', 'MG', 'BA', 'CE', 'RS', 'PR', 'PE', 'GO', 'DF'];
@@ -23,39 +24,47 @@ function ArtistCard({ artist }: { artist: ArtistProfile }) {
     };
 
     return (
-        <motion.div className="beet-card overflow-hidden" whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 400 }}
-            style={{ borderTop: '2px solid rgba(0,255,136,0.3)' }}
+        <motion.div className="beet-card overflow-hidden group" whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 400 }}
+            style={{ borderTop: '2px solid rgba(0,255,136,0.2)' }}
         >
-            {/* Cover banner */}
-            <div className="relative h-24 flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, rgba(0,255,102,0.07) 0%, #101010 100%)' }}>
-                <span style={{ fontSize: '2.5rem' }}>🎤</span>
-                <button onClick={handleShortlist}
-                    className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center shadow-lg transition-all hover:scale-110"
-                    style={{ borderRadius: '2px', background: inShortlist ? 'rgba(255,212,0,0.15)' : 'rgba(0,0,0,0.6)', border: `1px solid ${inShortlist ? '#FFD400' : 'var(--color-border)'}` }}>
-                    {inShortlist ? '⭐' : '☆'}
-                </button>
-            </div>
-            <div style={{ padding: '14px 14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <div>
-                        <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 800, color: 'white', letterSpacing: '-0.01em', lineHeight: 1.15 }}>{artist.stageName}</p>
-                        <p className="meta-text" style={{ marginTop: 4 }}>📍 {artist.city}, {artist.state}</p>
+            <Link href={`/artist/profile/${artist.id}`}>
+                <div className="relative h-24 overflow-hidden bg-beet-dark">
+                    {artist.coverUrl ? (
+                        <img src={api.getMediaUrl(artist.coverUrl)} className="h-full w-full object-cover transition-transform group-hover:scale-105" alt={artist.stageName} />
+                    ) : (
+                        <div className="h-full w-full bg-gradient-to-br from-beet-dark to-beet-card" />
+                    )}
+                    <div className="absolute inset-0 bg-black/20" />
+                    <button onClick={handleShortlist}
+                        className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-90"
+                        style={{ borderRadius: '8px', background: inShortlist ? 'rgba(255,212,0,0.15)' : 'rgba(0,0,0,0.4)', border: `1px solid ${inShortlist ? 'var(--color-yellow)' : 'rgba(255,255,255,0.1)'}`, backdropFilter: 'blur(4px)' }}>
+                        {inShortlist ? '⭐' : '☆'}
+                    </button>
+                    <div className="absolute -bottom-6 left-3">
+                        <Avatar name={artist.stageName} imageUrl={artist.avatarUrl} size="md" emoji="🎤" />
                     </div>
-                    <ScoreBeetBadge score={artist.scoreBeet} />
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-                    {artist.genres.slice(0, 3).map((g) => <span key={g} className="beet-pill">{g}</span>)}
+                <div style={{ padding: '28px 14px 16px 14px' }}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="min-w-0">
+                            <p className="font-syne text-sm font-black text-white truncate leading-tight">{artist.stageName}</p>
+                            <p className="text-[10px] text-beet-muted mt-0.5">📍 {artist.city}, {artist.state}</p>
+                        </div>
+                        <ScoreBeetBadge score={artist.scoreBeet} size="sm" />
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-3">
+                        {artist.genres.slice(0, 2).map((g) => <span key={g} className="text-[9px] bg-beet-dark px-2 py-0.5 rounded-full text-beet-gray border border-white/5">{g}</span>)}
+                    </div>
+                    <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider mb-4">
+                        <span className="text-beet-muted">▶️ {(artist.playsTotal / 1000).toFixed(0)}K PLAYS</span>
+                        {artist.availableForBooking && <span className="text-beet-accent">● DISPONÍVEL</span>}
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="flex-1 btn-outline text-[9px] py-2 uppercase font-black tracking-tighter">PERFIL</button>
+                        <Link href={`/industry/proposals/new?artistId=${artist.id}&artistName=${encodeURIComponent(artist.stageName)}`} onClick={(e) => e.stopPropagation()} className="flex-1 btn-accent text-[9px] py-2 uppercase font-black tracking-tighter text-center">PROPOSTA</Link>
+                    </div>
                 </div>
-                <div className="meta-text" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <span>🎵 {(artist.playsTotal / 1000).toFixed(0)}K PLAYS</span>
-                    {artist.availableForBooking && <span style={{ color: 'var(--color-accent)' }}>● DISPONÍVEL</span>}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <Link href={`/artist/profile/${artist.id}`} className="btn-outline flex-1 text-center" style={{ padding: '10px 8px', fontSize: '10px' }}>VER PERFIL</Link>
-                    <Link href={`/industry/proposals/new?artistId=${artist.id}&artistName=${encodeURIComponent(artist.stageName)}`} className="btn-accent flex-1 text-center" style={{ padding: '10px 8px', fontSize: '10px' }}>PROPOSTA</Link>
-                </div>
-            </div>
+            </Link>
         </motion.div>
     );
 }
@@ -63,6 +72,7 @@ function ArtistCard({ artist }: { artist: ArtistProfile }) {
 export default function Discover() {
     useAuthGuard('INDUSTRY');
     const { artists } = useStore();
+    const [searchName, setSearchName] = useState('');
     const [searchState, setSearchState] = useState('');
     const [genres, setGenres] = useState<string[]>([]);
     const [minScore, setMinScore] = useState(0);
@@ -70,6 +80,7 @@ export default function Discover() {
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     const filteredArtists = artists.filter((a) => {
+        if (searchName && !a.stageName.toLowerCase().includes(searchName.toLowerCase())) return false;
         if (searchState && a.state !== searchState) return false;
         if (genres.length > 0 && !genres.some((g) => a.genres.includes(g))) return false;
         if (a.scoreBeet < minScore) return false;
@@ -80,9 +91,9 @@ export default function Discover() {
     const toggleGenre = (g: string) =>
         setGenres((p) => (p.includes(g) ? p.filter((x) => x !== g) : [...p, g]));
 
-    const clearFilters = () => { setSearchState(''); setGenres([]); setMinScore(0); setAvailOnly(false); };
+    const clearFilters = () => { setSearchName(''); setSearchState(''); setGenres([]); setMinScore(0); setAvailOnly(false); };
 
-    const hasFilters = searchState || genres.length > 0 || minScore > 0 || availOnly;
+    const hasFilters = searchName || searchState || genres.length > 0 || minScore > 0 || availOnly;
 
     return (
         <>
@@ -93,6 +104,16 @@ export default function Discover() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                         <p className="page-header-sm" style={{ fontSize: '1.3rem' }}>FILTROS</p>
                         {hasFilters && <button onClick={clearFilters} className="meta-text" style={{ color: 'var(--color-accent)', cursor: 'pointer' }}>LIMPAR</button>}
+                    </div>
+
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nome..."
+                            className="beet-input w-full text-xs"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                        />
                     </div>
 
                     <div>

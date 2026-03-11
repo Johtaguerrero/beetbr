@@ -6,11 +6,14 @@ import { DiscoverFiltersSchema, RankingsFiltersSchema } from '@beetbr/shared';
 // ── FEED ──────────────────────────────────────────────────────
 export const feedRouter = Router();
 
-feedRouter.get('/', authenticate, async (req: AuthRequest, res: Response) => {
+feedRouter.get('/', async (req: Request, res: Response) => {
     const page = parseInt(String(req.query.page) || '1');
     const perPage = 20;
 
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
     const posts = await prisma.post.findMany({
+        where: { createdAt: { gte: fortyEightHoursAgo } },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
         take: perPage,
@@ -44,7 +47,7 @@ feedRouter.post('/posts', authenticate, requireRole('ARTIST'), async (req: AuthR
     return res.status(201).json({ success: true, data: post });
 });
 
-feedRouter.get('/stories', authenticate, async (_req: AuthRequest, res: Response) => {
+feedRouter.get('/stories', async (_req: Request, res: Response) => {
     const stories = await prisma.story.findMany({
         where: { expiresAt: { gt: new Date() } },
         orderBy: { createdAt: 'desc' },
