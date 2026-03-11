@@ -528,7 +528,7 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                     >
                         <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.02)' }}>
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-                                <Avatar name="Você" size="sm" />
+                                <Avatar name="Você" imageUrl={artistProfile?.avatarUrl} size="sm" />
                                 <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
                                     <CustomEmojiPicker onSelect={(emoji) => setCommentText(prev => prev + emoji)} />
                                     <input
@@ -565,7 +565,7 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
                                     {comments.map((c, i) => (
                                         <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                            <Avatar name={c.authorName} size="sm" />
+                                            <Avatar name={c.authorName} imageUrl={c.authorName === 'Você' ? artistProfile?.avatarUrl : undefined} size="sm" />
                                             <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '8px', borderTopLeftRadius: 0 }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                                                     <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 13, fontWeight: 700, color: 'white' }}>{c.authorName}</span>
@@ -795,9 +795,9 @@ export default function FeedPage() {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {[
-                                { name: 'MC Vibrante', score: 94, id: 'artist-1' },
-                                { name: 'Ana Lima', score: 87, id: 'artist-2' },
-                                { name: 'Dj Coruja', score: 79, id: 'artist-3' },
+                                { name: 'MC Vibrante', score: 94, id: 'artist-1', image: 'https://images.unsplash.com/photo-1520859050453-58ee97df39ee?w=100&h=100&fit=crop' },
+                                { name: 'Ana Lima', score: 87, id: 'artist-2', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop' },
+                                { name: 'Dj Coruja', score: 79, id: 'artist-3', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
                             ].map((a, i) => (
                                 <Link href={`/artist/profile/${a.id}`} key={a.id}
                                     style={{
@@ -814,7 +814,7 @@ export default function FeedPage() {
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                         <div style={{ position: 'relative' }}>
-                                            <Avatar name={a.name} size="sm" />
+                                            <Avatar name={a.name} imageUrl={a.image} size="sm" />
                                             <span style={{ position: 'absolute', top: -4, left: -8, fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 700, background: 'var(--color-accent)', color: '#000', padding: '1px 4px', borderRadius: '2px' }}>#{i + 1}</span>
                                         </div>
                                         <div>

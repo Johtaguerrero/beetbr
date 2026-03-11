@@ -176,23 +176,20 @@ class ApiClient {
         if (!path) return undefined;
         if (path.startsWith('http')) return path;
 
-        try {
-            const origin = new URL(API_BASE).origin;
-            // If path already starts with /api/, just prepend origin
-            if (path.startsWith('/api/')) {
-                return `${origin}${path}`;
-            }
-            // If path starts with uploads/ (legacy), prepend /api/
-            if (path.startsWith('uploads/') || path.startsWith('/uploads/')) {
-                const cleanPath = path.startsWith('/') ? path : `/${path}`;
-                return `${origin}/api${cleanPath}`;
-            }
-            // Generic fallback
-            return `${origin}/api/${path.startsWith('/') ? path.slice(1) : path}`;
-        } catch (e) {
-            console.error('Invalid API_BASE for URL resolution', e);
-            return path;
+        // Limpa o path para evitar barras duplas e redundâncias
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+        // Se já começa com /api/uploads ou uploads/, padroniza para /api/uploads/
+        if (cleanPath.startsWith('/api/uploads/')) {
+            return cleanPath;
         }
+
+        if (cleanPath.startsWith('/uploads/')) {
+            return `/api${cleanPath}`;
+        }
+
+        // Fallback genérico: se for apenas o nome do arquivo, assume que está em uploads
+        return `/api/uploads/${cleanPath.startsWith('/') ? cleanPath.slice(1) : cleanPath}`;
     }
 }
 

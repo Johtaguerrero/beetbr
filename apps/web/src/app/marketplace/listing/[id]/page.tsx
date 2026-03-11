@@ -217,7 +217,7 @@ export default function ListingDetail() {
                         <div className="beet-card p-5">
                             <p className="section-title mb-3">Sobre o vendedor</p>
                             <div className="flex items-center gap-3 mb-3">
-                                <Avatar name={listing.sellerName} size="md" emoji="🎤" />
+                                <Avatar name={listing.sellerName} imageUrl={listing.sellerAvatarUrl} size="md" emoji="🎤" />
                                 <div>
                                     <div className="flex items-center gap-1">
                                         <p className="font-semibold text-[var(--color-primary-text,white)] text-sm">{listing.sellerName}</p>

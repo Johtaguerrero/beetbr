@@ -33,6 +33,7 @@ export default function ArtistProfilePage() {
     const [artist, setArtist] = useState<ArtistProfile | null>(null);
     const [uploading, setUploading] = useState<{ avatar?: boolean; cover?: boolean }>({});
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [bannerError, setBannerError] = useState(false);
     
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
@@ -113,8 +114,13 @@ export default function ArtistProfilePage() {
                         className={`h-40 rounded-xl bg-beet-dark overflow-hidden group ${isSelf ? 'cursor-pointer' : ''}`}
                         onClick={() => isSelf && coverInputRef.current?.click()}
                     >
-                        {artist.coverUrl ? (
-                            <img src={api.getMediaUrl(artist.coverUrl)} className="w-full h-full object-cover" alt="Banner" />
+                        {artist.coverUrl && !bannerError ? (
+                            <img 
+                                src={api.getMediaUrl(artist.coverUrl)} 
+                                className="w-full h-full object-cover" 
+                                alt="Banner" 
+                                onError={() => setBannerError(true)}
+                            />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 60%), #181818` }} />
                         )}

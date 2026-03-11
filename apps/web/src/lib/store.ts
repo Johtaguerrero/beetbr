@@ -119,6 +119,7 @@ export const MOCK_LISTINGS: Listing[] = [
         id: 'listing-1',
         sellerId: 'artist-1',
         sellerName: 'MC Vibrante',
+        sellerAvatarUrl: 'https://i.pravatar.cc/150?u=artist-1',
         sellerVerified: true,
         sellerScore: 94,
         sellerCity: 'São Paulo',
@@ -406,14 +407,30 @@ export const useStore = create<BeetrStore>()(
             loginAsArtist: async (email, password) => {
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ currentUser: user, artistProfile: profile, isAuthenticated: true, accessToken, refreshToken });
+                // Limpa perfis antigos para evitar misturar estados
+                set({ 
+                    currentUser: user, 
+                    artistProfile: profile, 
+                    industryProfile: null, 
+                    isAuthenticated: true, 
+                    accessToken, 
+                    refreshToken 
+                });
                 get().addToast({ message: `Bem-vindo, ${profile.stageName}!`, type: 'success' });
             },
 
             loginAsIndustry: async (email, password) => {
                 const res: any = await api.auth.login({ email, password });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ currentUser: user, industryProfile: profile, isAuthenticated: true, accessToken, refreshToken });
+                // Limpa perfis antigos para evitar misturar estados
+                set({ 
+                    currentUser: user, 
+                    industryProfile: profile, 
+                    artistProfile: null, 
+                    isAuthenticated: true, 
+                    accessToken, 
+                    refreshToken 
+                });
                 get().addToast({ message: `Bem-vindo, ${profile.companyName}!`, type: 'success' });
             },
 
@@ -438,14 +455,28 @@ export const useStore = create<BeetrStore>()(
             registerArtist: async (data) => {
                 const res: any = await api.auth.register({ ...data, role: 'ARTIST' });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ currentUser: user, artistProfile: profile, isAuthenticated: true, accessToken, refreshToken });
+                set({ 
+                    currentUser: user, 
+                    artistProfile: profile, 
+                    industryProfile: null, 
+                    isAuthenticated: true, 
+                    accessToken, 
+                    refreshToken 
+                });
                 get().addToast({ message: 'Conta criada!', type: 'success' });
             },
 
             registerIndustry: async (data) => {
                 const res: any = await api.auth.register({ ...data, role: 'INDUSTRY' });
                 const { user, accessToken, refreshToken, profile } = res.data;
-                set({ currentUser: user, industryProfile: profile, isAuthenticated: true, accessToken, refreshToken });
+                set({ 
+                    currentUser: user, 
+                    industryProfile: profile, 
+                    artistProfile: null, 
+                    isAuthenticated: true, 
+                    accessToken, 
+                    refreshToken 
+                });
                 get().addToast({ message: 'Empresa registrada!', type: 'success' });
             },
 
@@ -533,7 +564,7 @@ export const useStore = create<BeetrStore>()(
                     const newPost: Post = {
                         id: `post-${Date.now()}`,
                         artistId: artistProfile.id,
-                        artist: { stageName: artistProfile.stageName, avatarUrl: '', scoreBeet: artistProfile.scoreBeet },
+                        artist: { stageName: artistProfile.stageName, avatarUrl: artistProfile.avatarUrl || '', scoreBeet: artistProfile.scoreBeet },
                         type: data.type,
                         text: data.text,
                         hashtags: data.hashtags || [],
@@ -588,7 +619,7 @@ export const useStore = create<BeetrStore>()(
                     const newStory: Story = {
                         id: `story-${Date.now()}`,
                         artistId: artistProfile.id,
-                        artist: { stageName: artistProfile.stageName, avatarUrl: '', scoreBeet: artistProfile.scoreBeet },
+                        artist: { stageName: artistProfile.stageName, avatarUrl: artistProfile.avatarUrl || '', scoreBeet: artistProfile.scoreBeet },
                         mediaUrl: objectUrl,
                         mediaType: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE',
                         expiresAt: new Date(Date.now() + 24 * 3600000).toISOString(),
