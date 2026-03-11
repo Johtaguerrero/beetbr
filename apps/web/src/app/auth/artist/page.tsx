@@ -7,13 +7,15 @@ import { setAuthCookies } from '@/components/shell/AppShell';
 import { Spinner } from '@/components/ui';
 import { Mic2, ArrowRight } from 'lucide-react';
 
+import { GoogleLogin } from '@react-oauth/google';
+
 function ArtistLoginContent() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
-    const { loginAsArtist } = useStore();
+    const { loginAsArtist, loginWithGoogle } = useStore();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,6 +27,20 @@ function ArtistLoginContent() {
             router.push('/artist/feed');
         } catch (err: any) {
             setError(`// ${(err.message || 'ERRO NO ACESSO').toUpperCase()}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        setLoading(true);
+        setError('');
+        try {
+            await loginWithGoogle(credentialResponse.credential, 'ARTIST');
+            setAuthCookies('ARTIST');
+            router.push('/artist/feed');
+        } catch (err: any) {
+            setError(`// ${(err.message || 'ERRO NO LOGIN GOOGLE').toUpperCase()}`);
         } finally {
             setLoading(false);
         }
@@ -88,11 +104,29 @@ function ArtistLoginContent() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn-accent w-full py-4 bg-[#00FF88] text-black hover:shadow-[0_0_20px_rgba(0,255,136,0.4)] transition-all"
+                        className="btn-accent w-full py-4 bg-[#00FF88] text-black hover:shadow-[0_0_20px_rgba(0,255,136,0.4)] transition-all font-bold"
                     >
-                        {loading ? <Spinner size="sm" /> : <span className="flex items-center justify-center gap-2">ENTRAR NO BEATBR <ArrowRight size={16} /></span>}
+                        {loading ? <Spinner size="sm" /> : <span className="flex items-center justify-center gap-2 uppercase">Entrar no BeatBR <ArrowRight size={16} /></span>}
                     </button>
                 </form>
+
+                <div className="my-6 flex items-center gap-2">
+                    <div className="h-[1px] flex-1 bg-white/10" />
+                    <span className="text-[9px] font-mono text-beet-muted uppercase tracking-widest">Ou acesse com</span>
+                    <div className="h-[1px] flex-1 bg-white/10" />
+                </div>
+
+                <div className="flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('// FALHA NA AUTENTICAÇÃO GOOGLE')}
+                        theme="filled_black"
+                        shape="pill"
+                        size="large"
+                        text="continue_with"
+                        width="100%"
+                    />
+                </div>
 
                 <p className="mt-8 text-center text-[10px] font-mono text-beet-muted">
                     NÃO É ARTISTA? <button onClick={() => router.push('/auth/industry')} className="text-[#00FF88] hover:underline font-bold">ACESSO EMPRESA</button>
