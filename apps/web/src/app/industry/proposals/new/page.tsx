@@ -8,7 +8,7 @@ import { Avatar, Spinner, ScoreBeetBadge } from '@/components/ui';
 import {
     ChevronLeft, Send, Calendar, Clock, MapPin,
     Globe, ShieldCheck, Info, Briefcase,
-    CheckCircle2, Search, X
+    CheckCircle2, Search, X, DollarSign
 } from 'lucide-react';
 
 const TYPE_OPTIONS = [
@@ -53,7 +53,7 @@ function NewProposalContent() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!artistId || !amount) {
-            addToast('Preencha os campos obrigatórios', 'error');
+            addToast({ message: 'Preencha os campos obrigatórios', type: 'error' });
             return;
         }
 
@@ -78,10 +78,10 @@ function NewProposalContent() {
                 status: 'SENT',
             });
 
-            addToast('Proposta enviada com sucesso!', 'success');
+            addToast({ message: 'Proposta enviada com sucesso!', type: 'success' });
             router.push(`/deals/${proposalId}`);
         } catch (err) {
-            addToast('Erro ao enviar proposta', 'error');
+            addToast({ message: 'Erro ao enviar proposta', type: 'error' });
         } finally {
             setSending(false);
         }
@@ -194,8 +194,8 @@ function NewProposalContent() {
                                                 key={opt.value}
                                                 onClick={() => setType(opt.value as ProposalType)}
                                                 className={`w-full text-left p-4 rounded-2xl border transition-all group ${type === opt.value
-                                                        ? 'bg-beet-blue/10 border-beet-blue shadow-lg shadow-beet-blue/10'
-                                                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                                                    ? 'bg-beet-blue/10 border-beet-blue shadow-lg shadow-beet-blue/10'
+                                                    : 'bg-white/[0.02] border-white/5 hover:border-white/10'
                                                     }`}
                                             >
                                                 <p className={`font-bold text-sm ${type === opt.value ? 'text-beet-blue' : 'text-white'}`}>{opt.label}</p>

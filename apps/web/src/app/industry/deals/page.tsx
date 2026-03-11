@@ -122,8 +122,8 @@ export default function IndustryDeals() {
                                         key={f.id}
                                         onClick={() => setFilter(f.id)}
                                         className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${filter === f.id
-                                                ? 'bg-beet-blue text-white shadow-lg shadow-beet-blue/20'
-                                                : 'bg-white/5 text-beet-muted hover:bg-white/10'
+                                            ? 'bg-beet-blue text-white shadow-lg shadow-beet-blue/20'
+                                            : 'bg-white/5 text-beet-muted hover:bg-white/10'
                                             }`}
                                     >
                                         {f.label}
@@ -155,9 +155,9 @@ export default function IndustryDeals() {
                                             <div className="flex flex-col md:flex-row p-6 gap-6">
                                                 {/* Artist Info */}
                                                 <div className="flex items-center gap-4 md:border-r border-white/5 md:pr-8 md:min-w-[200px]">
-                                                    <Avatar name={p.artistName} size="lg" emoji="🎤" />
+                                                    <Avatar name={p.artistName || "Artista"} size="lg" emoji="🎤" />
                                                     <div>
-                                                        <h3 className="font-bold text-white group-hover:text-beet-blue transition-colors truncate">{p.artistName}</h3>
+                                                        <h3 className="font-bold text-white group-hover:text-beet-blue transition-colors truncate">{p.artistName || "Artista"}</h3>
                                                         <div className="mt-1">
                                                             <ScoreBeetBadge score={p.artistScore || 0} size="sm" />
                                                         </div>

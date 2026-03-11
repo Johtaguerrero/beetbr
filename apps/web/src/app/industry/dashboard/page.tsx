@@ -131,10 +131,10 @@ export default function IndustryDashboard() {
                             ) : (
                                 myProposals.slice(0, 5).map(p => (
                                     <Link key={p.id} href={`/deals/${p.id}`} className="flex items-center gap-4 p-5 hover:bg-white/[0.03] transition-colors group">
-                                        <Avatar name={p.artistName} size="md" emoji="🎤" />
+                                        <Avatar name={p.artistName || "Artista"} size="md" emoji="🎤" />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className="font-bold text-white text-sm truncate">{p.artistName}</p>
+                                                <p className="font-bold text-white text-sm truncate">{p.artistName || "Artista"}</p>
                                                 <StatusBadge status={p.status} />
                                             </div>
                                             <p className="text-[10px] text-beet-muted uppercase font-black tracking-widest mt-1">
