@@ -74,6 +74,8 @@ marketplaceRouter.post('/', authenticate, async (req: AuthRequest, res: Response
             ...validated.data,
             sellerId: profileId,
             sellerType: role,
+            artistSellerId: role === 'ARTIST' ? profileId : undefined,
+            industrySellerId: role === 'INDUSTRY' ? profileId : undefined,
         },
     });
 
