@@ -107,26 +107,61 @@ export interface IndustryProfile {
     id: string;
     userId: string;
     companyName: string;
+    tradingName?: string;
     type: IndustryType;
-    niches: string[];
+    descriptionShort?: string;
+    descriptionFull?: string;
+    mainNiche: string;
+    complementaryNiches: string[];
     city: string;
     state: string;
+    country: string;
     logoUrl?: string;
     coverUrl?: string;
     website?: string;
+    email?: string;
+    whatsapp?: string;
     instagram?: string;
+    youtubeUrl?: string;
+    linkedin?: string;
+    generalLink?: string;
     verified: boolean;
+    verificationStatus: 'NOT_VERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
     cnpj?: string;
+    legalName?: string;
+    responsibleName?: string;
+    responsibleDocUrl?: string;
+    businessDocUrl?: string;
+
+    // Scouting Preferences
+    scoutingInterests: string[];
+    scoutingGenres: string[];
+    scoutingGoal: string;
+    scoutingTier: string[];
+    scoutingRegion: string;
+
+    // Stats
+    followedArtistsCount: number;
+    proposalsSentCount: number;
+    contractsClosedCount: number;
+
     createdAt: string;
     updatedAt: string;
 }
 
 export type IndustryType =
     | 'LABEL'
+    | 'SELO'
     | 'AGENCY'
+    | 'PRODUCER_MUSICAL'
+    | 'PRODUCER_EXECUTIVE'
+    | 'VENUE'
+    | 'FESTIVAL'
+    | 'MANAGER'
+    | 'CURATOR'
     | 'BRAND'
-    | 'PRODUCER'
-    | 'EVENT'
+    | 'STUDIO'
+    | 'DISTRIBUTOR'
     | 'OTHER';
 
 /** Content post (music / video / lyric) */
@@ -198,29 +233,37 @@ export type ProposalType =
     | 'FEAT'
     | 'MUSIC_VIDEO'
     | 'EVENT'
+    | 'LABEL_CONTRACT'
+    | 'PRODUCER_SERVICE'
+    | 'BRAND_CAMPAIGN'
+    | 'PUBLISHING'
     | 'OTHER';
 
 export interface Proposal {
     id: string;
     industryId: string;
     artistId: string;
-    industry?: Pick<IndustryProfile, 'companyName' | 'logoUrl'>;
+    industry?: Pick<IndustryProfile, 'companyName' | 'logoUrl' | 'verificationStatus'>;
     industryName?: string; // UI legacy field
-    artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl'>;
+    artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
     artistName?: string; // UI legacy field
     artistScore?: number; // UI legacy field
+    title: string;
     type: ProposalType;
     amount: number; // BRL
     date?: string;
     location?: string;
     online: boolean;
     terms?: string;
+    conditions?: string;
+    briefingUrl?: string;
     durationHours?: number;
     responseDeadline?: string;
     status: ProposalStatus;
     contractFileUrl?: string; // initial contract attachment
     messages: ProposalMessage[];
     contractVersions: ContractFileVersion[];
+    internalNotes?: string;
     createdAt: string;
     updatedAt: string;
 }

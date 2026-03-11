@@ -164,6 +164,8 @@ interface BeetrStore {
     stories: Story[];
     proposals: Proposal[];
     shortlist: string[];
+    shortlists: Record<string, string[]>;
+    artistNotes: Record<string, string>;
     likedPosts: Set<string>;
     followings: string[];
 
@@ -190,6 +192,9 @@ interface BeetrStore {
 
     updateArtistProfile: (data: Partial<ArtistProfile>) => Promise<void>;
     updateIndustryProfile: (data: Partial<IndustryProfile>) => Promise<void>;
+    submitIndustryVerification: (data: Partial<IndustryProfile>) => Promise<void>;
+    updateIndustryScouting: (data: Partial<IndustryProfile>) => Promise<void>;
+
     togglePostLike: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
@@ -199,6 +204,10 @@ interface BeetrStore {
 
     toggleShortlist: (artistId: string) => void;
     isInShortlist: (artistId: string) => boolean;
+    createShortlist: (name: string) => void;
+    addArtistToShortlist: (listName: string, artistId: string) => void;
+    removeArtistFromShortlist: (listName: string, artistId: string) => void;
+    setArtistNote: (artistId: string, note: string) => void;
 
     createProposal: (data: any) => string;
     sendMessage: (proposalId: string, message: string) => void;
@@ -253,6 +262,8 @@ export const useStore = create<BeetrStore>()(
             stories: MOCK_STORIES,
             proposals: INITIAL_PROPOSALS,
             shortlist: [],
+            shortlists: { 'Interesse': [], 'Shortlist': [], 'Contratados': [] },
+            artistNotes: {},
             likedPosts: new Set(),
             toasts: [],
             notifications: [],
@@ -359,6 +370,22 @@ export const useStore = create<BeetrStore>()(
                     industryProfile: state.industryProfile ? { ...state.industryProfile, ...data } : null
                 }));
                 get().addToast({ message: 'Perfil da empresa atualizado!', type: 'success' });
+            },
+
+            submitIndustryVerification: async (data: any) => {
+                await api.industry.updateMe({ ...data, verificationStatus: 'PENDING' });
+                set((state) => ({
+                    industryProfile: state.industryProfile ? { ...state.industryProfile, ...data, verificationStatus: 'PENDING' } : null
+                }));
+                get().addToast({ message: 'Documentos enviados para análise!', type: 'success' });
+            },
+
+            updateIndustryScouting: async (data: any) => {
+                await api.industry.updateMe(data);
+                set((state) => ({
+                    industryProfile: state.industryProfile ? { ...state.industryProfile, ...data } : null
+                }));
+                get().addToast({ message: 'Preferências de scouting atualizadas!', type: 'success' });
             },
 
             fetchFeed: async (page = 1) => {
@@ -474,6 +501,19 @@ export const useStore = create<BeetrStore>()(
 
             toggleShortlist: (artistId) => set((s) => ({ shortlist: s.shortlist.includes(artistId) ? s.shortlist.filter((id) => id !== artistId) : [...s.shortlist, artistId] })),
             isInShortlist: (artistId) => get().shortlist.includes(artistId),
+
+            createShortlist: (name) => set((s) => ({ shortlists: { ...s.shortlists, [name]: [] } })),
+            addArtistToShortlist: (listName, artistId) => set((s) => {
+                const list = s.shortlists[listName] || [];
+                if (list.includes(artistId)) return s;
+                return { shortlists: { ...s.shortlists, [listName]: [...list, artistId] } };
+            }),
+            removeArtistFromShortlist: (listName, artistId) => set((s) => ({
+                shortlists: { ...s.shortlists, [listName]: (s.shortlists[listName] || []).filter(id => id !== artistId) }
+            })),
+            setArtistNote: (artistId, note) => set((s) => ({
+                artistNotes: { ...s.artistNotes, [artistId]: note }
+            })),
 
             createProposal: (data) => {
                 const id = `proposal-${Date.now()}`;

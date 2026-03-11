@@ -1,41 +1,40 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
-import { useStore, type IndustryProfile } from '@/lib/store';
-import { Avatar, Skeleton, EmptyState } from '@/components/ui';
-import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
+import { useStore } from '@/lib/store';
+import { Skeleton, EmptyState } from '@/components/ui';
+import { IndustryHeader } from '@/components/industry/IndustryHeader';
+import { IndustryEditModal } from '@/components/industry/IndustryEditModal';
 import { api } from '@/lib/api';
+import {
+    Info, Users, Target, FileText,
+    Instagram, Globe, Linkedin, Youtube, MessageCircle, Mail, MapPin
+} from 'lucide-react';
 
 export default function IndustryProfilePage() {
     useAuthGuard();
     const params = useParams<{ id: string }>();
-    const { currentUser, industryProfile: myProfile, updateIndustryProfile } = useStore();
+    const { currentUser, industryProfile: myProfile } = useStore();
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [profile, setProfile] = useState<IndustryProfile | null>(null);
-    const [uploading, setUploading] = useState<{ logo?: boolean; cover?: boolean }>({});
-    
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    
-    const logoInputRef = useRef<HTMLInputElement>(null);
-    const coverInputRef = useRef<HTMLInputElement>(null);
 
-    const isSelf = params.id === 'me' || (currentUser && params.id === currentUser.id) || (myProfile && params.id === myProfile.id);
+    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState<any>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'about' | 'scouting' | 'history'>('about');
+
+    const isSelf = !!(params.id === 'me' || (currentUser && params.id === currentUser.id) || (myProfile && params.id === myProfile.id));
 
     useEffect(() => {
         const fetchProfile = async () => {
             setLoading(true);
             try {
-                if (isSelf || params.id === 'me') {
+                if (isSelf) {
                     setProfile(myProfile);
                 } else {
-                    // Fallback for public profile if id matches current profile id
-                    if (myProfile && params.id === myProfile.id) {
-                        setProfile(myProfile);
-                    }
+                    // In a real app, fetch public profile by ID
+                    // For now, if we can't find it, show empty
                 }
             } catch (err) {
                 console.error('Error fetching industry profile:', err);
@@ -46,124 +45,236 @@ export default function IndustryProfilePage() {
         fetchProfile();
     }, [params.id, isSelf, myProfile]);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'cover') => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setUploading(prev => ({ ...prev, [type]: true }));
-        try {
-            const { url } = await api.upload(file);
-            await updateIndustryProfile({ [type === 'logo' ? 'logoUrl' : 'coverUrl']: url });
-        } catch (err) {
-            console.error(`Error uploading ${type}:`, err);
-            alert(`Erro ao carregar ${type}. Tente novamente.`);
-        } finally {
-            setUploading(prev => ({ ...prev, [type]: false }));
-        }
-    };
-
     if (loading) return (
-        <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-            <Skeleton className="h-48 rounded-xl" />
-            <div className="flex gap-4 items-end -mt-12 ml-6">
-                <Skeleton className="h-24 w-24 rounded-full" />
-                <div className="space-y-2 mb-2">
-                    <Skeleton className="h-6 w-48" />
-                    <Skeleton className="h-4 w-32" />
+        <div className="min-h-screen bg-beet-black">
+            <Skeleton className="h-[350px] w-full" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 space-y-8">
+                <div className="flex gap-6 items-end">
+                    <Skeleton className="h-44 w-44 rounded-3xl" />
+                    <div className="space-y-4 flex-1">
+                        <Skeleton className="h-10 w-1/3" />
+                        <Skeleton className="h-6 w-1/4" />
+                    </div>
                 </div>
+                <Skeleton className="h-64 w-full rounded-3xl" />
             </div>
-            <Skeleton className="h-40 rounded-xl" />
         </div>
     );
 
     if (!profile) return (
-        <EmptyState icon="🏢" title="Perfil não encontrado" 
+        <EmptyState icon="🏢" title="Perfil Corporativo não encontrado"
             action={<button onClick={() => router.back()} className="btn-outline text-sm">Voltar</button>} />
     );
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-6 pb-24 lg:px-6 lg:pb-6">
-            {/* Cover */}
-            <div className="relative mb-6">
-                <div 
-                    className={`h-40 rounded-xl bg-beet-dark overflow-hidden group ${isSelf ? 'cursor-pointer' : ''}`}
-                    onClick={() => isSelf && coverInputRef.current?.click()}
-                >
-                    {profile.coverUrl ? (
-                        <img src={api.getMediaUrl(profile.coverUrl)} className="w-full h-full object-cover" alt="Banner" />
-                    ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-beet-dark to-beet-card" style={{ background: `linear-gradient(135deg, rgba(0,0,255,0.1) 0%, rgba(0,0,0,0) 60%), #121212` }} />
-                    )}
-                    
-                    {isSelf && (
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="bg-black/50 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                {uploading.cover ? 'Carregando...' : '📷 Alterar Banner'}
-                            </span>
-                        </div>
-                    )}
-                </div>
+        <div className="min-h-screen bg-beet-black pb-24 lg:pb-12">
+            <IndustryHeader
+                profile={profile}
+                isSelf={isSelf}
+                onEdit={() => setIsEditModalOpen(true)}
+            />
 
-                <div className="absolute -bottom-8 left-5 group">
-                    <div 
-                        className={`relative ${isSelf ? 'cursor-pointer' : ''}`}
-                        onClick={() => isSelf && logoInputRef.current?.click()}
-                    >
-                        <Avatar name={profile.companyName} imageUrl={profile.logoUrl} size="xl" emoji="🏢" />
-                        {isSelf && (
-                            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-4 border-beet-dark">
-                                <span className="text-[10px] text-white font-bold uppercase tracking-wider">
-                                    {uploading.logo ? '...' : 'Trocar'}
-                                </span>
+            <IndustryEditModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+            />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    {/* Sidebar / Left Column */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Contact & Socials Card */}
+                        <div className="beet-card p-6 border-beet-blue/5">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-beet-blue mb-4">Canais Oficiais</h3>
+                            <div className="space-y-4">
+                                {profile.website && (
+                                    <a href={profile.website} target="_blank" rel="noopener" className="flex items-center gap-3 text-sm text-beet-gray hover:text-white transition-colors group">
+                                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-beet-blue/10 group-hover:text-beet-blue">
+                                            <Globe size={16} />
+                                        </div>
+                                        {profile.website.replace(/^https?:\/\//, '')}
+                                    </a>
+                                )}
+                                {profile.email && (
+                                    <div className="flex items-center gap-3 text-sm text-beet-gray">
+                                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
+                                            <Mail size={16} />
+                                        </div>
+                                        {profile.email}
+                                    </div>
+                                )}
+                                {profile.whatsapp && (
+                                    <div className="flex items-center gap-3 text-sm text-beet-gray">
+                                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center text-green-500">
+                                            <MessageCircle size={16} />
+                                        </div>
+                                        {profile.whatsapp}
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                            <div className="mt-6 pt-6 border-t border-white/5 flex gap-3">
+                                {profile.instagram && (
+                                    <a href={`https://instagram.com/${profile.instagram.replace('@', '')}`} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-beet-blue/10 hover:text-beet-blue transition-all border border-white/5">
+                                        <Instagram size={18} />
+                                    </a>
+                                )}
+                                {profile.youtubeUrl && (
+                                    <a href={profile.youtubeUrl} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-beet-blue/10 hover:text-beet-blue transition-all border border-white/5">
+                                        <Youtube size={18} />
+                                    </a>
+                                )}
+                                {profile.linkedin && (
+                                    <a href={profile.linkedin} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-beet-blue/10 hover:text-beet-blue transition-all border border-white/5">
+                                        <Linkedin size={18} />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Location Details */}
+                        <div className="beet-card p-6">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-beet-blue mb-4">Sede Operacional</h3>
+                            <div className="flex items-center gap-3 text-sm text-beet-gray">
+                                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center">
+                                    <MapPin size={20} className="text-beet-blue" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-white">{profile.city || 'Cidade'}</p>
+                                    <p className="text-[10px] uppercase tracking-widest">{profile.state || 'UF'}, Brasil</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content / Right Column */}
+                    <div className="lg:col-span-8 space-y-8">
+                        {/* Tabs */}
+                        <div className="flex gap-4 border-b border-white/5">
+                            {[
+                                { id: 'about', label: 'Sobre', icon: <Info size={14} /> },
+                                { id: 'scouting', label: 'Scouting', icon: <Target size={14} /> },
+                                { id: 'history', label: 'Histórico', icon: <FileText size={14} /> }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`pb-4 px-2 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all relative ${activeTab === tab.id ? 'text-beet-blue' : 'text-beet-muted hover:text-white'
+                                        }`}
+                                >
+                                    {tab.icon}
+                                    {tab.label}
+                                    {activeTab === tab.id && (
+                                        <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-beet-blue" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                {activeTab === 'about' && (
+                                    <div className="space-y-6">
+                                        <div className="beet-card p-8 bg-gradient-to-br from-beet-card to-beet-black/40">
+                                            <h2 className="text-xl font-display font-black text-white mb-4">Perfil Institucional</h2>
+                                            <p className="text-beet-gray leading-relaxed whitespace-pre-wrap">
+                                                {profile.descriptionFull || profile.descriptionShort || 'Nenhuma descrição fornecida até o momento.'}
+                                            </p>
+
+                                            <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6">
+                                                <div>
+                                                    <p className="text-[10px] text-beet-muted font-black uppercase tracking-widest mb-1">Nicho Principal</p>
+                                                    <span className="text-sm font-bold text-white">{profile.mainNiche || 'N/A'}</span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-beet-muted font-black uppercase tracking-widest mb-1">Tipo</p>
+                                                    <span className="text-sm font-bold text-white uppercase">{profile.type}</span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-beet-muted font-black uppercase tracking-widest mb-1">Status</p>
+                                                    <span className={`text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter ${profile.verificationStatus === 'VERIFIED' ? 'bg-green-500/20 text-green-500' : 'bg-beet-muted/20 text-beet-muted'
+                                                        }`}>
+                                                        {profile.verificationStatus === 'VERIFIED' ? 'Verificada' : 'Aguardando'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Complementary Niches */}
+                                        <div className="space-y-3">
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-beet-muted">Áreas de Atuação</h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(profile.complementaryNiches || ['Distribuição', 'Agenciamento', 'Booking']).map((n: string) => (
+                                                    <span key={n} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-beet-gray">
+                                                        {n}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'scouting' && (
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="beet-card p-6 bg-beet-blue/5 border-beet-blue/10">
+                                                <div className="h-10 w-10 rounded-xl bg-beet-blue/10 flex items-center justify-center text-beet-blue mb-4">
+                                                    <Target size={20} />
+                                                </div>
+                                                <h3 className="font-display font-black text-white text-lg">Objetivo de Scouting</h3>
+                                                <p className="text-sm text-beet-gray mt-2 leading-relaxed">
+                                                    {profile.scoutingGoal || 'Buscando novos talentos para o mercado nacional.'}
+                                                </p>
+                                            </div>
+                                            <div className="beet-card p-6 bg-white/5 border-white/10">
+                                                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center text-white mb-4">
+                                                    <Users size={20} />
+                                                </div>
+                                                <h3 className="font-display font-black text-white text-lg">Perfis Buscados</h3>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    {(profile.scoutingInterests || ['Cantores', 'MC', 'DJs']).map((i: string) => (
+                                                        <span key={i} className="text-[10px] font-black bg-white/5 px-2 py-1 rounded-md border border-white/10 text-beet-muted uppercase tracking-wider">{i}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="beet-card p-6">
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-beet-blue mb-4">Gêneros de Interesse</h3>
+                                            <div className="flex flex-wrap gap-4">
+                                                {(profile.scoutingGenres || ['Trap', 'Pop', 'Hip Hop']).map((g: string) => (
+                                                    <div key={g} className="flex flex-col gap-1">
+                                                        <span className="text-sm font-bold text-white">{g}</span>
+                                                        <div className="h-1 w-12 bg-beet-blue rounded-full" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'history' && (
+                                    <div className="beet-card p-12 text-center flex flex-col items-center justify-center">
+                                        <div className="h-20 w-20 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-4 opacity-50 grayscale">
+                                            📜
+                                        </div>
+                                        <h3 className="font-bold text-white">Memória Institucional</h3>
+                                        <p className="text-sm text-beet-muted mt-2 max-w-sm">
+                                            O histórico de parcerias, propostas e negociações concluídas será exibido aqui conforme sua atividade na plataforma crescer.
+                                        </p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </div>
-
-                {isSelf && (
-                    <>
-                        <div className="hidden">
-                            <input type="file" ref={logoInputRef} onChange={(e) => handleFileChange(e, 'logo')} accept="image/*" />
-                            <input type="file" ref={coverInputRef} onChange={(e) => handleFileChange(e, 'cover')} accept="image/*" />
-                        </div>
-                        <button 
-                            onClick={() => setIsEditModalOpen(true)}
-                            className="absolute right-4 top-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white hover:bg-black/70 transition-colors backdrop-blur-md border border-white/10"
-                        >
-                            ✏️ Editar perfil
-                        </button>
-                    </>
-                )}
-            </div>
-
-            <ProfileEditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} />
-
-            {/* Info */}
-            <div className="mb-5 pl-1 pt-9">
-                <div className="flex items-start justify-between flex-wrap gap-3">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="font-display text-2xl font-black text-white">{profile.companyName}</h1>
-                            <span className="beet-pill text-[10px] bg-beet-blue/20 text-beet-blue border-beet-blue/30 uppercase tracking-tighter">{profile.type}</span>
-                        </div>
-                        <p className="mt-0.5 text-sm text-beet-muted">📍 {profile.city || 'Cidade não informada'}, {profile.state}</p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                            {(profile.niches || []).map((n) => <span key={n} className="beet-pill text-xs">{n}</span>)}
-                        </div>
-                    </div>
-                </div>
-                {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="mt-3 block text-sm text-beet-blue hover:underline">
-                        🔗 {profile.website.replace(/^https?:\/\//, '')}
-                    </a>
-                )}
-            </div>
-
-            <div className="beet-card p-6">
-                <p className="section-title mb-4">Sobre a Empresa</p>
-                <p className="text-sm text-beet-gray leading-relaxed">
-                    Esta é uma conta de Indústria no BeatBR. Empresas e profissionais podem descobrir talentos, enviar propostas e gerenciar contratos.
-                </p>
             </div>
         </div>
     );
