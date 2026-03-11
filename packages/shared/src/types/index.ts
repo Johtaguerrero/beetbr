@@ -37,7 +37,30 @@ export interface ArtistProfile {
     followersCount: number;
     playsTotal: number;
     metrics: Metrics;
+
+    // Novos campos BeeatBR
+    realName?: string;
+    pronouns?: string;
+    birthDate?: string;
+    bioFull?: string;
+    subGenres: string[];
+    complementaryStyles: string[];
+    roles: string[];
+    professionalQuestions?: any;
+    status?: string;
+    mainGoal?: string;
+    availabilityStatus?: string;
+    opportunityTypes: string[];
+    socialProofs?: any;
+    portfolioPdfUrl?: string;
+    portfolioPdfName?: string;
+
     instagram?: string;
+    youtubeUrl?: string;
+    spotifyUrl?: string;
+    tiktokUrl?: string;
+    soundcloudUrl?: string;
+    deezerUrl?: string;
     website?: string;
     createdAt: string;
     updatedAt: string;

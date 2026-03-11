@@ -75,7 +75,14 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
     const artist = await prisma.artistProfile.findUnique({ where: { userId: req.user!.userId } });
     if (!artist) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Perfil não encontrado' } });
 
-    const { stageName, genres, city, state, bio, availableForBooking, contactVisibility, instagram, website, avatarUrl, coverUrl } = req.body;
+    const {
+        stageName, genres, city, state, bio, availableForBooking, contactVisibility,
+        instagram, website, avatarUrl, coverUrl,
+        realName, pronouns, birthDate, bioFull, subGenres, complementaryStyles,
+        roles, professionalQuestions, status, mainGoal, availabilityStatus,
+        opportunityTypes, socialProofs, portfolioPdfUrl, portfolioPdfName,
+        youtubeUrl, spotifyUrl, tiktokUrl, soundcloudUrl, deezerUrl
+    } = req.body;
 
     const updated = await prisma.artistProfile.update({
         where: { id: artist.id },
@@ -91,8 +98,34 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
             ...(website !== undefined && { website }),
             ...(avatarUrl !== undefined && { avatarUrl }),
             ...(coverUrl !== undefined && { coverUrl }),
+
+            // Novos campos
+            ...(realName !== undefined && { realName }),
+            ...(pronouns !== undefined && { pronouns }),
+            ...(birthDate !== undefined && { birthDate: birthDate ? new Date(birthDate) : null }),
+            ...(bioFull !== undefined && { bioFull }),
+            ...(subGenres !== undefined && { subGenres }),
+            ...(complementaryStyles !== undefined && { complementaryStyles }),
+            ...(roles !== undefined && { roles }),
+            ...(professionalQuestions !== undefined && { professionalQuestions }),
+            ...(status !== undefined && { status }),
+            ...(mainGoal !== undefined && { mainGoal }),
+            ...(availabilityStatus !== undefined && { availabilityStatus }),
+            ...(opportunityTypes !== undefined && { opportunityTypes }),
+            ...(socialProofs !== undefined && { socialProofs }),
+            ...(portfolioPdfUrl !== undefined && { portfolioPdfUrl }),
+            ...(portfolioPdfName !== undefined && { portfolioPdfName }),
+            ...(youtubeUrl !== undefined && { youtubeUrl }),
+            ...(spotifyUrl !== undefined && { spotifyUrl }),
+            ...(tiktokUrl !== undefined && { tiktokUrl }),
+            ...(soundcloudUrl !== undefined && { soundcloudUrl }),
+            ...(deezerUrl !== undefined && { deezerUrl }),
         },
     });
+
+    // Recalculate score after update
+    const { refreshArtistScore } = require('../services/beetAI');
+    await refreshArtistScore(updated.id);
 
     return res.json({ success: true, data: updated });
 });

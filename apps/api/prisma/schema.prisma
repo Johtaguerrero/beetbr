@@ -127,7 +127,37 @@ model ArtistProfile {
   availableForBooking Boolean          @default(true)
   contactVisibility  ContactVisibility @default(PROPOSAL_ONLY)
   scoreBeet          Float             @default(0)
+  
+  // Identidade e Social
+  realName           String?
+  pronouns           String?
+  birthDate          DateTime?
+  bioFull            String?           @db.Text
+  
+  // Classificacao
+  subGenres          String[]
+  complementaryStyles String[]
+  roles              String[]          // Ex: Cantor, Beatmaker, etc.
+  
+  // Profissional
+  professionalQuestions Json?          // Respostas estruturadas
+  status             String?           // Status profissional
+  mainGoal           String?           // Objetivo na plataforma
+  availabilityStatus String?           // Disponibilidade atual
+  opportunityTypes   String[]          // Oportunidades desejadas
+  socialProofs       Json?             // Provas sociais (historico)
+  
+  // Portfolio PDF
+  portfolioPdfUrl    String?
+  portfolioPdfName   String?
+
+  // Redes Sociais
   instagram          String?
+  youtubeUrl         String?
+  spotifyUrl         String?
+  tiktokUrl          String?
+  soundcloudUrl      String?
+  deezerUrl          String?
   website            String?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt

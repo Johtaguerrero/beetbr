@@ -176,6 +176,10 @@ export const MOCK_ARTISTS: ArtistProfile[] = [
             breakdown: { growth: 95, engagement: 87, retention: 72, consistency: 89 }
         },
         instagram: '@mcvibrante',
+        subGenres: ['Funk Mandelão', 'Trap Ostentação'],
+        complementaryStyles: ['Phonk', 'Drill'],
+        roles: ['Cantor', 'Compositor'],
+        opportunityTypes: ['Shows', 'Collabs'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
@@ -489,9 +493,9 @@ export const useStore = create<BeetrStore>()(
             setAccessToken: (token) => set({ accessToken: token }),
 
             updateArtistProfile: async (data: any) => {
-                await api.artists.updateMe(data);
+                const res: any = await api.artists.updateMe(data);
                 set((state) => ({
-                    artistProfile: state.artistProfile ? { ...state.artistProfile, ...data } : null
+                    artistProfile: state.artistProfile ? { ...state.artistProfile, ...res.data } : null
                 }));
                 get().addToast({ message: 'Perfil atualizado!', type: 'success' });
             },
