@@ -506,9 +506,12 @@ export const useStore = create<BeetrStore>()(
 
                     set((s) => ({ posts: [enrichedPost, ...s.posts] }));
 
-                    // If target includes story, also create one
-                    if ((publishTarget === 'STORY' || publishTarget === 'FEED_AND_STORY') && file) {
-                        try { await get().createStory(file); } catch { /* story creation is best-effort */ }
+                    // If target includes story, also create one. 
+                    // Support creating from the newly uploaded mediaUrl if no file is present
+                    if (publishTarget === 'STORY' || publishTarget === 'FEED_AND_STORY') {
+                        try { 
+                            await get().createStory(file || mediaUrl); 
+                        } catch { /* story creation is best-effort */ }
                     }
 
                     get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
@@ -520,7 +523,7 @@ export const useStore = create<BeetrStore>()(
                 }
             },
 
-            createStory: async (file) => {
+            createStory: async (fileOrUrl) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return;
 
@@ -530,11 +533,26 @@ export const useStore = create<BeetrStore>()(
                 }
 
                 try {
-                    const uploadRes = await api.upload(file);
+                    let mediaUrl = '';
+                    let mediaType: 'IMAGE' | 'VIDEO' | 'AUDIO' = 'IMAGE';
+
+                    if (typeof fileOrUrl === 'string') {
+                        mediaUrl = fileOrUrl;
+                        // Guess media type from URL extension if possible
+                        if (mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'AUDIO';
+                        else if (mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'VIDEO';
+                    } else if (fileOrUrl instanceof File) {
+                        const uploadRes = await api.upload(fileOrUrl);
+                        mediaUrl = uploadRes.url;
+                        mediaType = fileOrUrl.type.startsWith('video') ? 'VIDEO' : fileOrUrl.type.startsWith('audio') ? 'AUDIO' : 'IMAGE';
+                    } else {
+                        return;
+                    }
+
                     const res: any = await api.feed.createStory({
-                        mediaUrl: uploadRes.url,
+                        mediaUrl,
                         artistId: artistProfile.id,
-                        mediaType: file.type.startsWith('video') ? 'VIDEO' : file.type.startsWith('audio') ? 'AUDIO' : 'IMAGE'
+                        mediaType
                     });
                     set((s) => ({ stories: [res.data, ...s.stories] }));
                     get().addToast({ message: 'Story publicado!', type: 'success' });
@@ -748,11 +766,17 @@ export const useStore = create<BeetrStore>()(
             },
 
             createListing: async (data: any) => {
-                const { currentUser } = get();
+                const { currentUser, accessToken } = get();
                 if (!currentUser) return false;
+
+                // Debug log for token issues reported by user
+                if (!accessToken) {
+                    console.error('[Marketplace] createListing blocked: accessToken is missing from state');
+                    get().addToast({ message: 'Sessão inválida. Por favor, saia e entre novamente.', type: 'error' });
+                    return false;
+                }
+
                 try {
-                    // If there are raw files in images, we should upload them
-                    // But for now the form handles uploads (or simulations)
                     const res: any = await api.marketplace.create({ 
                         ...data, 
                         sellerId: currentUser.id 
@@ -762,7 +786,7 @@ export const useStore = create<BeetrStore>()(
                         set((s) => ({ 
                             listings: [res.data, ...s.listings] 
                         }));
-                        // We also need to update the local artist profile score if it's an artist
+                        
                         if (currentUser.role === 'ARTIST' && get().artistProfile) {
                             set(s => ({
                                 artistProfile: s.artistProfile ? {
@@ -772,14 +796,14 @@ export const useStore = create<BeetrStore>()(
                             }));
                         }
 
-                        // Automatically create a post for the marketplace
+                        // Use the target selected by the user in the form
                         try {
                             await get().createPost({
                                 type: 'MARKETPLACE' as any,
                                 text: data.title,
                                 listingId: res.data.id,
                                 mediaUrl: data.images && data.images.length > 0 ? data.images[0] : undefined,
-                                publishTarget: 'FEED'
+                                publishTarget: data.announcementTarget || 'FEED'
                             });
                         } catch (e) {
                             console.error('Failed to create marketplace post announcement:', e);

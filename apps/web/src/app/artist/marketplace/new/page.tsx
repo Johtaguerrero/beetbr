@@ -7,7 +7,7 @@ import {
     Plus, ArrowRight, ArrowLeft, Check, Camera, 
     Music, Video, MapPin, Tag, Briefcase, 
     Clock, RefreshCw, Shield, Eye, Globe,
-    Users, Building, ShieldCheck
+    Users, Building, ShieldCheck, Zap, Radio, PlusCircle
 } from 'lucide-react';
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
 import { useAuthGuard, Avatar } from '@/components/shell/AppShell';
@@ -45,6 +45,13 @@ export default function NewListingPage() {
         audioUrl: '',
         videoUrl: '',
         thumbUrl: '',
+        announcementTarget: 'FEED_AND_STORY' as 'FEED' | 'STORY' | 'FEED_AND_STORY',
+    });
+
+    const [isUploading, setIsUploading] = useState({
+        images: false,
+        audio: false,
+        video: false
     });
 
     if (!ready) return null;
@@ -85,6 +92,7 @@ export default function NewListingPage() {
         if (!file) return;
 
         try {
+            setIsUploading(prev => ({ ...prev, [type]: true }));
             addToast({ message: `Fazendo upload de ${file.name}...`, type: 'info' });
             const { url } = await api.upload(file);
 
@@ -98,6 +106,8 @@ export default function NewListingPage() {
             addToast({ message: `${type === 'images' ? 'Imagem' : type === 'audio' ? 'Áudio' : 'Vídeo'} carregado com sucesso!`, type: 'success' });
         } catch (error: any) {
             addToast({ message: error.message || 'Erro no upload', type: 'error' });
+        } finally {
+            setIsUploading(prev => ({ ...prev, [type]: false }));
         }
     };
 
@@ -323,28 +333,32 @@ export default function NewListingPage() {
                                                 </button>
                                             </div>
                                         ))}
-                                         <label className="w-24 h-24 rounded border-2 border-dashed border-white/10 hover:border-accent flex flex-col items-center justify-center gap-2 text-beet-muted hover:text-accent transition-all bg-white/5 cursor-pointer">
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload('images', e)} />
-                                            <Camera size={24} />
-                                            <span className="text-[8px] font-black uppercase">ADICIONAR</span>
+                                         <label className={`w-24 h-24 rounded border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${isUploading.images ? 'bg-accent/20 border-accent text-accent' : 'border-white/10 text-beet-muted hover:border-accent hover:text-accent bg-white/5'}`}>
+                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload('images', e)} disabled={isUploading.images} />
+                                            {isUploading.images ? <Spinner size="sm" /> : <Camera size={24} />}
+                                            <span className="text-[8px] font-black uppercase">{isUploading.images ? 'SUBINDO...' : 'ADICIONAR'}</span>
                                          </label>
                                     </div>
+                                    <p className="mt-4 text-[10px] font-mono text-beet-muted uppercase tracking-widest">
+                                        <span className="text-accent font-black">Recomendado:</span> 1080x1080px (Quadrado)
+                                    </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-4">
-                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${formData.audioUrl ? 'bg-accent/10 border-accent text-accent' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
-                                            <input type="file" className="hidden" accept="audio/*" onChange={(e) => handleFileUpload('audio', e)} />
-                                            <Music size={20} />
-                                            <span className="text-xs font-bold">{formData.audioUrl ? 'ÁUDIO CARREGADO' : 'SUBIR MP3'}</span>
+                                     <div className="space-y-4">
+                                        <label className="section-label">Amostra de Áudio</label>
+                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${isUploading.audio ? 'bg-accent/20 border-accent text-accent' : formData.audioUrl ? 'bg-accent/10 border-accent text-accent' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
+                                            <input type="file" className="hidden" accept="audio/*" onChange={(e) => handleFileUpload('audio', e)} disabled={isUploading.audio} />
+                                            {isUploading.audio ? <Spinner size="sm" /> : <Music size={20} />}
+                                            <span className="text-xs font-bold">{isUploading.audio ? 'SUBINDO MP3...' : formData.audioUrl ? 'ÁUDIO CARREGADO' : 'SUBIR MP3'}</span>
                                         </label>
                                     </div>
                                     <div className="space-y-4">
                                         <label className="section-label">Amostra de Vídeo</label>
-                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${formData.videoUrl ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
-                                            <input type="file" className="hidden" accept="video/*" onChange={(e) => handleFileUpload('video', e)} />
-                                            <Video size={20} />
-                                            <span className="text-xs font-bold">{formData.videoUrl ? 'VÍDEO CARREGADO' : 'SUBIR VÍDEO'}</span>
+                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${isUploading.video ? 'bg-blue-500/20 border-blue-500 text-blue-400' : formData.videoUrl ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
+                                            <input type="file" className="hidden" accept="video/*" onChange={(e) => handleFileUpload('video', e)} disabled={isUploading.video} />
+                                            {isUploading.video ? <Spinner size="sm" /> : <Video size={20} />}
+                                            <span className="text-xs font-bold">{isUploading.video ? 'SUBINDO VÍDEO...' : formData.videoUrl ? 'VÍDEO CARREGADO' : 'SUBIR VÍDEO'}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -360,7 +374,6 @@ export default function NewListingPage() {
                                 className="space-y-10"
                             >
                                 <div className="bg-white/5 p-6 border border-white/5 rounded">
-                                    <label className="section-label mb-6">Visibilidade do Anúncio</label>
                                     <div className="space-y-3">
                                         {[
                                             { id: 'PUBLIC', label: 'Público Geral', desc: 'Visível para todos na plataforma', icon: <Globe size={18} /> },
@@ -378,6 +391,26 @@ export default function NewListingPage() {
                                                     <p className="text-[10px] text-beet-muted">{v.desc}</p>
                                                 </div>
                                                 {formData.visibility === v.id && <div className="h-4 w-4 rounded-full bg-accent flex items-center justify-center"><Check size={10} color="#000" strokeWidth={4} /></div>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/5 p-6 border border-white/5 rounded">
+                                    <label className="section-label mb-6">Onde anunciar a novidade?</label>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[
+                                            { id: 'FEED', label: 'APENAS FEED', icon: <Zap size={16} /> },
+                                            { id: 'STORY', label: 'APENAS STORY', icon: <Radio size={16} /> },
+                                            { id: 'FEED_AND_STORY', label: 'FEED + STORY', icon: <PlusCircle size={16} /> },
+                                        ].map((t) => (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => setFormData({ ...formData, announcementTarget: t.id as any })}
+                                                className={`flex flex-col items-center justify-center gap-2 p-4 border rounded transition-all ${formData.announcementTarget === t.id ? 'bg-accent/10 border-accent text-accent' : 'bg-transparent border-white/10 opacity-60 text-beet-muted hover:opacity-100'}`}
+                                            >
+                                                {t.icon}
+                                                <p className="font-black text-[9px] tracking-widest text-center">{t.label}</p>
                                             </button>
                                         ))}
                                     </div>
