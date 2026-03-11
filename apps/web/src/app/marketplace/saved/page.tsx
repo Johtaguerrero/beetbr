@@ -72,7 +72,7 @@ export default function SavedListings() {
                                             <div className="flex-shrink-0 text-right">
                                                 <p className="font-black text-[var(--color-primary-text,white)] text-sm">
                                                     R$ {listing.price.toLocaleString('pt-BR')}
-                                                    {listing.priceType === 'negotiable' && '+'}
+                                                    {listing.priceType === 'NEGOTIABLE' && '+'}
                                                 </p>
                                                 <div className="flex gap-1 mt-1">
                                                     <Link href={`/marketplace/listing/${listing.id}`}

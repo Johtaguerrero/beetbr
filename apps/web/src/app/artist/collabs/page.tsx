@@ -92,7 +92,7 @@ export default function ArtistCollabsPage() {
                                         <MyPostCard
                                             key={post.id}
                                             post={post}
-                                            onToggleStatus={() => updateCollabStatus(post.id, (post.status as string) === 'ACTIVE' || (post.status as string) === 'active' ? 'PAUSED' : 'ACTIVE')}
+                                            onToggleStatus={() => updateCollabStatus(post.id, (post.status as string).toUpperCase() === 'ACTIVE' ? 'PAUSED' : 'ACTIVE')}
                                         />
                                     ))
                                 ) : (

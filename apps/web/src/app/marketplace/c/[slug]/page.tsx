@@ -48,7 +48,7 @@ function ListingRow({ listing, saved, onSave }: { listing: Listing; saved: boole
             </div>
 
             <div className="flex-shrink-0 text-right">
-                {listing.priceType === 'fixed' ? (
+                {listing.priceType === 'FIXED' ? (
                     <p className="font-black text-[var(--color-primary-text,white)]">R${listing.price.toLocaleString('pt-BR')}</p>
                 ) : (
                     <>

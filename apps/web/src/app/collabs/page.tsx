@@ -33,7 +33,7 @@ export default function CollabsPage() {
             collab.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             collab.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
             collab.authorName.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch && (collab.status === 'ACTIVE' || (collab.status as string) === 'active');
+        return matchesFilter && matchesSearch && collab.status === 'ACTIVE';
     });
 
     return (
