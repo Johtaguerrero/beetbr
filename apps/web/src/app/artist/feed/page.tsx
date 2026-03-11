@@ -1090,6 +1090,10 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                             onClick={e => e.stopPropagation()}
                         />
+                    ) : story.mediaType === 'AUDIO' ? (
+                        <div style={{ width: '90%', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}>
+                            <TrackPlayer url={story.mediaUrl} title="Audio Story" />
+                        </div>
                     ) : (
                         <img src={story.mediaUrl} alt="Story"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}

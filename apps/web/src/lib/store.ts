@@ -533,7 +533,7 @@ export const useStore = create<BeetrStore>()(
                     const res: any = await api.feed.createStory({
                         mediaUrl: uploadRes.url,
                         artistId: artistProfile.id,
-                        mediaType: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE'
+                        mediaType: file.type.startsWith('video') ? 'VIDEO' : file.type.startsWith('audio') ? 'AUDIO' : 'IMAGE'
                     });
                     set((s) => ({ stories: [res.data, ...s.stories] }));
                     get().addToast({ message: 'Story publicado!', type: 'success' });
