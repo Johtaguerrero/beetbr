@@ -171,7 +171,7 @@ export default function SellerPanel() {
                                             <p className="text-xl font-black text-beet-green tracking-tighter">
                                                 R$ {listing.price.toLocaleString()}
                                                 <span className="text-[11px] text-beet-muted font-medium ml-1">
-                                                    {listing.priceType === 'fixed' ? 'FIXO' : 'A COMBINAR'}
+                                                    {listing.priceType === 'FIXED' ? 'FIXO' : 'A COMBINAR'}
                                                 </span>
                                             </p>
                                             <div className="flex gap-3 text-beet-muted">
