@@ -174,7 +174,7 @@ class ApiClient {
     };
     getMediaUrl(path: string | null | undefined): string | undefined {
         if (!path) return undefined;
-        if (path.startsWith('http')) return path;
+        if (path.startsWith('http') || path.startsWith('blob:')) return path;
 
         // Limpa o path para evitar barras duplas e redundâncias
         const cleanPath = path.startsWith('/') ? path : `/${path}`;

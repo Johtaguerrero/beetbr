@@ -48,6 +48,7 @@ enum PostType {
   VIDEO
   LYRIC
   AUDIO
+  IMAGE
 }
 
 enum ProposalType {
