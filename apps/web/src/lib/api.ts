@@ -62,16 +62,43 @@ class ApiClient {
         const formData = new FormData();
         formData.append('file', file);
 
-        const { accessToken } = useStore.getState();
-        const headers: HeadersInit = {
-            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        const sendRequest = async (token?: string | null) => {
+            const headers: HeadersInit = {
+                ...(token && { Authorization: `Bearer ${token}` }),
+            };
+            return fetch(`${API_BASE}/uploads`, {
+                method: 'POST',
+                headers,
+                body: formData,
+            });
         };
 
-        const res = await fetch(`${API_BASE}/uploads`, {
-            method: 'POST',
-            headers,
-            body: formData,
-        });
+        const { accessToken } = useStore.getState();
+        let res = await sendRequest(accessToken);
+
+        // Token expired — try refresh
+        if (res.status === 401) {
+            const { refreshToken, setAccessToken, logout } = useStore.getState();
+            if (refreshToken) {
+                const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken }),
+                });
+
+                if (refreshRes.ok) {
+                    const data = await refreshRes.json();
+                    const newToken = data.data.accessToken;
+                    setAccessToken(newToken);
+                    // Retry upload with new token
+                    res = await sendRequest(newToken);
+                } else {
+                    logout();
+                    window.location.href = '/auth';
+                    throw new Error('Sessão expirada');
+                }
+            }
+        }
 
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));

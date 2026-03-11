@@ -39,11 +39,15 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
                 </div>
 
                 {/* Seller */}
-                <div className="flex items-center gap-2">
+                <Link
+                    href={`/artist/profile/${listing.sellerId}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-2 group/seller no-underline"
+                >
                     <Avatar name={listing.sellerName} imageUrl={listing.sellerAvatarUrl} size="sm" />
                     <div>
                         <div className="flex items-center gap-1">
-                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: 700 }} className="text-[var(--color-primary-text,white)]">{listing.sellerName}</span>
+                            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: 700 }} className="text-[var(--color-primary-text,white)] group-hover/seller:text-[var(--color-accent)] transition-colors">{listing.sellerName}</span>
                             {listing.sellerVerified && <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', color: 'var(--color-blue)', fontWeight: 700 }}>✓</span>}
                         </div>
                         <div className="flex items-center gap-1">
@@ -51,7 +55,7 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
                             <span className="brutalist-meta-text">{listing.sellerCity || 'Brasil'}</span>
                         </div>
                     </div>
-                </div>
+                </Link>
 
                 {/* Rating + delivery */}
                 <div className="flex items-center gap-2" style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
