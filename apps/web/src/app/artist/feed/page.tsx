@@ -321,7 +321,7 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
 function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) {
-    const { togglePostLike } = useStore();
+    const { togglePostLike, artistProfile } = useStore();
     const [liked, setLiked] = useState(post.liked);
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
