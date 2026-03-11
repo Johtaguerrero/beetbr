@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Modal, Spinner, SectionTitle } from '@/components/ui';
 import { Save, User, Music, MapPin, Briefcase, Share2, FileText, ChevronRight, ChevronLeft, Upload, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { PROFESSIONAL_QUESTIONS_LABELS, QUESTION_VALUE_LABELS } from '@/app/artist/profile/[id]/page';
+import { PROFESSIONAL_QUESTIONS_LABELS, QUESTION_VALUE_LABELS } from '@/app/artist/profile/[id]/constants';
 
 interface ProfileEditModalProps {
     isOpen: boolean;
@@ -69,7 +69,7 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
         setPdfFile(file);
         setPdfUploading(true);
         try {
-            const result = await api.uploadMedia(file, 'portfolio');
+            const result = await api.upload(file);
             if (result.url) {
                 setFormData((prev: any) => ({ ...prev, portfolioPdfUrl: result.url }));
             }

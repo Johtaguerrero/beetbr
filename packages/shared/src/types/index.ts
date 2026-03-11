@@ -54,6 +54,7 @@ export interface ArtistProfile {
     socialProofs?: SocialProof;
     portfolioPdfUrl?: string;
     portfolioPdfName?: string;
+    ranking?: string;
 
     instagram?: string;
     youtubeUrl?: string;
@@ -167,6 +168,8 @@ export interface Metrics {
     weeklyGrowth: number; // percentage change
     retention: number; // percentage (0–100)
     consistency: number; // 0–100 based on posting frequency
+    viralIndex?: number;
+    reach?: number;
     updatedAt: string;
     // BeetAI breakdown
     scoreBeet: number;
