@@ -920,6 +920,8 @@ export const useStore = create<BeetrStore>()(
                 artistProfile: s.artistProfile,
                 industryProfile: s.industryProfile,
                 isAuthenticated: s.isAuthenticated,
+                accessToken: s.accessToken,
+                refreshToken: s.refreshToken,
                 shortlist: s.shortlist,
                 proposals: s.proposals,
                 posts: s.posts,
