@@ -10,7 +10,9 @@ import {
     Users, Building, ShieldCheck
 } from 'lucide-react';
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
-import { AppShell, useAuthGuard, Avatar } from '@/components/shell/AppShell';
+import { useAuthGuard, Avatar } from '@/components/shell/AppShell';
+import { api } from '@/lib/api';
+import { Spinner } from '@/components/ui';
 
 const STEPS = [
     { id: 1, title: 'Categoria', label: 'Escolha o que você está oferecendo' },
@@ -78,21 +80,29 @@ export default function NewListingPage() {
         }
     };
 
-    const handleFileUpload = (type: 'images' | 'audio' | 'video') => {
-        // Mock upload for now - in reality this would hit an API and return a URL
-        const url = `https://picsum.photos/seed/${Math.random()}/800/600`;
-        if (type === 'images') {
-            setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
-        } else if (type === 'audio') {
-            setFormData(prev => ({ ...prev, audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }));
-        } else if (type === 'video') {
-            setFormData(prev => ({ ...prev, videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }));
+    const handleFileUpload = async (type: 'images' | 'audio' | 'video', e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            addToast({ message: `Fazendo upload de ${file.name}...`, type: 'info' });
+            const { url } = await api.upload(file);
+
+            if (type === 'images') {
+                setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
+            } else if (type === 'audio') {
+                setFormData(prev => ({ ...prev, audioUrl: url }));
+            } else if (type === 'video') {
+                setFormData(prev => ({ ...prev, videoUrl: url }));
+            }
+            addToast({ message: `${type === 'images' ? 'Imagem' : type === 'audio' ? 'Áudio' : 'Vídeo'} carregado com sucesso!`, type: 'success' });
+        } catch (error: any) {
+            addToast({ message: error.message || 'Erro no upload', type: 'error' });
         }
-        addToast({ message: `${type} carregado (simulação)`, type: 'success' });
     };
 
     return (
-        <AppShell>
+        <>
             <div className="mx-auto max-w-3xl px-4 py-12 pb-32">
                 {/* Header */}
                 <div className="mb-10">
@@ -313,36 +323,29 @@ export default function NewListingPage() {
                                                 </button>
                                             </div>
                                         ))}
-                                        <button 
-                                            onClick={() => handleFileUpload('images')}
-                                            className="w-24 h-24 rounded border-2 border-dashed border-white/10 hover:border-accent flex flex-col items-center justify-center gap-2 text-beet-muted hover:text-accent transition-all bg-white/5"
-                                        >
+                                         <label className="w-24 h-24 rounded border-2 border-dashed border-white/10 hover:border-accent flex flex-col items-center justify-center gap-2 text-beet-muted hover:text-accent transition-all bg-white/5 cursor-pointer">
+                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload('images', e)} />
                                             <Camera size={24} />
                                             <span className="text-[8px] font-black uppercase">ADICIONAR</span>
-                                        </button>
+                                         </label>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-4">
-                                        <label className="section-label">Amostra de Áudio (MP3)</label>
-                                        <button 
-                                            onClick={() => handleFileUpload('audio')}
-                                            className={`w-full p-4 border rounded flex items-center gap-3 transition-all ${formData.audioUrl ? 'bg-accent/10 border-accent text-accent' : 'bg-white/5 border-white/10 text-beet-muted'}`}
-                                        >
+                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${formData.audioUrl ? 'bg-accent/10 border-accent text-accent' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
+                                            <input type="file" className="hidden" accept="audio/*" onChange={(e) => handleFileUpload('audio', e)} />
                                             <Music size={20} />
                                             <span className="text-xs font-bold">{formData.audioUrl ? 'ÁUDIO CARREGADO' : 'SUBIR MP3'}</span>
-                                        </button>
+                                        </label>
                                     </div>
                                     <div className="space-y-4">
                                         <label className="section-label">Amostra de Vídeo</label>
-                                        <button 
-                                            onClick={() => handleFileUpload('video')}
-                                            className={`w-full p-4 border rounded flex items-center gap-3 transition-all ${formData.videoUrl ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-beet-muted'}`}
-                                        >
+                                        <label className={`w-full p-4 border rounded flex items-center gap-3 transition-all cursor-pointer ${formData.videoUrl ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-beet-muted'}`}>
+                                            <input type="file" className="hidden" accept="video/*" onChange={(e) => handleFileUpload('video', e)} />
                                             <Video size={20} />
                                             <span className="text-xs font-bold">{formData.videoUrl ? 'VÍDEO CARREGADO' : 'SUBIR VÍDEO'}</span>
-                                        </button>
+                                        </label>
                                     </div>
                                 </div>
                             </motion.div>
@@ -447,6 +450,6 @@ export default function NewListingPage() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </>
     );
 }

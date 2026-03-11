@@ -35,7 +35,7 @@ const TC = 22; // tab icon size
 const ARTIST_NAV = [
     { label: 'Feed', href: '/artist/feed', icon: <Zap size={IC} strokeWidth={2} /> },
     { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
-    { label: 'Postar', id: 'post-menu', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
+    { label: 'Postar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
     { collabTabs: true },
     { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
     { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
@@ -503,7 +503,7 @@ function TabBar({
         : [
             { label: 'Feed', href: '/artist/feed', icon: <Zap size={TC} strokeWidth={1.75} /> },
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
-            { label: 'Post', id: 'post-menu', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
+            { label: 'Post', href: '/artist/post/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Repeat2 size={TC} strokeWidth={1.75} /> },
             { label: 'Perfil', href: '/artist/profile/me', icon: <User size={TC} strokeWidth={1.75} /> },
         ];

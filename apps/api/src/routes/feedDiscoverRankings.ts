@@ -10,10 +10,7 @@ feedRouter.get('/', async (req: Request, res: Response) => {
     const page = parseInt(String(req.query.page) || '1');
     const perPage = 20;
 
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-
     const posts = await prisma.post.findMany({
-        where: { createdAt: { gte: fortyEightHoursAgo } },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
         take: perPage,
