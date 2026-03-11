@@ -23,6 +23,7 @@ const TC: Record<string, { label: string; color: string }> = {
     VIDEO: { label: 'VIDEO', color: '#7000FF' },
     IMAGE: { label: 'IMAGE', color: '#FF8800' },
     LYRIC: { label: 'LYRIC', color: '#00E5FF' },
+    MARKETPLACE: { label: 'MARKET', color: '#FF3B5C' },
 };
 
 const POST_TYPES = [
@@ -554,6 +555,27 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                     <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }}>
                         <TrackPlayer ref={mediaRef as any} url={post.mediaUrl} title="Faixa" />
                     </div>
+                )}
+
+                {post.type === 'MARKETPLACE' && post.listingId && (
+                    <Link href={`/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
+                        <div className="beet-card p-4 flex items-center gap-4 transition-all hover:border-[var(--color-accent)] group/market">
+                            <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20 border border-[var(--color-nav-border)]">
+                                {post.mediaUrl ? (
+                                    <img src={api.getMediaUrl(post.mediaUrl)} alt="Marketplace" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-beet-red mb-1">Novo Anúncio no Marketplace</p>
+                                <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate group-hover/market:text-beet-red transition-colors">{post.text || 'Anúncio sem título'}</h4>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-xs font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase tracking-tighter">Ver detalhes ›</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
                 )}
 
                 {post.hashtags.length > 0 && (

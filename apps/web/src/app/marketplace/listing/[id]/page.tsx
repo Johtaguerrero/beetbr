@@ -26,18 +26,29 @@ function AntiFraudBanner() {
 
 // ── Waveform Demo ─────────────────────────────────────────────
 
-function DemoPlayer({ title }: { title: string }) {
+function DemoPlayer({ url, title, type }: { url: string; title: string; type: 'audio' | 'video' }) {
     const [playing, setPlaying] = useState(false);
+    if (type === 'video') {
+        return (
+            <div className="beet-card overflow-hidden">
+                <video src={url} controls className="w-full aspect-video bg-black" />
+            </div>
+        );
+    }
     const BARS = 28;
     return (
         <div className="beet-card p-4 flex items-center gap-3">
-            <button onClick={() => setPlaying(!playing)}
+            <audio id="demo-audio" src={url} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+            <button onClick={() => {
+                const a = document.getElementById('demo-audio') as HTMLAudioElement;
+                if (a.paused) a.play(); else a.pause();
+            }}
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-base transition-transform active:scale-90"
                 style={{ background: playing ? 'var(--color-accent)' : 'var(--color-accent-dim)', color: playing ? 'var(--color-bg)' : 'var(--color-accent)' }}>
                 {playing ? '⏸' : '▶'}
             </button>
             <div className="flex-1">
-                <p className="text-xs font-semibold text-[var(--color-primary-text,white)] mb-1">Demo — {title}</p>
+                <p className="text-xs font-semibold text-[var(--color-primary-text,white)] mb-1">Amostra — {title}</p>
                 <div className="flex items-end gap-[2px] h-6">
                     {Array.from({ length: BARS }).map((_, i) => (
                         <div key={i} className="waveform-bar rounded-sm flex-1"
@@ -45,7 +56,6 @@ function DemoPlayer({ title }: { title: string }) {
                     ))}
                 </div>
             </div>
-            <span className="text-[10px] text-beet-muted flex-shrink-0">0:30</span>
         </div>
     );
 }
@@ -125,10 +135,17 @@ export default function ListingDetail() {
                         </div>
 
                         {/* Demo player (if has sample) */}
-                        {listing.hasSample && (
+                        {listing.audioUrl && (
                             <div>
-                                <p className="section-title mb-2">Amostra demo</p>
-                                <DemoPlayer title={listing.title} />
+                                <p className="section-title mb-2">Amostra de Áudio</p>
+                                <DemoPlayer title={listing.title} url={listing.audioUrl} type="audio" />
+                            </div>
+                        )}
+
+                        {listing.videoUrl && (
+                            <div>
+                                <p className="section-title mb-2">Amostra de Vídeo</p>
+                                <DemoPlayer title={listing.title} url={listing.videoUrl} type="video" />
                             </div>
                         )}
 
@@ -188,12 +205,17 @@ export default function ListingDetail() {
                         {/* Price card */}
                         <div className="beet-card p-5 lg:sticky lg:top-6 space-y-4">
                             <div>
-                                {listing.priceType === 'fixed' ? (
+                                {listing.priceType === 'FIXED' ? (
                                     <p className="font-black text-[var(--color-primary-text,white)] text-2xl">R$ {listing.price.toLocaleString('pt-BR')}</p>
-                                ) : (
+                                ) : listing.priceType === 'NEGOTIABLE' ? (
                                     <div>
                                         <p className="font-black text-[var(--color-primary-text,white)] text-2xl">R$ {listing.price.toLocaleString('pt-BR')}+</p>
-                                        <p className="text-xs text-beet-muted">valor a combinar</p>
+                                        <p className="text-xs text-beet-muted uppercase tracking-widest font-bold">valor negociável</p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="font-black text-[var(--color-primary-text,white)] text-xl uppercase tracking-tighter">SOB CONSULTA</p>
+                                        <p className="text-xs text-beet-muted font-mono mt-1">Negocie direto no chat</p>
                                     </div>
                                 )}
                             </div>

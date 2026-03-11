@@ -175,7 +175,8 @@ export interface Post {
     id: string;
     artistId: string;
     artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
-    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE';
+    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE' | 'MARKETPLACE';
+    listingId?: string;
 
     // ── Lifecycle & Visibility ───────────────────────────
     status: PostStatus;
@@ -354,13 +355,13 @@ export interface AuditLog {
 export type ListingStatus = 'ACTIVE' | 'PAUSED' | 'SOLD' | 'EXPIRED' | 'DELETED' | 'CLOSED';
 
 export type MarketplaceCategory =
-    | 'INSTRUMENT'
-    | 'EQUIPMENT'
-    | 'SERVICE'
-    | 'STUDIO_TIME'
-    | 'TICKET'
-    | 'MERCH'
-    | 'OTHER'
+    | 'beats'
+    | 'mixagem'
+    | 'composicao'
+    | 'videoclipe'
+    | 'design'
+    | 'assessoria'
+    | 'outros'
     | string;
 
 export interface Listing {
@@ -375,12 +376,16 @@ export interface Listing {
     title: string;
     description: string;
     price: number;
-    priceType?: 'fixed' | 'negotiable' | string;
+    priceType: 'FIXED' | 'NEGOTIABLE' | 'CONSULT';
     category: MarketplaceCategory;
     condition: 'NEW' | 'USED_LIKE_NEW' | 'USED_GOOD' | 'USED_FAIR' | string;
     location: string;
     images: string[];
+    audioUrl?: string;
+    videoUrl?: string;
+    thumbUrl?: string;
     status: ListingStatus;
+    visibility: 'PUBLIC' | 'ARTISTS_ONLY' | 'INDUSTRY_ONLY';
     views: number;
     chats: number;
     saves: number;
@@ -389,6 +394,7 @@ export interface Listing {
     deliveryDays?: number;
     deliveryMethod?: string;
     revisions?: number;
+    licenseType?: string;
     requiresBriefing?: boolean;
     hasSample?: boolean;
     tags: string[];

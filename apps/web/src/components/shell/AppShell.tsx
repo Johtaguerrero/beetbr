@@ -11,7 +11,7 @@ import {
     BarChart2, Users, Briefcase, Music, Star, Package,
     Sparkles, MessageSquare, Lock, Radio, Mic2, Heart,
     Share2, Play, Send, Check, AlertCircle, Info, Sun, Moon,
-    ChevronLeft
+    ChevronLeft, SquarePen
 } from 'lucide-react';
 import { useStore, type Notification } from '@/lib/store';
 import { ScoreBeetBadge, Avatar, Spinner } from '@/components/ui';
@@ -34,10 +34,9 @@ const TC = 22; // tab icon size
 // ── Navigation config ─────────────────────────────────────────
 const ARTIST_NAV = [
     { label: 'Feed', href: '/artist/feed', icon: <Zap size={IC} strokeWidth={2} /> },
-    { label: 'Explorar', href: '/marketplace', icon: <Search size={IC} strokeWidth={2} /> }, // Usando marketplace como explorar inicial
-    { label: 'Postar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
-    { collabTabs: true },
     { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
+    { label: 'Postar', id: 'post-menu', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
+    { collabTabs: true },
     { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
     { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
     { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} /> },
@@ -238,8 +237,63 @@ function NotificationPanel({ open, onClose }: { open: boolean; onClose: () => vo
     );
 }
 
+// ── Post Menu Popover ─────────────────────────────────────────
+function PostMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+    if (!open) return null;
+
+    const options = [
+        { label: 'Publicar Post', href: '/artist/feed', icon: <SquarePen size={18} />, desc: 'Solte um som, foto ou texto' },
+        { label: 'Criar Collab', href: '/collabs/new', icon: <Repeat2 size={18} />, desc: 'Chame alguém pro som' },
+        { label: 'Anunciar no Marketplace', href: '/artist/marketplace/new', icon: <ShoppingBag size={18} />, desc: 'Venda seus serviços' },
+    ];
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 lg:items-start lg:justify-start lg:p-0 lg:absolute lg:left-[270px] lg:top-[120px]">
+            <motion.div 
+                initial={{ opacity: 0 }} opacity-0
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm lg:hidden"
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                className="relative w-full max-w-xs overflow-hidden rounded-2xl border bg-black shadow-2xl lg:w-64"
+                style={{ 
+                    borderColor: 'var(--color-nav-border)',
+                    boxShadow: '0 24px 64px rgba(0,0,0,0.8), 0 0 40px var(--color-accent-dim)' 
+                }}
+            >
+                <div className="p-2">
+                    <p className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-beet-muted">O que vamos postar hoje?</p>
+                    <div className="space-y-1">
+                        {options.map((opt) => (
+                            <Link key={opt.href} href={opt.href} onClick={onClose} className="group flex items-center gap-3 rounded-xl p-3 transition-all hover:bg-white/5">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-beet-muted group-hover:bg-accent group-hover:text-black transition-all">
+                                    {opt.icon}
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-white uppercase tracking-wide group-hover:text-accent font-display">{opt.label}</p>
+                                    <p className="text-[10px] text-beet-muted opacity-60 leading-tight">{opt.desc}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
 // ── Sidebar (desktop) ─────────────────────────────────────────
-function Sidebar() {
+function Sidebar({ 
+    postMenuOpen, 
+    setPostMenuOpen 
+}: { 
+    postMenuOpen: boolean; 
+    setPostMenuOpen: (o: boolean) => void 
+}) {
     const pathname = usePathname();
     const { currentUser, artistProfile, industryProfile, logout, notifications, theme, toggleTheme, sidebarExpanded, toggleSidebar, showNotifications, toggleNotifications } = useStore();
     const router = useRouter();
@@ -247,6 +301,7 @@ function Sidebar() {
     const nav = isIndustry ? INDUSTRY_NAV : ARTIST_NAV;
     const displayName = artistProfile?.stageName || industryProfile?.companyName || currentUser?.email || 'Usuário';
     const unreadCount = notifications.filter(n => !n.read).length;
+
 
     const handleLogout = () => {
         logout();
@@ -329,6 +384,38 @@ function Sidebar() {
                     // ── Collab inline tab group ──
                     if (item.collabTabs) return <CollabTabGroup key="collab-tabs" pathname={pathname} sidebarExpanded={sidebarExpanded} />;
 
+                    if (item.id === 'post-menu') {
+                        return (
+                            <div key="post-menu-container" className="relative">
+                                <button 
+                                    onClick={() => setPostMenuOpen(!postMenuOpen)}
+                                    title={!sidebarExpanded ? item.label : undefined}
+                                    className="w-full text-left"
+                                >
+                                    <motion.span
+                                        whileHover={{ x: sidebarExpanded ? 3 : 0, scale: sidebarExpanded ? 1 : 1.05 }}
+                                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                        className={`sidebar-link flex items-center ${sidebarExpanded ? 'gap-3 px-3' : 'justify-center px-0 py-3 mb-1'} ${postMenuOpen ? 'active' : ''} ${item.highlight ? 'sidebar-link-highlight' : ''}`}
+                                        style={{ borderRadius: sidebarExpanded ? '8px' : '12px' }}
+                                    >
+                                        <span className={`flex-shrink-0 flex items-center justify-center ${sidebarExpanded ? 'w-4 h-4' : 'w-6 h-6'}`}>
+                                            <div style={{ transform: sidebarExpanded ? 'scale(1)' : 'scale(1.2)' }}>
+                                                {item.icon}
+                                            </div>
+                                        </span>
+                                        {sidebarExpanded && <span className="truncate">{item.label}</span>}
+                                        {postMenuOpen && sidebarExpanded && (
+                                            <motion.span layoutId="sidebar-dot" className="ml-auto h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--color-accent)', boxShadow: '0 0 8px var(--color-accent-glow)' }} />
+                                        )}
+                                    </motion.span>
+                                </button>
+                                <AnimatePresence>
+                                    {postMenuOpen && <PostMenu open={postMenuOpen} onClose={() => setPostMenuOpen(false)} />}
+                                </AnimatePresence>
+                            </div>
+                        );
+                    }
+
                     const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                     return (
                         <Link key={item.href + item.label} href={item.href} title={!sidebarExpanded ? item.label : undefined}>
@@ -394,7 +481,13 @@ function Sidebar() {
 }
 
 // ── Tab bar (mobile) ──────────────────────────────────────────
-function TabBar() {
+function TabBar({ 
+    postMenuOpen, 
+    setPostMenuOpen 
+}: { 
+    postMenuOpen: boolean; 
+    setPostMenuOpen: (o: boolean) => void 
+}) {
     const pathname = usePathname();
     const { currentUser } = useStore();
     const isIndustry = currentUser?.role === 'INDUSTRY';
@@ -403,14 +496,14 @@ function TabBar() {
         ? [
             { label: 'Dash', href: '/industry/dashboard', icon: <LayoutDashboard size={TC} strokeWidth={1.75} /> },
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
-            { label: 'Post', href: '/industry/proposals/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
+            { label: 'Post', id: 'post-menu', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Repeat2 size={TC} strokeWidth={1.75} /> },
             { label: 'Deals', href: '/industry/deals', icon: <Briefcase size={TC} strokeWidth={1.75} /> },
         ]
         : [
             { label: 'Feed', href: '/artist/feed', icon: <Zap size={TC} strokeWidth={1.75} /> },
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
-            { label: 'Post', href: '/artist/post/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
+            { label: 'Post', id: 'post-menu', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Repeat2 size={TC} strokeWidth={1.75} /> },
             { label: 'Perfil', href: '/artist/profile/me', icon: <User size={TC} strokeWidth={1.75} /> },
         ];
@@ -431,6 +524,33 @@ function TabBar() {
 
             {tabs.map((tab: any) => {
                 const active = pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href));
+                if (tab.id === 'post-menu') {
+                    return (
+                        <div key="post-menu-mobile" className="flex-1 flex items-center justify-center py-2">
+                            <motion.button
+                                whileTap={{ scale: 0.85 }}
+                                whileHover={{ scale: 1.05 }}
+                                onClick={() => setPostMenuOpen(!postMenuOpen)}
+                                className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                                style={{
+                                    background: 'var(--color-accent)',
+                                    color: '#000',
+                                    boxShadow: '0 0 20px rgba(0,255,136,0.5), 0 4px 12px rgba(0,0,0,0.4)',
+                                }}
+                            >
+                                {tab.icon}
+                            </motion.button>
+                            <AnimatePresence>
+                                {postMenuOpen && (
+                                    <div className="fixed bottom-24 left-4 right-4 z-[120] lg:hidden">
+                                        <PostMenu open={postMenuOpen} onClose={() => setPostMenuOpen(false)} />
+                                    </div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    );
+                }
+
                 if (tab.special) {
                     return (
                         <Link key={tab.href} href={tab.href} className="flex-1 flex items-center justify-center py-2">
@@ -468,6 +588,7 @@ interface AppShellProps {
 
 export function AppShell({ children, noPadding = false }: AppShellProps) {
     const { currentUser, isAuthenticated, notifications, theme, toggleTheme, showNotifications, toggleNotifications } = useStore();
+    const [postMenuOpen, setPostMenuOpen] = useState(false);
     const isIndustry = currentUser?.role === 'INDUSTRY';
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -547,8 +668,8 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
                 )}
             </AnimatePresence>
 
-            <Sidebar />
-
+            <Sidebar postMenuOpen={postMenuOpen} setPostMenuOpen={setPostMenuOpen} />
+            
             <main className="flex-1 overflow-hidden pt-15 lg:pt-0">
                 <motion.div
                     className={noPadding ? 'h-full' : 'h-full'}
@@ -559,7 +680,7 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
                     {children}
                 </motion.div>
             </main>
-            <TabBar />
+            <TabBar postMenuOpen={postMenuOpen} setPostMenuOpen={setPostMenuOpen} />
             <ToastContainer />
         </div>
     );
@@ -599,5 +720,6 @@ export {
     BarChart2, Users, Briefcase, Music, Star, Package,
     Sparkles, MessageSquare, Lock, Radio, Mic2, Heart,
     Share2, Play, Send, Check, AlertCircle, Info, Sun, Moon,
-    ChevronLeft
+    ChevronLeft,
+    Avatar, ScoreBeetBadge
 };

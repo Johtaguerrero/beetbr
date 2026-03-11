@@ -1,414 +1,452 @@
 'use client';
-import { useState, useRef } from 'react';
+
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthGuard } from '@/components/shell/AppShell';
-import { useStore, MARKETPLACE_CATEGORIES, type Listing, type ListingStatus } from '@/lib/store';
-import { type MarketplaceCategory } from '@beetbr/shared';
-import { api } from '@/lib/api';
+import { 
+    Plus, ArrowRight, ArrowLeft, Check, Camera, 
+    Music, Video, MapPin, Tag, Briefcase, 
+    Clock, RefreshCw, Shield, Eye, Globe,
+    Users, Building, ShieldCheck
+} from 'lucide-react';
+import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
+import { AppShell, useAuthGuard, Avatar } from '@/components/shell/AppShell';
 
-const DELIVERY_METHODS = [
-    { id: 'digital', label: '📁 Arquivo digital', desc: 'Entrega por download' },
-    { id: 'link', label: '🔗 Link / Acesso', desc: 'Entregue via link' },
-    { id: 'online', label: '🎥 Videochamada', desc: 'Sessão ao vivo online' },
-    { id: 'presencial', label: '📍 Presencial', desc: 'Requer presença física' },
+const STEPS = [
+    { id: 1, title: 'Categoria', label: 'Escolha o que você está oferecendo' },
+    { id: 2, title: 'Detalhes', label: 'Título, descrição e localização' },
+    { id: 3, title: 'Negócio', label: 'Preços, entrega e revisões' },
+    { id: 4, title: 'Mídia', label: 'Imagens, áudio e vídeo de exemplo' },
+    { id: 5, title: 'Publicar', label: 'Visibilidade e revisão final' },
 ];
 
-export default function NewListing() {
-    useAuthGuard('ARTIST');
+export default function NewListingPage() {
+    const { ready, user } = useAuthGuard('ARTIST');
     const router = useRouter();
-    const { createListing, artistProfile, addToast } = useStore();
+    const { createListing, addToast } = useStore();
+    const [step, setStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [step, setStep] = useState(0);
-    const [form, setForm] = useState({
-        type: 'service' as 'product' | 'service',
-        category: '' as MarketplaceCategory | '',
+    const [formData, setFormData] = useState({
+        category: '',
+        condition: 'NEW',
         title: '',
         description: '',
-        price: '',
-        priceType: 'fixed' as 'fixed' | 'negotiable',
-        deliveryDays: '',
-        deliveryMethod: 'digital' as 'digital' | 'link' | 'online' | 'presencial',
-        revisions: '2',
-        requiresBriefing: true,
-        hasSample: false,
-        tags: [] as string[],
-        tagInput: '',
-        images: [] as { file: File; preview: string }[],
+        location: '',
+        price: 0,
+        priceType: 'FIXED',
+        deliveryDays: 7,
+        revisions: 2,
+        licenseType: 'Comercial',
+        visibility: 'PUBLIC',
+        images: [] as string[],
+        audioUrl: '',
+        videoUrl: '',
+        thumbUrl: '',
     });
-    const [submitting, setSubmitting] = useState(false);
-    const [uploadingImages, setUploadingImages] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+    if (!ready) return null;
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (form.images.length + files.length > 5) {
-            addToast({ message: 'Máximo de 5 imagens permitido.', type: 'info' });
+    const nextStep = () => {
+        if (step === 1 && !formData.category) {
+            addToast({ message: 'Escolha uma categoria', type: 'error' });
             return;
         }
-
-        const newImages = files.map(file => ({
-            file,
-            preview: URL.createObjectURL(file)
-        }));
-
-        set('images', [...form.images, ...newImages]);
-    };
-
-    const removeImage = (index: number) => {
-        const newImages = [...form.images];
-        URL.revokeObjectURL(newImages[index].preview);
-        newImages.splice(index, 1);
-        set('images', newImages);
-    };
-
-    const addTag = () => {
-        if (form.tagInput.trim() && form.tags.length < 5) {
-            setForm((f) => ({ ...f, tags: [...f.tags, f.tagInput.trim()], tagInput: '' }));
+        if (step === 2 && (!formData.title || !formData.description || !formData.location)) {
+            addToast({ message: 'Preencha os campos obrigatórios', type: 'error' });
+            return;
         }
+        setStep(Math.min(step + 1, STEPS.length));
     };
 
-    const canContinue = [
-        form.type && form.category && form.images.length > 0,
-        form.title.length >= 10 && form.description.length >= 30,
-        form.price && Number(form.price) > 0,
-    ][step] as boolean;
+    const prevStep = () => setStep(Math.max(step - 1, 1));
 
-    const handlePublish = async () => {
-        if (submitting) return;
-        setSubmitting(true);
+    const handleSubmit = async () => {
         try {
-            const files = form.images.map(img => img.file);
-            const id = await createListing({
-                title: form.title,
-                description: form.description,
-                category: form.category as MarketplaceCategory,
-                type: form.type,
-                price: Number(form.price),
-                priceType: form.priceType,
-                deliveryDays: form.deliveryDays ? Number(form.deliveryDays) : undefined,
-                deliveryMethod: form.deliveryMethod,
-                revisions: Number(form.revisions),
-                requiresBriefing: form.requiresBriefing,
-                hasSample: form.hasSample,
-                tags: form.tags,
-                condition: 'NEW',
-                location: `${artistProfile?.city || 'Brasil'}, ${artistProfile?.state || ''}`,
-                status: 'ACTIVE',
-            }, files);
-
-            if (id) {
-                router.push('/artist/marketplace');
+            setIsSubmitting(true);
+            const success = await createListing(formData);
+            if (success) {
+                addToast({ message: 'Anúncio criado com sucesso! +5 Score Beeats', type: 'success' });
+                router.push('/marketplace');
+            } else {
+                addToast({ message: 'Erro ao criar anúncio. Verifique os dados.', type: 'error' });
             }
         } catch (error) {
-            console.error('Error publishing listing:', error);
-            addToast({ message: 'Erro ao publicar anúncio.', type: 'error' });
+            addToast({ message: 'Ocorreu um erro inesperado.', type: 'error' });
         } finally {
-            setSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
-    const STEPS = ['Mídia & Categoria', 'Detalhes', 'Preço & Entrega'];
+    const handleFileUpload = (type: 'images' | 'audio' | 'video') => {
+        // Mock upload for now - in reality this would hit an API and return a URL
+        const url = `https://picsum.photos/seed/${Math.random()}/800/600`;
+        if (type === 'images') {
+            setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
+        } else if (type === 'audio') {
+            setFormData(prev => ({ ...prev, audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }));
+        } else if (type === 'video') {
+            setFormData(prev => ({ ...prev, videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }));
+        }
+        addToast({ message: `${type} carregado (simulação)`, type: 'success' });
+    };
 
     return (
-        <div className="mx-auto max-w-2xl px-4 py-8 pb-32 lg:px-6">
-            <div className="mb-10 text-center sm:text-left">
-                <h1 className="text-3xl font-black text-white tracking-tight">🛍️ NOVO ANÚNCIO</h1>
-                <p className="text-sm text-beet-muted mt-2 font-medium">Transforme seu talento em lucro no Marketplace Beeat</p>
-            </div>
+        <AppShell>
+            <div className="mx-auto max-w-3xl px-4 py-12 pb-32">
+                {/* Header */}
+                <div className="mb-10">
+                    <button 
+                        onClick={() => router.back()}
+                        className="flex items-center gap-2 text-beet-muted hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
+                    >
+                        <ArrowLeft size={14} /> Voltar
+                    </button>
+                    <h1 className="brutalist-text-xl mb-2" style={{ fontSize: '32px' }}>CRIAR NOVO ANÚNCIO</h1>
+                    <p className="text-beet-muted font-mono text-xs uppercase tracking-[0.2em]">Passo {step} de 5: {STEPS[step-1].label}</p>
+                </div>
 
-            {/* Steps Indicator */}
-            <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-2 scrollbar-none">
-                {STEPS.map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 flex-1 min-w-max">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black transition-all border"
-                                style={{
-                                    background: i === step ? 'var(--color-accent)' : i < step ? 'var(--color-accent-dim)' : 'var(--color-dark)',
-                                    borderColor: i <= step ? 'var(--color-accent)' : 'var(--color-border)',
-                                    color: i === step ? 'var(--color-bg)' : i < step ? 'var(--color-accent)' : 'var(--color-muted)',
-                                    boxShadow: i === step ? '0 0 15px var(--color-accent-glow)' : 'none'
-                                }}>
-                                {i < step ? '✓' : i + 1}
-                            </div>
-                            <span className="text-xs font-black tracking-widest uppercase hidden sm:inline"
-                                style={{ color: i === step ? 'white' : 'var(--color-muted)' }}>
-                                {s}
-                            </span>
-                        </div>
-                        {i < STEPS.length - 1 && (
-                            <div className="flex-1 min-w-[20px] h-px hidden sm:block"
-                                style={{ background: i < step ? 'var(--color-accent)' : 'var(--color-border)' }}
-                            />
-                        )}
-                    </div>
-                ))}
-            </div>
+                {/* Progress Bar */}
+                <div className="flex gap-2 mb-12">
+                    {STEPS.map((s) => (
+                        <div 
+                            key={s.id} 
+                            className="h-1 flex-1 rounded-full transition-all duration-500"
+                            style={{ 
+                                background: step >= s.id ? 'var(--color-accent)' : 'rgba(255,255,255,0.1)',
+                                boxShadow: step >= s.id ? '0 0 10px var(--color-accent-glow)' : 'none'
+                             }}
+                        />
+                    ))}
+                </div>
 
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={step}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-8"
-                >
-                    {/* Step 0 — Media & Category */}
-                    {step === 0 && (
-                        <>
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">TIPO DE ANÚNCIO</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { id: 'service', label: '🛠 Serviço', desc: 'Ofereça seu trabalho: gravação, mix, feat, etc.' },
-                                        { id: 'product', label: '📦 Produto', desc: 'Venda beats, letras, licenças, artes etc.' },
-                                    ].map((t) => (
-                                        <button key={t.id} onClick={() => set('type', t.id)}
-                                            className="beet-card p-5 text-left transition-all group"
-                                            style={{
-                                                borderColor: form.type === t.id ? 'var(--color-accent)' : 'var(--color-border)',
-                                                background: form.type === t.id ? 'var(--color-accent-dim)' : ''
-                                            }}>
-                                            <p className={`text-lg font-black mb-1 ${form.type === t.id ? 'text-white' : 'text-beet-muted'}`}>{t.label}</p>
-                                            <p className="text-xs leading-relaxed text-beet-muted group-hover:text-gray-400">{t.desc}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">MÍDIA (FOTOS DO PRODUTO/SERVIÇO)</label>
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                                    {form.images.map((img, i) => (
-                                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
-                                            <img src={img.preview} alt="Preview" className="w-full h-full object-cover" />
+                {/* Form Steps */}
+                <div className="beet-card p-6 md:p-10 relative overflow-hidden" style={{ minHeight: '400px' }}>
+                    <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(0,255,102,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                    
+                    <AnimatePresence mode="wait">
+                        {step === 1 && (
+                            <motion.div 
+                                key="step1"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-8"
+                            >
+                                <div>
+                                    <label className="section-label mb-6">O que você quer anunciar?</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {MARKETPLACE_CATEGORIES.map((cat) => (
                                             <button
-                                                onClick={() => removeImage(i)}
-                                                className="absolute top-1 right-1 h-6 w-6 bg-red-500 rounded-full text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                                key={cat.slug}
+                                                onClick={() => setFormData({ ...formData, category: cat.slug })}
+                                                className={`flex items-center gap-4 p-4 text-left transition-all border ${formData.category === cat.slug ? 'bg-accent/10 border-accent' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                                                style={{ borderRadius: '4px' }}
                                             >
-                                                ×
+                                                <span className="text-2xl">{cat.icon}</span>
+                                                <div>
+                                                    <p className="font-bold text-sm text-white uppercase tracking-wider">{cat.label}</p>
+                                                    <p className="text-[10px] text-beet-muted">Clique para selecionar</p>
+                                                </div>
+                                                {formData.category === cat.slug && <Check className="ml-auto text-accent" size={18} />}
                                             </button>
-                                        </div>
-                                    ))}
-                                    {form.images.length < 5 && (
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-beet-green/50 flex flex-col items-center justify-center gap-1 transition-all hover:bg-white/5"
-                                        >
-                                            <span className="text-2xl text-beet-muted">+</span>
-                                            <span className="text-[10px] uppercase font-black text-beet-muted">Adicionar</span>
-                                        </button>
-                                    )}
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                        accept="image/*"
-                                        multiple
-                                    />
-                                </div>
-                                <p className="text-[11px] text-beet-muted mt-3 font-medium italic">Faça upload de até 5 fotos reais. Imagens premium vendem mais.</p>
-                            </div>
-
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">CATEGORIA</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {MARKETPLACE_CATEGORIES.map((c) => (
-                                        <button key={c.slug} onClick={() => set('category', c.slug)}
-                                            className="beet-pill cursor-pointer px-4 py-2 text-xs font-bold"
-                                            style={{
-                                                background: form.category === c.slug ? `${c.color}25` : 'var(--color-dark)',
-                                                borderColor: form.category === c.slug ? c.color : 'var(--color-border)',
-                                                color: form.category === c.slug ? c.color : 'var(--color-muted)',
-                                                boxShadow: form.category === c.slug ? `0 0 10px ${c.color}30` : 'none'
-                                            }}>
-                                            {c.icon} {c.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Step 1 — Details */}
-                    {step === 1 && (
-                        <>
-                            <div>
-                                <label className="section-title block mb-3 uppercase tracking-widest text-[11px] font-black text-beet-muted">TÍTULO DO ANÚNCIO *</label>
-                                <input
-                                    className="beet-input text-lg font-bold py-4"
-                                    placeholder="Ex: Mixagem Profissional em Dolby Atmos"
-                                    value={form.title}
-                                    onChange={(e) => set('title', e.target.value)}
-                                />
-                                <p className={`text-[11px] mt-2 font-mono ${form.title.length < 10 ? 'text-red-400' : 'text-beet-green'}`}>
-                                    {form.title.length}/80 caracteres {form.title.length < 10 && '(Mín. 10 necessários)'}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="section-title block mb-3 uppercase tracking-widest text-[11px] font-black text-beet-muted">DESCRIÇÃO COMPLETA *</label>
-                                <textarea
-                                    className="beet-input min-h-48 resize-none leading-relaxed text-base"
-                                    rows={6}
-                                    placeholder="Detalhe o que está incluído no seu serviço ou produto, prazos médios, referências e processo de trabalho..."
-                                    value={form.description}
-                                    onChange={(e) => set('description', e.target.value)}
-                                />
-                                <p className={`text-[11px] mt-2 font-mono ${form.description.length < 30 ? 'text-red-400' : 'text-beet-green'}`}>
-                                    {form.description.length} caracteres {form.description.length < 30 && '(Descreva com pelo menos 30 caracteres)'}
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                                <label className="flex items-center gap-4 cursor-pointer beet-card p-5 group">
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center border transition-all ${form.requiresBriefing ? 'bg-beet-green border-beet-green shadow-[0_0_8px_var(--color-accent-glow)]' : 'border-white/10'}`}>
-                                        {form.requiresBriefing && <span className="text-black text-xs font-bold">✓</span>}
-                                    </div>
-                                    <input type="checkbox" checked={form.requiresBriefing}
-                                        onChange={(e) => set('requiresBriefing', e.target.checked)} className="hidden" />
-                                    <div>
-                                        <p className="text-sm font-black text-white uppercase tracking-tighter">Exigir briefing</p>
-                                        <p className="text-[11px] text-beet-muted mt-0.5">O comprador deve preencher suas especificações</p>
-                                    </div>
-                                </label>
-                                <label className="flex items-center gap-4 cursor-pointer beet-card p-5 group">
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center border transition-all ${form.hasSample ? 'bg-beet-green border-beet-green shadow-[0_0_8px_var(--color-accent-glow)]' : 'border-white/10'}`}>
-                                        {form.hasSample && <span className="text-black text-xs font-bold">✓</span>}
-                                    </div>
-                                    <input type="checkbox" checked={form.hasSample}
-                                        onChange={(e) => set('hasSample', e.target.checked)} className="hidden" />
-                                    <div>
-                                        <p className="text-sm font-black text-white uppercase tracking-tighter">Incluir demo</p>
-                                        <p className="text-[11px] text-beet-muted mt-0.5">Exibir player de amostra no anúncio</p>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div>
-                                <label className="section-title block mb-3 uppercase tracking-widest text-[11px] font-black text-beet-muted">TAGS DE BUSCA (MÁX. 5)</label>
-                                <div className="flex gap-2">
-                                    <input className="beet-input flex-1 font-mono text-sm" placeholder="Aperte ENTER para adicionar..."
-                                        value={form.tagInput} onChange={(e) => set('tagInput', e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} />
-                                    <button type="button" onClick={addTag} className="btn-outline px-6">+</button>
-                                </div>
-                                {form.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        {form.tags.map((tag) => (
-                                            <span key={tag} className="beet-pill active bg-beet-green/10 border-beet-green/30 text-beet-green font-black">
-                                                #{tag.toUpperCase()}
-                                                <button onClick={() => set('tags', form.tags.filter((t) => t !== tag))} className="ml-2 hover:text-white transition-colors">×</button>
-                                            </span>
                                         ))}
                                     </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    {/* Step 2 — Price & Delivery */}
-                    {step === 2 && (
-                        <>
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">MODELO DE PRECIFICAÇÃO</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { id: 'fixed', label: '💰 Preço fixo', desc: 'Valor definido, ideal para produtos prontos' },
-                                        { id: 'negotiable', label: '🤝 A combinar', desc: 'Preço base, sujeito a ajustes no chat' },
-                                    ].map((p) => (
-                                        <button key={p.id} onClick={() => set('priceType', p.id)}
-                                            className="beet-card p-5 text-left transition-all"
-                                            style={{
-                                                borderColor: form.priceType === p.id ? 'var(--color-accent)' : 'var(--color-border)',
-                                                background: form.priceType === p.id ? 'var(--color-accent-dim)' : ''
-                                            }}>
-                                            <p className={`text-lg font-black mb-1 ${form.priceType === p.id ? 'text-white' : 'text-beet-muted'}`}>{p.label}</p>
-                                            <p className="text-xs text-beet-muted">{p.desc}</p>
-                                        </button>
-                                    ))}
                                 </div>
-                            </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="section-title block mb-3 uppercase tracking-widest text-[11px] font-black text-beet-muted">VALOR (R$)</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-beet-muted font-bold">R$</span>
-                                        <input type="number" className="beet-input pl-12 text-2xl font-black py-4" placeholder="00,00"
-                                            value={form.price} onChange={(e) => set('price', e.target.value)} />
+                                    <label className="section-label mb-4">Condição do Item / Tipo</label>
+                                    <div className="flex gap-3">
+                                        {['NEW', 'USED_LIKE_NEW', 'USED_GOOD'].map((c) => (
+                                            <button
+                                                key={c}
+                                                onClick={() => setFormData({ ...formData, condition: c as any })}
+                                                className={`flex-1 py-3 text-center transition-all border text-[10px] font-black tracking-widest uppercase ${formData.condition === c ? 'bg-white text-black border-white' : 'bg-white/5 text-beet-muted border-white/5'}`}
+                                            >
+                                                {c.replace(/_/g, ' ')}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
+                            </motion.div>
+                        )}
+
+                        {step === 2 && (
+                            <motion.div 
+                                key="step2"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-2">
+                                    <label className="section-label flex items-center gap-2"><Tag size={14} /> Título do Anúncio</label>
+                                    <input 
+                                        type="text"
+                                        placeholder="Ex: Ghost Production Tech House Premium"
+                                        className="beet-input w-full"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="section-label flex items-center gap-2"><Briefcase size={14} /> Descrição Detalhada</label>
+                                    <textarea 
+                                        rows={6}
+                                        placeholder="Descreva seu serviço, processos, o que o comprador recebe, etc..."
+                                        className="beet-input w-full resize-none p-4"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="section-label flex items-center gap-2"><MapPin size={14} /> Localização</label>
+                                    <input 
+                                        type="text"
+                                        placeholder="Ex: São Paulo, SP (ou Remoto)"
+                                        className="beet-input w-full"
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 3 && (
+                            <motion.div 
+                                key="step3"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-8"
+                            >
+                                <div className="space-y-4">
+                                    <label className="section-label">Modelo de Preço</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { id: 'FIXED', label: 'PREÇO FIXO', desc: 'Valor exato' },
+                                            { id: 'NEGOTIABLE', label: 'NEGOCIÁVEL', desc: 'A partir de...' },
+                                            { id: 'CONSULT', label: 'CONSULTA', desc: 'Combinar no chat' },
+                                        ].map((p) => (
+                                            <button
+                                                key={p.id}
+                                                onClick={() => setFormData({ ...formData, priceType: p.id as any })}
+                                                className={`p-4 border text-center transition-all ${formData.priceType === p.id ? 'bg-accent/10 border-accent' : 'bg-white/5 border-white/10'}`}
+                                            >
+                                                <p className="font-black text-[10px] tracking-widest text-white mb-1">{p.label}</p>
+                                                <p className="text-[9px] text-beet-muted opacity-60">{p.desc}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {formData.priceType !== 'CONSULT' && (
+                                    <div className="space-y-2">
+                                        <label className="section-label">Valor (R$)</label>
+                                        <input 
+                                            type="number"
+                                            className="beet-input w-full text-2xl font-black text-accent"
+                                            value={formData.price}
+                                            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="section-label flex items-center gap-2"><Clock size={14} /> Prazo (Dias)</label>
+                                        <input 
+                                            type="number"
+                                            className="beet-input w-full"
+                                            value={formData.deliveryDays}
+                                            onChange={(e) => setFormData({ ...formData, deliveryDays: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="section-label flex items-center gap-2"><RefreshCw size={14} /> Revisões</label>
+                                        <input 
+                                            type="number"
+                                            className="beet-input w-full"
+                                            value={formData.revisions}
+                                            onChange={(e) => setFormData({ ...formData, revisions: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="section-label flex items-center gap-2"><Shield size={14} /> Tipo de Licença / Uso</label>
+                                    <select 
+                                        className="beet-input w-full bg-[#111]"
+                                        value={formData.licenseType}
+                                        onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
+                                    >
+                                        <option value="Comercial">Uso Comercial Full</option>
+                                        <option value="Limitada">Licença Limitada</option>
+                                        <option value="Royalties">Com Royalties</option>
+                                        <option value="Exclusivo">Buyout (Exclusivo)</option>
+                                    </select>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === 4 && (
+                            <motion.div 
+                                key="step4"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-8"
+                            >
                                 <div>
-                                    <label className="section-title block mb-3 uppercase tracking-widest text-[11px] font-black text-beet-muted">PRAZO ESTIMADO (DIAS)</label>
-                                    <input type="number" className="beet-input text-2xl font-black py-4" placeholder="Ex: 3"
-                                        value={form.deliveryDays} onChange={(e) => set('deliveryDays', e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">MÉTODO DE ENTREGA</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {DELIVERY_METHODS.map((m) => (
-                                        <button key={m.id} onClick={() => set('deliveryMethod', m.id)}
-                                            className="beet-card p-4 text-left transition-all"
-                                            style={{
-                                                borderColor: form.deliveryMethod === m.id ? 'var(--color-accent)' : 'var(--color-border)',
-                                                background: form.deliveryMethod === m.id ? 'var(--color-accent-dim)' : ''
-                                            }}>
-                                            <p className={`text-[13px] font-black uppercase tracking-tight ${form.deliveryMethod === m.id ? 'text-white' : 'text-beet-muted'}`}>{m.label}</p>
-                                            <p className="text-[10px] text-beet-muted mt-1 leading-tight">{m.desc}</p>
+                                    <label className="section-label mb-4">Galeria de Imagens</label>
+                                    <div className="flex flex-wrap gap-4">
+                                        {formData.images.map((img, i) => (
+                                            <div key={i} className="w-24 h-24 rounded border border-white/10 overflow-hidden relative group">
+                                                <img src={img} alt="" className="w-full h-full object-cover" />
+                                                <button 
+                                                    onClick={() => setFormData(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
+                                                    className="absolute inset-0 bg-beet-red/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                                >
+                                                    <Plus className="rotate-45 text-white" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button 
+                                            onClick={() => handleFileUpload('images')}
+                                            className="w-24 h-24 rounded border-2 border-dashed border-white/10 hover:border-accent flex flex-col items-center justify-center gap-2 text-beet-muted hover:text-accent transition-all bg-white/5"
+                                        >
+                                            <Camera size={24} />
+                                            <span className="text-[8px] font-black uppercase">ADICIONAR</span>
                                         </button>
-                                    ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div>
-                                <label className="section-title block mb-4 uppercase tracking-widest text-[11px] font-black text-beet-muted">NÚMERO DE REVISÕES</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {['0', '1', '2', '3', '5', 'Ilimitado'].map((r) => (
-                                        <button key={r} onClick={() => set('revisions', r)}
-                                            className={`beet-pill cursor-pointer px-5 py-2.5 font-black uppercase tracking-widest text-[10px] transition-all
-                                                ${form.revisions === r ? 'active bg-beet-green text-black border-beet-green shadow-[0_0_10px_var(--color-accent-glow)]' : 'bg-var(--color-dark) text-beet-muted border-var(--color-border)'}`}>
-                                            {r}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-4">
+                                        <label className="section-label">Amostra de Áudio (MP3)</label>
+                                        <button 
+                                            onClick={() => handleFileUpload('audio')}
+                                            className={`w-full p-4 border rounded flex items-center gap-3 transition-all ${formData.audioUrl ? 'bg-accent/10 border-accent text-accent' : 'bg-white/5 border-white/10 text-beet-muted'}`}
+                                        >
+                                            <Music size={20} />
+                                            <span className="text-xs font-bold">{formData.audioUrl ? 'ÁUDIO CARREGADO' : 'SUBIR MP3'}</span>
                                         </button>
-                                    ))}
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="section-label">Amostra de Vídeo</label>
+                                        <button 
+                                            onClick={() => handleFileUpload('video')}
+                                            className={`w-full p-4 border rounded flex items-center gap-3 transition-all ${formData.videoUrl ? 'bg-blue-500/10 border-blue-500 text-blue-400' : 'bg-white/5 border-white/10 text-beet-muted'}`}
+                                        >
+                                            <Video size={20} />
+                                            <span className="text-xs font-bold">{formData.videoUrl ? 'VÍDEO CARREGADO' : 'SUBIR VÍDEO'}</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </>
-                    )}
-                </motion.div>
-            </AnimatePresence>
+                            </motion.div>
+                        )}
 
-            {/* Navigation Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-beet-black/80 backdrop-blur-xl z-50">
-                <div className="mx-auto max-w-2xl flex justify-between gap-4">
-                    <button onClick={() => step > 0 ? setStep(step - 1) : router.back()}
-                        className="btn-outline flex-1 sm:flex-none">
-                        {step === 0 ? 'CANCELAR' : '← VOLTAR'}
-                    </button>
-                    {step < 2 ? (
-                        <button onClick={() => setStep(step + 1)} disabled={!canContinue}
-                            className="btn-accent flex-1 sm:flex-none px-12 group disabled:opacity-30">
-                            CONTINUAR <span className="group-hover:translate-x-1 transition-transform ml-2">→</span>
+                        {step === 5 && (
+                            <motion.div 
+                                key="step5"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-10"
+                            >
+                                <div className="bg-white/5 p-6 border border-white/5 rounded">
+                                    <label className="section-label mb-6">Visibilidade do Anúncio</label>
+                                    <div className="space-y-3">
+                                        {[
+                                            { id: 'PUBLIC', label: 'Público Geral', desc: 'Visível para todos na plataforma', icon: <Globe size={18} /> },
+                                            { id: 'ARTISTS_ONLY', label: 'Somente Artistas', desc: 'Restrito a perfis do tipo ARTISTA', icon: <Users size={18} /> },
+                                            { id: 'INDUSTRY_ONLY', label: 'Somente Industry', desc: 'Exclusivo para empresas/selos', icon: <Building size={18} /> },
+                                        ].map((v) => (
+                                            <button
+                                                key={v.id}
+                                                onClick={() => setFormData({ ...formData, visibility: v.id as any })}
+                                                className={`w-full flex items-center gap-4 p-4 border rounded transition-all text-left ${formData.visibility === v.id ? 'bg-accent/10 border-accent' : 'bg-transparent border-white/10 opacity-60'}`}
+                                            >
+                                                <div className={formData.visibility === v.id ? 'text-accent' : ''}>{v.icon}</div>
+                                                <div className="flex-1">
+                                                    <p className="font-bold text-xs uppercase tracking-wider text-white">{v.label}</p>
+                                                    <p className="text-[10px] text-beet-muted">{v.desc}</p>
+                                                </div>
+                                                {formData.visibility === v.id && <div className="h-4 w-4 rounded-full bg-accent flex items-center justify-center"><Check size={10} color="#000" strokeWidth={4} /></div>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Summary preview */}
+                                <div className="border-t border-white/10 pt-8">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded overflow-hidden">
+                                            {formData.images[0] ? <img src={formData.images[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-lg text-white leading-tight">{formData.title || 'Título do Anúncio'}</p>
+                                            <p className="text-accent font-black text-sm uppercase tracking-widest mt-1">
+                                                {formData.priceType === 'CONSULT' ? 'SOB CONSULTA' : `R$ ${formData.price}`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-beet-muted font-mono text-[9px] uppercase tracking-widest">
+                                        <ShieldCheck size={12} className="text-accent" /> Ao publicar, você ganha 5 Score Beeats e seu perfil sobe no ranking.
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Navigation Buttons */}
+                    <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/5">
+                        <button 
+                            onClick={prevStep}
+                            disabled={step === 1 || isSubmitting}
+                            className={`flex items-center gap-2 transition-all font-black text-[10px] tracking-widest uppercase ${step === 1 ? 'opacity-0' : 'text-beet-muted hover:text-white'}`}
+                        >
+                            <ArrowLeft size={16} /> Voltar
                         </button>
-                    ) : (
-                        <button onClick={handlePublish} disabled={submitting || !form.price}
-                            className={`btn-accent flex-1 sm:flex-none px-12 relative overflow-hidden ${submitting ? 'opacity-70 cursor-wait' : ''}`}>
-                            {submitting ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                    PUBLICANDO...
-                                </span>
-                            ) : '🚀 PUBLICAR AGORA'}
-                        </button>
-                    )}
+
+                        {step < STEPS.length ? (
+                            <motion.button 
+                                whileHover={{ x: 3 }}
+                                onClick={nextStep}
+                                className="btn-accent px-8 py-3 flex items-center gap-2"
+                                style={{ fontSize: '12px', fontWeight: 900, letterSpacing: '0.1em' }}
+                            >
+                                PRÓXIMO PASSO <ArrowRight size={16} />
+                            </motion.button>
+                        ) : (
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="btn-accent px-10 py-4 flex items-center gap-4 shadow-[0_0_30px_rgba(0,255,102,0.4)]"
+                                style={{ fontSize: '14px', fontWeight: 950, letterSpacing: '0.15em' }}
+                            >
+                                {isSubmitting ? 'PUBLICANDO...' : 'PUBLICAR ANÚNCIO'}
+                                {!isSubmitting && <Plus size={20} strokeWidth={3} />}
+                            </motion.button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Info Tip */}
+                <div className="mt-8 flex items-center gap-4 p-4 border border-[var(--color-accent-dim)] bg-accent/5 rounded-sm">
+                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent">
+                        <Tag size={20} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-accent uppercase tracking-widest">Dica de Sucesso</p>
+                        <p className="text-xs text-beet-muted leading-relaxed">Adicionar áudio e vídeo de amostra aumenta suas chances de venda em até 40%.</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </AppShell>
     );
 }

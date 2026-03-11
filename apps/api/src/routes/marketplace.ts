@@ -7,15 +7,23 @@ export const marketplaceRouter = Router();
 
 // Get all listings with filters
 marketplaceRouter.get('/', async (req, res) => {
-    const { category, minPrice, maxPrice, search } = req.query;
+    const { category, minPrice, maxPrice, search, visibility } = req.query;
 
     const where: any = {
         status: 'ACTIVE',
     };
 
-    if (category) where.category = category;
+    if (category) where.category = category as any;
     if (minPrice) where.price = { gte: parseFloat(minPrice as string) };
     if (maxPrice) where.price = { ...where.price, lte: parseFloat(maxPrice as string) };
+    
+    // Visibility filter (default to PUBLIC if not specified)
+    if (visibility) {
+        where.visibility = visibility as any;
+    } else {
+        where.visibility = 'PUBLIC';
+    }
+
     if (search) {
         where.OR = [
             { title: { contains: search as string, mode: 'insensitive' } },
@@ -26,8 +34,8 @@ marketplaceRouter.get('/', async (req, res) => {
     const listings = await prisma.listing.findMany({
         where,
         include: {
-            artistSeller: { select: { stageName: true, avatarUrl: true } },
-            industrySeller: { select: { companyName: true, logoUrl: true } },
+            artistSeller: { select: { stageName: true, avatarUrl: true, scoreBeet: true, city: true, state: true } },
+            industrySeller: { select: { companyName: true, logoUrl: true, city: true, state: true } },
         },
         orderBy: { createdAt: 'desc' },
     });
@@ -49,6 +57,12 @@ marketplaceRouter.post('/', authenticate, async (req: AuthRequest, res: Response
         const profile = await prisma.artistProfile.findUnique({ where: { userId } });
         if (!profile) return res.status(404).json({ success: false, error: { message: 'Perfil não encontrado' } });
         profileId = profile.id;
+        
+        // Bonus for creating listing
+        await prisma.artistProfile.update({
+            where: { id: profileId },
+            data: { scoreBeet: { increment: 5 } }
+        });
     } else {
         const profile = await prisma.industryProfile.findUnique({ where: { userId } });
         if (!profile) return res.status(404).json({ success: false, error: { message: 'Perfil não encontrado' } });
@@ -57,8 +71,7 @@ marketplaceRouter.post('/', authenticate, async (req: AuthRequest, res: Response
 
     const listing = await prisma.listing.create({
         data: {
-            ...(validated.data as any),
-            price: validated.data.price,
+            ...validated.data,
             sellerId: profileId,
             sellerType: role,
         },
@@ -72,8 +85,8 @@ marketplaceRouter.get('/:id', async (req, res) => {
     const listing = await prisma.listing.findUnique({
         where: { id: req.params.id },
         include: {
-            artistSeller: { select: { stageName: true, avatarUrl: true, city: true, state: true } },
-            industrySeller: { select: { companyName: true, logoUrl: true, city: true, state: true } },
+            artistSeller: { select: { stageName: true, avatarUrl: true, scoreBeet: true, city: true, state: true, bio: true } },
+            industrySeller: { select: { companyName: true, logoUrl: true, city: true, state: true, description: true } },
         },
     });
 

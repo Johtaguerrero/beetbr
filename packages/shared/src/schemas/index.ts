@@ -93,7 +93,7 @@ export type IndustryProfileUpdateInput = z.infer<typeof IndustryProfileUpdateSch
 // ============================================================
 
 export const CreatePostSchema = z.object({
-    type: z.enum(['TRACK', 'VIDEO', 'IMAGE', 'LYRIC']),
+    type: z.enum(['TRACK', 'VIDEO', 'IMAGE', 'LYRIC', 'MARKETPLACE']),
     text: z.string().max(500).optional(),
     hashtags: z.array(z.string()).max(10).default([]),
     // mediaUrl and thumbUrl are set server-side after upload
@@ -113,18 +113,18 @@ export const CreateListingSchema = z.object({
     title: z.string().min(3).max(100),
     description: z.string().min(10).max(1000),
     price: z.number().min(0),
-    priceType: z.enum(['fixed', 'negotiable']).optional().default('fixed'),
-    category: z.string().min(1),
-    condition: z.string().min(1),
+    priceType: z.enum(['FIXED', 'NEGOTIABLE', 'CONSULT']).optional().default('FIXED'),
+    category: z.enum(['beats', 'mixagem', 'composicao', 'videoclipe', 'design', 'assessoria', 'outros']),
+    condition: z.enum(['NEW', 'USED_LIKE_NEW', 'USED_GOOD', 'USED_FAIR']),
     location: z.string().min(2),
-    images: z.array(z.string()).min(0), // allow empty for now, handle in UI
-    type: z.enum(['product', 'service']).optional().default('service'),
+    images: z.array(z.string()).min(0),
+    audioUrl: z.string().optional(),
+    videoUrl: z.string().optional(),
+    thumbUrl: z.string().optional(),
+    visibility: z.enum(['PUBLIC', 'ARTISTS_ONLY', 'INDUSTRY_ONLY']).optional().default('PUBLIC'),
     deliveryDays: z.number().min(0).optional(),
-    deliveryMethod: z.string().optional(),
     revisions: z.number().min(0).optional(),
-    requiresBriefing: z.boolean().optional(),
-    hasSample: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
+    licenseType: z.string().optional(),
     status: z.enum(['ACTIVE', 'PAUSED', 'SOLD', 'EXPIRED', 'DELETED', 'CLOSED']).optional().default('ACTIVE'),
 });
 export type CreateListingInput = z.infer<typeof CreateListingSchema>;

@@ -134,6 +134,7 @@ export const MARKETPLACE_CATEGORIES = [
     { slug: 'videoclipe', label: 'Videoclipes & Edição', icon: '🎬', color: '#FF0055' },
     { slug: 'design', label: 'Capa & Identidade', icon: '🎨', color: '#8B5CF6' },
     { slug: 'assessoria', label: 'Marketing & Assessoria', icon: '📈', color: '#059669' },
+    { slug: 'outros', label: 'Outros Serviços', icon: '💼', color: '#64748B' },
 ];
 export type MarketplaceCategory = 'beats' | 'mixagem' | 'composicao' | 'videoclipe' | 'design' | 'assessoria' | 'equipamentos' | 'SERVICE' | string;
 
@@ -202,7 +203,7 @@ interface BeetrStore {
     togglePostLike: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
-    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; publishTarget?: PublishTarget }) => Promise<string>;
+    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; mediaUrl?: string; publishTarget?: PublishTarget; listingId?: string }) => Promise<string>;
     createStory: (file: File) => Promise<void>;
     addPostComment: (postId: string, text: string) => void;
 
@@ -231,7 +232,7 @@ interface BeetrStore {
     uploadContract: (proposalId: string, fileName: string) => void;
 
     fetchListings: (params?: object) => Promise<void>;
-    createListing: (data: Omit<CreateListingInput, 'images'>, files: File[]) => Promise<string>;
+    createListing: (data: any) => Promise<boolean>;
     toggleSaveListing: (listingId: string) => void;
     isListingSaved: (listingId: string) => boolean;
     startMarketplaceChat: (listingId: string, listingTitle: string, sellerId: string, sellerName: string) => string;
@@ -472,7 +473,7 @@ export const useStore = create<BeetrStore>()(
                 };
             }),
 
-            createPost: async (data) => {
+            createPost: async (data: any) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return '';
                 const file = data.file;
@@ -484,12 +485,12 @@ export const useStore = create<BeetrStore>()(
                 }
 
                 try {
-                    let mediaUrl = undefined;
+                    let mediaUrl = data.mediaUrl;
                     if (file) {
                         const res = await api.upload(file);
                         mediaUrl = res.url;
                     }
-                    const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id });
+                    const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id, listingId: data.listingId });
 
                     const BOOST_MS = 48 * 60 * 60 * 1000;
                     const now = new Date();
@@ -746,22 +747,50 @@ export const useStore = create<BeetrStore>()(
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
             },
 
-            createListing: async (data, files) => {
+            createListing: async (data: any) => {
                 const { currentUser } = get();
-                if (!currentUser) return '';
+                if (!currentUser) return false;
                 try {
-                    const imageUrls: string[] = [];
-                    for (const file of files) {
-                        const res = await api.upload(file);
-                        imageUrls.push(res.url);
+                    // If there are raw files in images, we should upload them
+                    // But for now the form handles uploads (or simulations)
+                    const res: any = await api.marketplace.create({ 
+                        ...data, 
+                        sellerId: currentUser.id 
+                    });
+                    
+                    if (res.success) {
+                        set((s) => ({ 
+                            listings: [res.data, ...s.listings] 
+                        }));
+                        // We also need to update the local artist profile score if it's an artist
+                        if (currentUser.role === 'ARTIST' && get().artistProfile) {
+                            set(s => ({
+                                artistProfile: s.artistProfile ? {
+                                    ...s.artistProfile,
+                                    scoreBeet: (s.artistProfile.scoreBeet || 0) + 5
+                                } : null
+                            }));
+                        }
+
+                        // Automatically create a post for the marketplace
+                        try {
+                            await get().createPost({
+                                type: 'MARKETPLACE' as any,
+                                text: data.title,
+                                listingId: res.data.id,
+                                mediaUrl: data.images && data.images.length > 0 ? data.images[0] : undefined,
+                                publishTarget: 'FEED'
+                            });
+                        } catch (e) {
+                            console.error('Failed to create marketplace post announcement:', e);
+                        }
+
+                        return true;
                     }
-                    const res: any = await api.marketplace.create({ ...data, images: imageUrls, sellerId: currentUser.id });
-                    set((s) => ({ listings: [res.data, ...s.listings] }));
-                    get().addToast({ message: 'Anúncio publicado!', type: 'success' });
-                    return res.data.id;
+                    return false;
                 } catch (error: any) {
                     get().addToast({ message: error.message, type: 'error' });
-                    return '';
+                    return false;
                 }
             },
 
