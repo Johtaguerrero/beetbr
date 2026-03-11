@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES, type Listing } from '@/lib/store';
-import { ScoreBeetBadge, Skeleton } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, Skeleton } from '@/components/ui';
 
 // ── Listing Card ──────────────────────────────────────────────
 
