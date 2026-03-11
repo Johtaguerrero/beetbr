@@ -112,120 +112,16 @@ export interface CollabThread {
     updatedAt: string;
 }
 
-// ── Mock Data ───────────────────────────────────────────────────
+// ── Mock Data (Empty for Real Persistence) ───────────────────────────
 
-export const MOCK_LISTINGS: Listing[] = [
-    {
-        id: 'listing-1',
-        sellerId: 'artist-1',
-        sellerName: 'MC Vibrante',
-        sellerAvatarUrl: 'https://i.pravatar.cc/150?u=artist-1',
-        sellerVerified: true,
-        sellerScore: 94,
-        sellerCity: 'São Paulo',
-        sellerState: 'SP',
-        title: 'Beats Trap/Drill - Pack 5 Unid',
-        description: 'Pack com 5 beats exclusivos nos estilos que estão dominando a cena.',
-        price: 450,
-        priceType: 'fixed',
-        category: 'beats',
-        condition: 'NEW',
-        location: 'São Paulo, SP',
-        images: ['https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400'],
-        status: 'ACTIVE',
-        views: 1250, chats: 12, saves: 45,
-        rating: 4.8,
-        reviewCount: 24,
-        deliveryDays: 3,
-        deliveryMethod: 'digital',
-        revisions: 2,
-        requiresBriefing: true,
-        hasSample: true,
-        tags: ['beats', 'trap', 'exclusive'],
-        type: 'service',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-];
+export const MOCK_LISTINGS: Listing[] = [];
+export const MOCK_ARTISTS: ArtistProfile[] = [];
+export const MOCK_POSTS: Post[] = [];
+export const MOCK_STORIES: Story[] = [];
+export const INITIAL_PROPOSALS: Proposal[] = [];
+export const MOCK_COLLAB_POSTS: CollabPost[] = [];
 
-export const MOCK_ARTISTS: ArtistProfile[] = [
-    {
-        id: 'artist-1',
-        userId: 'user-artist-1',
-        stageName: 'MC Vibrante',
-        genres: ['Funk', 'Trap'],
-        city: 'São Paulo',
-        state: 'SP',
-        bio: 'Funk carioca com influências do trap newyorkino.',
-        availableForBooking: true,
-        contactVisibility: 'PUBLIC',
-        scoreBeet: 94,
-        verified: true,
-        followersCount: 45200,
-        playsTotal: 2100000,
-        metrics: {
-            artistId: 'artist-1',
-            plays: 2100000,
-            views: 2400000,
-            engagement: 8.7,
-            weeklyGrowth: 4.2,
-            retention: 72,
-            consistency: 89,
-            updatedAt: new Date().toISOString(),
-            scoreBeet: 94,
-            breakdown: { growth: 95, engagement: 87, retention: 72, consistency: 89 }
-        },
-        instagram: '@mcvibrante',
-        subGenres: ['Funk Mandelão', 'Trap Ostentação'],
-        complementaryStyles: ['Phonk', 'Drill'],
-        roles: ['Cantor', 'Compositor'],
-        opportunityTypes: ['Shows', 'Collabs'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-];
-
-export const MOCK_POSTS: Post[] = [
-    {
-        id: 'post-1',
-        artistId: 'artist-1',
-        artist: { stageName: 'MC Vibrante', avatarUrl: 'https://i.pravatar.cc/150?u=artist-1', scoreBeet: 94 },
-        type: 'TRACK',
-        text: '🔥 Single novo chegando! Aguardem o drop de sexta-feira.',
-        hashtags: ['FunkBR', 'TrapNacional', 'BeatBR', 'SingleNovo'],
-        plays: 14200,
-        likes: 980,
-        comments: 142,
-        createdAt: new Date().toISOString(),
-    },
-];
-
-export const MOCK_STORIES: Story[] = [
-    {
-        id: 'story-1',
-        artistId: 'artist-1',
-        artist: { stageName: 'MC Vibrante', avatarUrl: 'https://i.pravatar.cc/150?u=artist-1', scoreBeet: 94 },
-        mediaUrl: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=400',
-        mediaType: 'IMAGE',
-        expiresAt: new Date(Date.now() + 24 * 3600000).toISOString(),
-        createdAt: new Date().toISOString()
-    },
-];
-
-export const MOCK_INDUSTRY: IndustryProfile = {
-    id: 'industry-1',
-    userId: 'user-industry-1',
-    companyName: 'Label One Music',
-    type: 'LABEL' as any,
-    niches: ['Funk', 'Trap', 'R&B'],
-    city: 'São Paulo',
-    state: 'SP',
-    verified: true,
-    instagram: '@labelonemusic',
-    website: 'labelonemusic.com.br',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-} as any;
+export const MOCK_INDUSTRY: IndustryProfile = null as any;
 
 export const MARKETPLACE_CATEGORIES = [
     { slug: 'beats', label: 'Beats & Instrumentais', icon: '🥁', color: '#00FF66' },
@@ -237,26 +133,6 @@ export const MARKETPLACE_CATEGORIES = [
 ];
 export type MarketplaceCategory = 'beats' | 'mixagem' | 'composicao' | 'videoclipe' | 'design' | 'assessoria' | 'equipamentos' | 'SERVICE' | string;
 
-export const INITIAL_PROPOSALS: Proposal[] = [
-    {
-        id: 'proposal-1',
-        industryId: 'industry-1',
-        industry: { companyName: 'Label One Music', logoUrl: '' } as any,
-        industryName: 'Label One Music',
-        artistId: 'artist-1',
-        artistName: 'MC Vibrante',
-        artistScore: 94,
-        type: 'LIVE_SHOW' as any,
-        amount: 15000,
-        status: 'SENT',
-        online: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messages: [],
-        contractVersions: [],
-    },
-];
-
 export const COLLAB_TYPE_CONFIG: Record<string, { label: string; chip: string; color: string; icon: string }> = {
     PRODUCER: { label: 'Produtor', chip: 'Produtores', color: '#059669', icon: '🎛️' },
     FEAT: { label: 'Feat', chip: 'Feat', color: '#00FF66', icon: '🤝' },
@@ -265,29 +141,6 @@ export const COLLAB_TYPE_CONFIG: Record<string, { label: string; chip: string; c
     SONGWRITER: { label: 'Compositor', chip: 'Compositores', color: '#DB2777', icon: '✍️' },
     OTHER: { label: 'Outro', chip: 'Outros', color: '#64748B', icon: '💼' },
 };
-
-export const MOCK_COLLAB_POSTS: CollabPost[] = [
-    {
-        id: 'collab-1',
-        authorId: 'artist-1',
-        authorName: 'MC Vibrante',
-        authorVerified: true,
-        authorScore: 94,
-        authorCity: 'São Paulo',
-        authorState: 'SP',
-        type: 'FEAT',
-        title: 'Feat Trap Pesado',
-        description: 'Buscando alguém para verso agressivo.',
-        genres: ['Trap'],
-        remote: true,
-        compensation: 'REV_SHARE',
-        status: 'ACTIVE',
-        views: 150,
-        interestCount: 5,
-        chatCount: 2,
-        createdAt: new Date().toISOString(),
-    },
-];
 
 // ── Main Store ────────────────────────────────────────────────
 
@@ -513,10 +366,12 @@ export const useStore = create<BeetrStore>()(
                 if (accessToken === 'demo-token') return;
                 try {
                     const res: any = await api.feed.getFeed(page);
-                    set({ posts: res.data });
+                    // Redundância: Expira posts com mais de 48h (backend já filtra, mas garantimos aqui)
+                    const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
+                    const validPosts = (res.data || []).filter((p: any) => new Date(p.createdAt).getTime() >= fortyEightHoursAgo);
+                    set({ posts: validPosts });
                 } catch (error: any) {
                     console.error('Failed to fetch feed:', error);
-                    // Silently fail to prevent toast spam when API is down
                 }
             },
 
@@ -525,10 +380,11 @@ export const useStore = create<BeetrStore>()(
                 if (accessToken === 'demo-token') return;
                 try {
                     const res: any = await api.feed.getStories();
-                    set({ stories: res.data });
+                    // Redundância: Expira stories baseando-se no timestamp expiresAt
+                    const validStories = (res.data || []).filter((s: any) => new Date(s.expiresAt).getTime() > Date.now());
+                    set({ stories: validStories });
                 } catch (error: any) {
                     console.error('Failed to fetch stories:', error);
-                    // Silently fail to prevent toast spam when API is down
                 }
             },
 
@@ -568,34 +424,9 @@ export const useStore = create<BeetrStore>()(
                 if (!artistProfile) return '';
                 const file = data.file;
 
-                // Helper to create locally
-                const createLocally = (mediaUrl?: string) => {
-                    const newPost: Post = {
-                        id: `post-${Date.now()}`,
-                        artistId: artistProfile.id,
-                        artist: { stageName: artistProfile.stageName, avatarUrl: artistProfile.avatarUrl || '', scoreBeet: artistProfile.scoreBeet },
-                        type: data.type,
-                        text: data.text,
-                        hashtags: data.hashtags || [],
-                        mediaUrl,
-                        likes: 0,
-                        comments: 0,
-                        plays: 0,
-                        liked: false,
-                        createdAt: new Date().toISOString(),
-                    };
-                    set((s) => ({ posts: [newPost, ...s.posts] }));
-                    get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
-                    return newPost.id;
-                };
-
                 if (accessToken === 'demo-token') {
-                    if (file) {
-                        const objectUrl = URL.createObjectURL(file);
-                        return createLocally(objectUrl);
-                    } else {
-                        return createLocally();
-                    }
+                    get().addToast({ message: 'Modo demo: Upload desativado para garantir persistência real.', type: 'info' });
+                    return '';
                 }
 
                 try {
@@ -605,17 +436,15 @@ export const useStore = create<BeetrStore>()(
                         mediaUrl = res.url;
                     }
                     const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id });
+
+                    // Add to local state only after API success
                     set((s) => ({ posts: [res.data, ...s.posts] }));
                     get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
                     return res.data.id;
                 } catch (error: any) {
-                    console.error('API createPost failed, falling back locally:', error);
-                    // Fallback locally if API is down
-                    if (file) {
-                        return createLocally(URL.createObjectURL(file));
-                    } else {
-                        return createLocally();
-                    }
+                    console.error('API createPost failed:', error);
+                    get().addToast({ message: 'Erro ao publicar post. Tente novamente.', type: 'error' });
+                    return '';
                 }
             },
 
@@ -623,35 +452,23 @@ export const useStore = create<BeetrStore>()(
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return;
 
-                const createLocally = () => {
-                    const objectUrl = URL.createObjectURL(file);
-                    const newStory: Story = {
-                        id: `story-${Date.now()}`,
-                        artistId: artistProfile.id,
-                        artist: { stageName: artistProfile.stageName, avatarUrl: artistProfile.avatarUrl || '', scoreBeet: artistProfile.scoreBeet },
-                        mediaUrl: objectUrl,
-                        mediaType: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE',
-                        expiresAt: new Date(Date.now() + 24 * 3600000).toISOString(),
-                        createdAt: new Date().toISOString(),
-                    };
-                    set((s) => ({ stories: [newStory, ...s.stories] }));
-                    get().addToast({ message: 'Story publicado! 📸', type: 'success' });
-                };
-
-                // Demo mode: create story locally without API
                 if (accessToken === 'demo-token') {
-                    createLocally();
+                    get().addToast({ message: 'Modo demo: Upload desativado para garantir persistência real.', type: 'info' });
                     return;
                 }
 
                 try {
                     const uploadRes = await api.upload(file);
-                    const res: any = await api.feed.createStory({ mediaUrl: uploadRes.url, artistId: artistProfile.id, mediaType: 'IMAGE' });
+                    const res: any = await api.feed.createStory({
+                        mediaUrl: uploadRes.url,
+                        artistId: artistProfile.id,
+                        mediaType: file.type.startsWith('video') ? 'VIDEO' : 'IMAGE'
+                    });
                     set((s) => ({ stories: [res.data, ...s.stories] }));
                     get().addToast({ message: 'Story publicado!', type: 'success' });
                 } catch (error: any) {
-                    console.error('API createStory failed, falling back locally:', error);
-                    createLocally();
+                    console.error('API createStory failed:', error);
+                    get().addToast({ message: 'Erro ao publicar story.', type: 'error' });
                 }
             },
 
