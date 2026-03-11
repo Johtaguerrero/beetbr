@@ -58,11 +58,13 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
 }
 
 // ── Score Beet Badge ──────────────────────────────────────────
-export function ScoreBeetBadge({ score, size = 'sm' }: { score: number; size?: 'sm' | 'md' | 'lg' }) {
+export function ScoreBeetBadge({ score, size = 'sm', showLabel = false, className = '' }: { score: number; size?: 'sm' | 'md' | 'lg'; showLabel?: boolean; className?: string }) {
     const textSizes = { sm: 'text-[10px]', md: 'text-xs', lg: 'text-sm' };
     return (
-        <span className={`score-badge ${textSizes[size]}`}>
-            🐝 {Math.round(score)}
+        <span className={`score-badge ${textSizes[size]} ${className} flex items-center gap-1.5`}>
+            <span className="opacity-90">🐝</span>
+            <span className="font-black">{Math.round(score)}</span>
+            {showLabel && <span className="ml-1 text-[9px] font-bold uppercase tracking-widest opacity-60">Score Beeat</span>}
         </span>
     );
 }
@@ -93,34 +95,35 @@ interface AvatarProps {
     emoji?: string;
     imageUrl?: string | null;
     isIndustry?: boolean;
+    className?: string;
 }
-export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry = false }: AvatarProps) {
+export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry = false, className = '' }: AvatarProps) {
     const sizes = { sm: 'h-8 w-8 text-sm', md: 'h-10 w-10 text-base', lg: 'h-14 w-14 text-xl', xl: 'h-20 w-20 text-3xl' };
     const bg = isIndustry ? 'rgba(0,87,255,0.15)' : 'rgba(0,255,102,0.15)';
-    
+
     // Resolve full URL
     const fullUrl = api.getMediaUrl(imageUrl);
     const [imgError, setImgError] = useState(false);
-    
+
     // Get initials for fallback
     const initials = name
         ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : '?';
 
     return (
-        <div 
-            className={`flex flex-shrink-0 items-center justify-center rounded-full overflow-hidden ${sizes[size]} relative`} 
-            style={{ 
+        <div
+            className={`flex flex-shrink-0 items-center justify-center rounded-full overflow-hidden ${sizes[size]} ${className} relative`}
+            style={{
                 background: bg,
                 border: '1px solid rgba(255,255,255,0.05)',
                 boxShadow: 'inset 0 0 12px rgba(0,0,0,0.2)'
             }}
         >
             {fullUrl && !imgError ? (
-                <img 
-                    src={fullUrl} 
-                    alt={name} 
-                    className="h-full w-full object-cover" 
+                <img
+                    src={fullUrl}
+                    alt={name}
+                    className="h-full w-full object-cover"
                     onError={() => setImgError(true)}
                 />
             ) : (
@@ -128,7 +131,7 @@ export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry
                     {name ? initials : emoji}
                 </span>
             )}
-            
+
             {/* Status indicator or glow could go here */}
             {isIndustry && (
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-[var(--color-bg)] bg-beet-blue" style={{ boxShadow: '0 0 8px var(--color-blue)' }} title="Indústria" />

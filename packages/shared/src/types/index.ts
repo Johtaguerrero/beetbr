@@ -46,12 +46,12 @@ export interface ArtistProfile {
     subGenres: string[];
     complementaryStyles: string[];
     roles: string[];
-    professionalQuestions?: any;
+    professionalQuestions?: ProfessionalQuestions;
     status?: string;
     mainGoal?: string;
     availabilityStatus?: string;
     opportunityTypes: string[];
-    socialProofs?: any;
+    socialProofs?: SocialProof;
     portfolioPdfUrl?: string;
     portfolioPdfName?: string;
 
@@ -64,6 +64,41 @@ export interface ArtistProfile {
     website?: string;
     createdAt: string;
     updatedAt: string;
+}
+
+/** Structure for the 20+ professional artist questions */
+export interface ProfessionalQuestions {
+    availableForHire: 'YES' | 'NO' | 'CONSULT';
+    liveShows: 'YES' | 'NO' | 'SOON';
+    ownBand: 'YES' | 'PARTIAL' | 'NO';
+    performanceFormat: 'SOLO' | 'DUO' | 'BANDA' | 'DJ_VOCAL' | 'OTHER';
+    corporateEvents: 'YES' | 'NO' | 'ANALYSIS';
+    venueTypes: 'YES' | 'NO' | 'ANALYSIS';
+    featsAndCollabs: 'YES' | 'NO' | 'PROPOSAL';
+    unpaidCollabs: 'YES' | 'NO' | 'DEPENDS';
+    revShareCollabs: 'YES' | 'NO' | 'NEGOTIATION';
+    pressMaterial: 'YES' | 'NO';
+    hasPdfPortfolio: 'YES' | 'NO';
+    officialReleases: 'YES' | 'NO' | 'RELEASING';
+    digitalPlatforms: 'YES' | 'NO';
+    stageExperience: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'PROFESSIONAL';
+    travelAvailability: 'YES' | 'NO' | 'DEPENDS';
+    autoralRepertoire: 'YES' | 'NO' | 'PARTIAL';
+    singsCovers: 'YES' | 'NO';
+    invoiceIssuance: 'YES' | 'NO' | 'PARTNER';
+    hasManager: 'YES' | 'NO';
+    preferredContract: 'FIXED' | 'COMBINE' | 'REV_SHARE' | 'PERMUTE' | 'OTHER';
+}
+
+/** Structure for social proofs (collaborations, venues, etc.) */
+export interface SocialProof {
+    collaboratedArtists: string[];
+    venuesPlayed: string[];
+    festivals: string[];
+    partnerBrands: string[];
+    playlists: string[];
+    pressLinks: string[];
+    testimonials: { author: string; text: string }[];
 }
 
 /** Industry / company profile — linked 1:1 to a User with role=INDUSTRY */
