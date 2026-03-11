@@ -949,8 +949,8 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
 
                 {/* Header */}
                 <div style={{ position: 'absolute', top: 18, left: 12, right: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Avatar name={story.artist?.stageName || 'Artist'} size="sm" />
+                    <Link href={`/artist/profile/${story.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                        <Avatar name={story.artist?.stageName || 'Artist'} imageUrl={story.artist?.avatarUrl} size="sm" />
                         <div>
                             <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white' }}>
                                 {story.artist?.stageName || 'Artist'}
@@ -960,7 +960,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                                 {paused && ' · PAUSADO'}
                             </p>
                         </div>
-                    </div>
+                    </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {story.mediaType === 'VIDEO' && (
                             <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} style={{
