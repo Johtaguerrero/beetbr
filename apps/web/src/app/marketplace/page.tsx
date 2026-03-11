@@ -40,7 +40,7 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
 
                 {/* Seller */}
                 <div className="flex items-center gap-2">
-                    <Avatar name={listing.sellerName} imageUrl={listing.sellerAvatarUrl} size="xs" />
+                    <Avatar name={listing.sellerName} imageUrl={listing.sellerAvatarUrl} size="sm" />
                     <div>
                         <div className="flex items-center gap-1">
                             <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '13px', fontWeight: 700 }} className="text-[var(--color-primary-text,white)]">{listing.sellerName}</span>
