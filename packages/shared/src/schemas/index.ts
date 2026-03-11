@@ -101,7 +101,7 @@ export const CreatePostSchema = z.object({
 export type CreatePostInput = z.infer<typeof CreatePostSchema>;
 
 export const CreateStorySchema = z.object({
-    mediaType: z.enum(['IMAGE', 'VIDEO']),
+    mediaType: z.enum(['IMAGE', 'VIDEO', 'AUDIO']),
     // mediaUrl set server-side after upload
 });
 

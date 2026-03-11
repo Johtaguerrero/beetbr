@@ -208,7 +208,7 @@ export interface Story {
     artistId: string;
     artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
     mediaUrl: string;
-    mediaType: 'IMAGE' | 'VIDEO';
+    mediaType: 'IMAGE' | 'VIDEO' | 'AUDIO',
     expiresAt: string;
     createdAt: string;
     seen?: boolean; // UI state
