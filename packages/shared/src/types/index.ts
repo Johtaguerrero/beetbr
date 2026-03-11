@@ -164,17 +164,37 @@ export type IndustryType =
     | 'DISTRIBUTOR'
     | 'OTHER';
 
-/** Content post (music / video / lyric) */
+/** Post lifecycle status */
+export type PostStatus = 'DRAFT' | 'PUBLISHED' | 'BOOSTED_48H' | 'ARCHIVED' | 'DELETED' | 'PINNED';
+
+/** Where to publish the post */
+export type PublishTarget = 'FEED' | 'STORY' | 'FEED_AND_STORY' | 'PROFILE_ONLY';
+
+/** Content post (music / video / lyric / image) */
 export interface Post {
     id: string;
     artistId: string;
     artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
     type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE';
+
+    // ── Lifecycle & Visibility ───────────────────────────
+    status: PostStatus;
+    publishTarget: PublishTarget;
+    visibleInFeed: boolean;
+    visibleInProfile: boolean;
+    visibleInExplore: boolean;
+    boostExpiresAt?: string;   // createdAt + 48h
+    pinnedAt?: string;         // set when pinned
+    archivedAt?: string;       // set when archived
+
+    // ── Content ──────────────────────────────────────────
     text?: string;
     mediaUrl?: string;
     thumbUrl?: string;
     duration?: number; // seconds
     hashtags: string[];
+
+    // ── Engagement ───────────────────────────────────────
     plays: number;
     likes: number;
     comments: number;

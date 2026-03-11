@@ -29,7 +29,7 @@ import { PROFESSIONAL_QUESTIONS_LABELS, QUESTION_VALUE_LABELS } from './constant
 export default function ArtistProfilePage() {
     useAuthGuard();
     const params = useParams<{ id: string }>();
-    const { artists, currentUser, artistProfile: myProfile, updateArtistProfile, toggleFollow, isFollowing, toggleShortlist, isInShortlist } = useStore();
+    const { artists, currentUser, artistProfile: myProfile, updateArtistProfile, toggleFollow, isFollowing, toggleShortlist, isInShortlist, getProfilePosts, restorePost } = useStore();
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
@@ -402,14 +402,18 @@ export default function ArtistProfilePage() {
 
                         {portfolioSubTab === 'tracks' && (
                             <div className="grid grid-cols-1 gap-4">
-                                {(useStore.getState().posts || []).filter((p) => p.artistId === artist.id && p.type === 'TRACK').map((post) => (
-                                    <div key={post.id} className="beet-card overflow-hidden group hover:border-beet-accent/20 transition-all">
+                                {getProfilePosts(artist.id, 'TRACK').sort((a, b) => (a.status === 'PINNED' ? -1 : b.status === 'PINNED' ? 1 : 0)).map((post) => (
+                                    <div key={post.id} className="beet-card overflow-hidden group hover:border-beet-accent/20 transition-all" style={{ opacity: post.status === 'ARCHIVED' ? 0.5 : 1 }}>
                                         <div className="p-5 flex gap-5 items-center">
                                             <div className="h-20 w-20 rounded-2xl bg-beet-dark flex items-center justify-center flex-shrink-0 text-3xl shadow-inner border border-white/5 group-hover:bg-beet-accent/5 transition-colors">
                                                 🎵
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-base text-white font-bold tracking-tight line-clamp-1">{post.text || 'Single sem título'}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-base text-white font-bold tracking-tight line-clamp-1">{post.text || 'Single sem título'}</p>
+                                                    {post.status === 'PINNED' && <span className="text-[9px] bg-beet-accent/10 text-beet-accent px-2 py-0.5 rounded font-bold uppercase">📌 Fixado</span>}
+                                                    {post.status === 'ARCHIVED' && isSelf && <span className="text-[9px] bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded font-bold uppercase">Arquivado</span>}
+                                                </div>
                                                 <p className="text-[10px] text-beet-muted font-black uppercase tracking-widest mt-1">Lançamento Oficial</p>
                                                 <div className="mt-4 flex items-center gap-4 text-[10px] text-beet-muted font-bold uppercase tracking-tighter">
                                                     <span className="flex items-center gap-1">▶️ <span className="text-white">{(post.plays || 0).toLocaleString('pt-BR')}</span></span>
@@ -417,13 +421,16 @@ export default function ArtistProfilePage() {
                                                     <span className="bg-white/5 px-2 py-1 rounded-md">{new Date(post.createdAt).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
+                                            {post.status === 'ARCHIVED' && isSelf && (
+                                                <button onClick={() => restorePost(post.id)} className="text-[9px] text-beet-accent font-bold uppercase tracking-wider hover:bg-beet-accent/10 px-3 py-1.5 rounded transition-colors">Restaurar</button>
+                                            )}
                                         </div>
                                         <div className="px-5 pb-5 pt-2">
                                             <TrackPlayer url={post.mediaUrl} />
                                         </div>
                                     </div>
                                 ))}
-                                {(useStore.getState().posts || []).filter((p) => p.artistId === artist.id && p.type === 'TRACK').length === 0 && (
+                                {getProfilePosts(artist.id, 'TRACK').length === 0 && (
                                     <EmptyState icon="🎵" title="Nenhuma música ainda" description="O artista ainda não publicou faixas de destaque." />
                                 )}
                             </div>
@@ -431,8 +438,8 @@ export default function ArtistProfilePage() {
 
                         {portfolioSubTab === 'videos' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {(useStore.getState().posts || []).filter((p) => p.artistId === artist.id && p.type === 'VIDEO').map((post) => (
-                                    <div key={post.id} className="beet-card overflow-hidden aspect-video relative group border-white/5 hover:border-beet-accent/30 transition-all shadow-2xl cursor-pointer">
+                                {getProfilePosts(artist.id, 'VIDEO').sort((a, b) => (a.status === 'PINNED' ? -1 : b.status === 'PINNED' ? 1 : 0)).map((post) => (
+                                    <div key={post.id} className="beet-card overflow-hidden aspect-video relative group border-white/5 hover:border-beet-accent/30 transition-all shadow-2xl cursor-pointer" style={{ opacity: post.status === 'ARCHIVED' ? 0.5 : 1 }}>
                                         {post.mediaUrl ? (
                                             <video src={api.getMediaUrl(post.mediaUrl)} className="w-full h-full object-cover" />
                                         ) : (
@@ -444,12 +451,15 @@ export default function ArtistProfilePage() {
                                             </div>
                                         </div>
                                         <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                                            <p className="text-sm text-white font-bold tracking-tight line-clamp-1">{post.text || 'Clipe Oficial'}</p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm text-white font-bold tracking-tight line-clamp-1 flex-1">{post.text || 'Clipe Oficial'}</p>
+                                                {post.status === 'PINNED' && <span className="text-[8px] bg-beet-accent/10 text-beet-accent px-1.5 py-0.5 rounded font-bold">📌</span>}
+                                            </div>
                                             <p className="text-[9px] text-beet-muted font-black uppercase tracking-widest mt-1">Video Release</p>
                                         </div>
                                     </div>
                                 ))}
-                                {(useStore.getState().posts || []).filter((p) => p.artistId === artist.id && p.type === 'VIDEO').length === 0 && (
+                                {getProfilePosts(artist.id, 'VIDEO').length === 0 && (
                                     <div className="col-span-full py-12"><EmptyState icon="🎬" title="Nenhum clipe disponível" description="Em breve novos vídeos serão adicionados." /></div>
                                 )}
                             </div>
@@ -457,22 +467,50 @@ export default function ArtistProfilePage() {
 
                         {portfolioSubTab === 'lyrics' && (
                             <div className="space-y-4">
-                                <div className="beet-card p-10 flex flex-col items-center justify-center text-center bg-black/20 border-dashed border-white/10">
-                                    <div className="text-4xl mb-4 opacity-40">📝</div>
-                                    <p className="text-sm text-beet-muted font-bold uppercase tracking-widest">Sincronização de Letras</p>
-                                    <p className="text-[10px] text-beet-muted/50 mt-1 max-w-xs">As composições deste artista estão sendo revisadas para publicação oficial.</p>
-                                </div>
+                                {getProfilePosts(artist.id, 'LYRIC').length > 0 ? (
+                                    getProfilePosts(artist.id, 'LYRIC').sort((a, b) => (a.status === 'PINNED' ? -1 : b.status === 'PINNED' ? 1 : 0)).map(post => (
+                                        <div key={post.id} className="beet-card p-6" style={{ opacity: post.status === 'ARCHIVED' ? 0.5 : 1 }}>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-lg">📝</span>
+                                                <p className="text-sm font-bold text-white">{post.text?.split('\n')[0] || 'Composição'}</p>
+                                                {post.status === 'PINNED' && <span className="text-[9px] bg-beet-accent/10 text-beet-accent px-2 py-0.5 rounded font-bold uppercase">📌 Fixado</span>}
+                                            </div>
+                                            <p className="text-sm text-beet-gray whitespace-pre-wrap leading-relaxed">{post.text}</p>
+                                            <p className="text-[9px] text-beet-muted mt-3 uppercase font-bold tracking-widest">{new Date(post.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="beet-card p-10 flex flex-col items-center justify-center text-center bg-black/20 border-dashed border-white/10">
+                                        <div className="text-4xl mb-4 opacity-40">📝</div>
+                                        <p className="text-sm text-beet-muted font-bold uppercase tracking-widest">Sincronização de Letras</p>
+                                        <p className="text-[10px] text-beet-muted/50 mt-1 max-w-xs">As composições deste artista estão sendo revisadas para publicação oficial.</p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {portfolioSubTab === 'photos' && (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {[1, 2, 3, 4, 5, 6].map(i => (
-                                    <div key={i} className="aspect-square bg-beet-dark rounded-2xl border border-white/5 overflow-hidden group relative cursor-pointer hover:border-beet-accent/30 transition-all">
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-40 transition-opacity text-5xl">🖼️</div>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                ))}
+                                {getProfilePosts(artist.id, 'IMAGE').length > 0 ? (
+                                    getProfilePosts(artist.id, 'IMAGE').sort((a, b) => (a.status === 'PINNED' ? -1 : b.status === 'PINNED' ? 1 : 0)).map(post => (
+                                        <div key={post.id} className="aspect-square bg-beet-dark rounded-2xl border border-white/5 overflow-hidden group relative cursor-pointer hover:border-beet-accent/30 transition-all" style={{ opacity: post.status === 'ARCHIVED' ? 0.5 : 1 }}>
+                                            {post.mediaUrl ? (
+                                                <img src={api.getMediaUrl(post.mediaUrl)} alt={post.text || 'Foto'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center opacity-10 text-5xl">🖼️</div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            {post.status === 'PINNED' && <span className="absolute top-2 left-2 text-[8px] bg-beet-accent/20 text-beet-accent px-1.5 py-0.5 rounded font-bold">📌</span>}
+                                        </div>
+                                    ))
+                                ) : (
+                                    [1, 2, 3, 4, 5, 6].map(i => (
+                                        <div key={i} className="aspect-square bg-beet-dark rounded-2xl border border-white/5 overflow-hidden group relative cursor-pointer hover:border-beet-accent/30 transition-all">
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-40 transition-opacity text-5xl">🖼️</div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         )}
 

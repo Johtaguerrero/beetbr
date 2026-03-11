@@ -6,6 +6,8 @@ import {
     ArtistProfile,
     IndustryProfile,
     Post,
+    PostStatus,
+    PublishTarget,
     Story,
     Proposal,
     ProposalStatus,
@@ -27,6 +29,8 @@ export type {
     ArtistProfile,
     IndustryProfile,
     Post,
+    PostStatus,
+    PublishTarget,
     Story,
     Proposal,
     ProposalStatus,
@@ -198,9 +202,19 @@ interface BeetrStore {
     togglePostLike: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
-    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File }) => Promise<string>;
+    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; publishTarget?: PublishTarget }) => Promise<string>;
     createStory: (file: File) => Promise<void>;
     addPostComment: (postId: string, text: string) => void;
+
+    // ── Post Lifecycle Actions ─────────────────────────
+    editPost: (postId: string, data: Partial<Pick<Post, 'text' | 'hashtags' | 'type'>>) => void;
+    archivePost: (postId: string) => void;
+    deletePost: (postId: string) => void;
+    pinPost: (postId: string) => void;
+    unpinPost: (postId: string) => void;
+    restorePost: (postId: string) => void;
+    getProfilePosts: (artistId: string, type?: Post['type']) => Post[];
+    getFeedPosts: () => Post[];
 
     toggleShortlist: (artistId: string) => void;
     isInShortlist: (artistId: string) => boolean;
@@ -393,10 +407,22 @@ export const useStore = create<BeetrStore>()(
                 if (accessToken === 'demo-token') return;
                 try {
                     const res: any = await api.feed.getFeed(page);
-                    // Redundância: Expira posts com mais de 48h (backend já filtra, mas garantimos aqui)
-                    const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
-                    const validPosts = (res.data || []).filter((p: any) => new Date(p.createdAt).getTime() >= fortyEightHoursAgo);
-                    set({ posts: validPosts });
+                    const BOOST_MS = 48 * 60 * 60 * 1000;
+                    const enriched: Post[] = (res.data || []).map((p: any) => {
+                        const createdMs = new Date(p.createdAt).getTime();
+                        const boostExpires = new Date(createdMs + BOOST_MS).toISOString();
+                        const isBoosted = Date.now() < createdMs + BOOST_MS;
+                        return {
+                            ...p,
+                            status: p.status || (isBoosted ? 'BOOSTED_48H' : 'PUBLISHED') as PostStatus,
+                            publishTarget: p.publishTarget || 'FEED' as PublishTarget,
+                            visibleInFeed: p.visibleInFeed ?? true,
+                            visibleInProfile: p.visibleInProfile ?? true,
+                            visibleInExplore: p.visibleInExplore ?? true,
+                            boostExpiresAt: p.boostExpiresAt || boostExpires,
+                        };
+                    });
+                    set({ posts: enriched });
                 } catch (error: any) {
                     console.error('Failed to fetch feed:', error);
                 }
@@ -450,6 +476,7 @@ export const useStore = create<BeetrStore>()(
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return '';
                 const file = data.file;
+                const publishTarget: PublishTarget = data.publishTarget || 'FEED';
 
                 if (accessToken === 'demo-token') {
                     get().addToast({ message: 'Modo demo: Upload desativado para garantir persistência real.', type: 'info' });
@@ -464,10 +491,27 @@ export const useStore = create<BeetrStore>()(
                     }
                     const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id });
 
-                    // Add to local state only after API success
-                    set((s) => ({ posts: [res.data, ...s.posts] }));
+                    const BOOST_MS = 48 * 60 * 60 * 1000;
+                    const now = new Date();
+                    const enrichedPost: Post = {
+                        ...res.data,
+                        status: publishTarget === 'PROFILE_ONLY' ? 'PUBLISHED' : 'BOOSTED_48H',
+                        publishTarget,
+                        visibleInFeed: publishTarget !== 'PROFILE_ONLY' && publishTarget !== 'STORY',
+                        visibleInProfile: true,
+                        visibleInExplore: publishTarget !== 'PROFILE_ONLY',
+                        boostExpiresAt: new Date(now.getTime() + BOOST_MS).toISOString(),
+                    };
+
+                    set((s) => ({ posts: [enrichedPost, ...s.posts] }));
+
+                    // If target includes story, also create one
+                    if ((publishTarget === 'STORY' || publishTarget === 'FEED_AND_STORY') && file) {
+                        try { await get().createStory(file); } catch { /* story creation is best-effort */ }
+                    }
+
                     get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
-                    return res.data.id;
+                    return enrichedPost.id;
                 } catch (error: any) {
                     console.error('API createPost failed:', error);
                     get().addToast({ message: 'Erro ao publicar post. Tente novamente.', type: 'error' });
@@ -497,6 +541,88 @@ export const useStore = create<BeetrStore>()(
                     console.error('API createStory failed:', error);
                     get().addToast({ message: 'Erro ao publicar story.', type: 'error' });
                 }
+            },
+
+            // ── Post Lifecycle Actions ───────────────────────────────────
+            editPost: (postId, data) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? { ...p, ...data } : p),
+            })),
+
+            archivePost: (postId) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? {
+                    ...p,
+                    status: 'ARCHIVED' as PostStatus,
+                    visibleInFeed: false,
+                    visibleInExplore: false,
+                    visibleInProfile: true,
+                    archivedAt: new Date().toISOString(),
+                } : p),
+            })),
+
+            deletePost: (postId) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? {
+                    ...p,
+                    status: 'DELETED' as PostStatus,
+                    visibleInFeed: false,
+                    visibleInExplore: false,
+                    visibleInProfile: false,
+                } : p),
+            })),
+
+            pinPost: (postId) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? {
+                    ...p,
+                    status: 'PINNED' as PostStatus,
+                    pinnedAt: new Date().toISOString(),
+                    visibleInProfile: true,
+                } : p),
+            })),
+
+            unpinPost: (postId) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? {
+                    ...p,
+                    status: (Date.now() < new Date(p.boostExpiresAt || 0).getTime() ? 'BOOSTED_48H' : 'PUBLISHED') as PostStatus,
+                    pinnedAt: undefined,
+                } : p),
+            })),
+
+            restorePost: (postId) => set((s) => ({
+                posts: s.posts.map(p => p.id === postId ? {
+                    ...p,
+                    status: (Date.now() < new Date(p.boostExpiresAt || 0).getTime() ? 'BOOSTED_48H' : 'PUBLISHED') as PostStatus,
+                    visibleInFeed: p.publishTarget !== 'PROFILE_ONLY',
+                    visibleInProfile: true,
+                    visibleInExplore: p.publishTarget !== 'PROFILE_ONLY',
+                    archivedAt: undefined,
+                } : p),
+            })),
+
+            getProfilePosts: (artistId, type) => {
+                const posts = get().posts.filter(p =>
+                    p.artistId === artistId &&
+                    p.status !== 'DELETED' &&
+                    p.visibleInProfile !== false
+                );
+                if (type) return posts.filter(p => p.type === type);
+                return posts;
+            },
+
+            getFeedPosts: () => {
+                const BOOST_MS = 48 * 60 * 60 * 1000;
+                const now = Date.now();
+                return get().posts
+                    .filter(p => p.visibleInFeed && p.status !== 'DELETED' && p.status !== 'ARCHIVED')
+                    .sort((a, b) => {
+                        const aCreated = new Date(a.createdAt).getTime();
+                        const bCreated = new Date(b.createdAt).getTime();
+                        const aBoosted = now < aCreated + BOOST_MS ? 1 : 0;
+                        const bBoosted = now < bCreated + BOOST_MS ? 1 : 0;
+                        // Pinned first, then boosted, then by recency
+                        if (a.status === 'PINNED' && b.status !== 'PINNED') return -1;
+                        if (b.status === 'PINNED' && a.status !== 'PINNED') return 1;
+                        if (aBoosted !== bBoosted) return bBoosted - aBoosted;
+                        return bCreated - aCreated;
+                    });
             },
 
             toggleShortlist: (artistId) => set((s) => ({ shortlist: s.shortlist.includes(artistId) ? s.shortlist.filter((id) => id !== artistId) : [...s.shortlist, artistId] })),

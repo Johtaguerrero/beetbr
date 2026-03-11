@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
-import { useStore } from '@/lib/store';
+import { useStore, type PublishTarget } from '@/lib/store';
 import { Spinner } from '@/components/ui';
 
 const HASHTAG_SUGGESTIONS: Record<string, string[]> = {
@@ -26,6 +26,14 @@ export default function CreatePost() {
     const [customHashtag, setCustomHashtag] = useState('');
     const [publishing, setPublishing] = useState(false);
     const [file, setFile] = useState<File | null>(null);
+    const [publishTarget, setPublishTarget] = useState<PublishTarget>('FEED');
+
+    const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
+        { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
+        { key: 'STORY', label: 'Story', icon: '⏱', desc: 'Expira em 24h' },
+        { key: 'FEED_AND_STORY', label: 'Feed + Story', icon: '🚀', desc: 'Máxima visibilidade' },
+        { key: 'PROFILE_ONLY', label: 'Só Perfil', icon: '📂', desc: 'Salva no portfólio' },
+    ];
 
     const toggleHashtag = (h: string) =>
         setSelectedHashtags((p) => p.includes(h) ? p.filter((x) => x !== h) : [...p, h]);
@@ -48,7 +56,8 @@ export default function CreatePost() {
                 type,
                 text,
                 hashtags: selectedHashtags,
-                file: file || undefined
+                file: file || undefined,
+                publishTarget,
             });
             router.push('/artist/feed');
         } catch (error) {
@@ -172,6 +181,29 @@ export default function CreatePost() {
                             </p>
                         )}
                     </motion.div>
+
+                    {/* Publish Target */}
+                    <div>
+                        <p className="section-title mb-3">Publicar em</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {PUBLISH_TARGETS.map(t => (
+                                <button key={t.key} onClick={() => setPublishTarget(t.key)}
+                                    className="rounded-xl border p-3 text-left transition-all duration-200"
+                                    style={{
+                                        borderColor: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-border)',
+                                        background: publishTarget === t.key ? 'var(--color-accent-dim)' : 'transparent',
+                                    }}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">{t.icon}</span>
+                                        <span className="text-xs font-bold" style={{ color: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-gray)' }}>
+                                            {t.label}
+                                        </span>
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-beet-muted">{t.desc}</p>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
                     {/* Publish */}
                     <button onClick={handlePublish} disabled={publishing} className="btn-accent w-full flex items-center justify-center gap-2 py-4">

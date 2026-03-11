@@ -4,10 +4,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
-import { useStore, type Post, type Story } from '@/lib/store';
+import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3 } from 'lucide-react';
+
+const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
+    { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
+    { key: 'STORY', label: 'Story', icon: '⏱', desc: 'Expira em 24h' },
+    { key: 'FEED_AND_STORY', label: 'Feed + Story', icon: '🚀', desc: 'Máxima visibilidade' },
+    { key: 'PROFILE_ONLY', label: 'Só Perfil', icon: '📂', desc: 'Salva no portfólio' },
+];
 
 
 /* ── Type colours ──────────────────────────────────────── */
@@ -35,6 +42,7 @@ function InlineComposer() {
     const [file, setFile] = useState<File | null>(null);
     const [filePreview, setFilePreview] = useState<string | null>(null);
     const [postType, setPostType] = useState<string>('IMAGE');
+    const [publishTarget, setPublishTarget] = useState<PublishTarget>('FEED');
     const [publishing, setPublishing] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -61,7 +69,7 @@ function InlineComposer() {
         if (!text.trim() && !file) { addToast({ message: 'Adicione texto ou arquivo!', type: 'error' }); return; }
         setPublishing(true);
         try {
-            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined });
+            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined, publishTarget });
             setText('');
             clearFile();
             setExpanded(false);
@@ -156,8 +164,30 @@ function InlineComposer() {
                         </div>
                     )}
 
+                    {/* Publish target selector */}
+                    <div style={{ marginTop: 12, marginBottom: 12 }}>
+                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.15em', color: 'var(--color-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Publicar em:</p>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {PUBLISH_TARGETS.map(t => (
+                                <button key={t.key} onClick={() => setPublishTarget(t.key)}
+                                    title={t.desc}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 5,
+                                        padding: '5px 10px', borderRadius: '2px', border: '1px solid',
+                                        borderColor: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-nav-border)',
+                                        background: publishTarget === t.key ? 'rgba(0,255,136,0.1)' : 'transparent',
+                                        color: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-muted)',
+                                        fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700,
+                                        letterSpacing: '0.08em', cursor: 'pointer', transition: 'all .15s',
+                                    }}>
+                                    <span>{t.icon}</span> {t.label.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Actions row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', gap: 8 }}>
                             <input type="file" ref={fileRef} className="hidden" accept={selectedType.accept} onChange={handleFile} />
                             <button onClick={() => fileRef.current?.click()} style={{
@@ -321,12 +351,20 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
 function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) {
-    const { togglePostLike, artistProfile } = useStore();
+    const { togglePostLike, artistProfile, currentUser, archivePost, deletePost, pinPost, unpinPost } = useStore();
     const [liked, setLiked] = useState(post.liked);
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [comments, setComments] = useState<any[]>([]); // Local state for demo
+    const [showMenu, setShowMenu] = useState(false);
     const tc = TC[post.type] || TC.TRACK;
+
+    const isOwn = artistProfile?.id === post.artistId;
+    const isBoosted = post.boostExpiresAt ? Date.now() < new Date(post.boostExpiresAt).getTime() : false;
+    const isPinned = post.status === 'PINNED';
+    const boostRemaining = post.boostExpiresAt
+        ? Math.max(0, Math.ceil((new Date(post.boostExpiresAt).getTime() - Date.now()) / 3600000))
+        : 0;
 
     const containerRef = useRef<HTMLElement>(null);
     const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
@@ -415,16 +453,73 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                     </div>
                 </Link>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {/* Boost badge */}
+                    {isBoosted && (
+                        <span style={{
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em',
+                            padding: '3px 8px', borderRadius: '2px',
+                            border: '1px solid rgba(255,165,0,0.4)', background: 'rgba(255,165,0,0.1)', color: '#FFA500',
+                            animation: 'pulse 2s ease-in-out infinite',
+                        }}>
+                            <Flame size={10} /> {boostRemaining}H
+                        </span>
+                    )}
+                    {/* Pinned badge */}
+                    {isPinned && (
+                        <span style={{
+                            display: 'flex', alignItems: 'center', gap: 3,
+                            fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700,
+                            padding: '3px 8px', borderRadius: '2px',
+                            border: '1px solid rgba(0,255,136,0.3)', background: 'rgba(0,255,136,0.08)', color: 'var(--color-accent)',
+                        }}>
+                            <Pin size={10} /> FIXADO
+                        </span>
+                    )}
                     {/* type badge */}
                     <span style={{
                         fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em',
                         padding: '4px 10px', borderRadius: '2px',
                         border: `1px solid ${tc.color}50`, background: `${tc.color}12`, color: tc.color,
                     }}>{tc.label}</span>
-                    <button style={{ color: 'var(--color-muted)', padding: '4px', lineHeight: 1, border: 'none', background: 'none' }}>
-                        <MoreHorizontal size={18} strokeWidth={1.75} />
-                    </button>
+                    {/* 3-dot menu */}
+                    <div style={{ position: 'relative' }}>
+                        <button onClick={() => setShowMenu(!showMenu)} style={{ color: 'var(--color-muted)', padding: '4px', lineHeight: 1, border: 'none', background: 'none', cursor: 'pointer' }}>
+                            <MoreHorizontal size={18} strokeWidth={1.75} />
+                        </button>
+                        {showMenu && isOwn && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                                style={{
+                                    position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                                    background: 'var(--color-card)', border: '1px solid var(--color-nav-border)',
+                                    borderRadius: '4px', overflow: 'hidden', zIndex: 50,
+                                    minWidth: 160, boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                                }}
+                            >
+                                {[
+                                    { label: isPinned ? 'Desafixar' : 'Fixar no Perfil', icon: Pin, action: () => isPinned ? unpinPost(post.id) : pinPost(post.id), color: 'var(--color-accent)' },
+                                    { label: 'Arquivar', icon: Archive, action: () => archivePost(post.id), color: '#FFA500' },
+                                    { label: 'Excluir', icon: Trash2, action: () => { if (confirm('Excluir este post?')) deletePost(post.id); }, color: '#FF0055' },
+                                ].map((item, i) => (
+                                    <button key={i} onClick={() => { item.action(); setShowMenu(false); }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                                            padding: '10px 14px', border: 'none', background: 'none',
+                                            color: item.color, cursor: 'pointer', textAlign: 'left',
+                                            fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700,
+                                            letterSpacing: '0.06em',
+                                        }}
+                                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                                    >
+                                        <item.icon size={14} /> {item.label.toUpperCase()}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -677,7 +772,8 @@ function PublishFAB() {
 ══════════════════════════════════════════════════════════ */
 export default function FeedPage() {
     useAuthGuard('ARTIST');
-    const { artistProfile, posts, stories, fetchFeed, fetchStories } = useStore();
+    const { artistProfile, stories, fetchFeed, fetchStories, getFeedPosts } = useStore();
+    const feedPosts = getFeedPosts();
     const [loading, setLoading] = useState(true);
     const [selectedStory, setSelectedStory] = useState<Story | null>(null);
 
@@ -754,11 +850,11 @@ export default function FeedPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 {[1, 2, 3].map(i => <Skeleton key={i} className="h-52" />)}
                             </div>
-                        ) : posts.length === 0 ? (
+                        ) : feedPosts.length === 0 ? (
                             <EmptyState icon="🎵" title="Nenhuma publicação ainda" description="Siga artistas para ver o feed"
                                 action={<Link href="/rankings" className="btn-outline">EXPLORAR ARTISTAS</Link>} />
                         ) : (
-                            posts.map(post => <PostCard key={post.id} post={post} isStoryOpen={!!selectedStory} />)
+                            feedPosts.map(post => <PostCard key={post.id} post={post} isStoryOpen={!!selectedStory} />)
                         )}
                     </div>
                 </div>
