@@ -19,6 +19,12 @@ feedRouter.get('/', async (req: Request, res: Response) => {
         take: perPage,
         include: {
             artist: { select: { id: true, stageName: true, avatarUrl: true, genres: true, scoreBeet: true } },
+            listing: {
+                include: {
+                    artistSeller: { select: { stageName: true, avatarUrl: true, scoreBeet: true } },
+                    industrySeller: { select: { companyName: true, logoUrl: true } },
+                }
+            }
         },
     });
 
@@ -29,7 +35,7 @@ feedRouter.post('/posts', authenticate, requireRole('ARTIST'), async (req: AuthR
     const artist = await prisma.artistProfile.findUnique({ where: { userId: req.user!.userId } });
     if (!artist) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Perfil não encontrado' } });
 
-    const { type, text, hashtags, mediaUrl } = req.body;
+    const { type, text, hashtags, mediaUrl, listingId } = req.body;
 
     const post = await prisma.post.create({
         data: {
@@ -38,9 +44,16 @@ feedRouter.post('/posts', authenticate, requireRole('ARTIST'), async (req: AuthR
             text,
             hashtags: hashtags || [],
             mediaUrl,
+            listingId,
         },
         include: {
             artist: { select: { id: true, stageName: true, avatarUrl: true, genres: true, scoreBeet: true } },
+            listing: {
+                include: {
+                    artistSeller: { select: { stageName: true, avatarUrl: true, scoreBeet: true } },
+                    industrySeller: { select: { companyName: true, logoUrl: true } },
+                }
+            }
         },
     });
 

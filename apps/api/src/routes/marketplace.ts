@@ -86,7 +86,7 @@ marketplaceRouter.get('/:id', async (req, res) => {
         where: { id: req.params.id },
         include: {
             artistSeller: { select: { stageName: true, avatarUrl: true, scoreBeet: true, city: true, state: true, bio: true } },
-            industrySeller: { select: { companyName: true, logoUrl: true, city: true, state: true, description: true } },
+            industrySeller: { select: { companyName: true, logoUrl: true, city: true, state: true } },
         },
     });
 
