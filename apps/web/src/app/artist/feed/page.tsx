@@ -967,8 +967,9 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
     const [liked, setLiked] = useState(false);
     const [paused, setPaused] = useState(false);
     const [muted, setMuted] = useState(true);
-    const [duration, setDuration] = useState(story.mediaType === 'VIDEO' ? 45000 : 25000); // 45s for video, 25s for img
+    const [duration, setDuration] = useState(story.mediaType === 'VIDEO' ? 45000 : 25000);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const dragY = useRef(0);
 
     useEffect(() => {
         setProgress(0);
@@ -1009,38 +1010,62 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
         else setPaused(p => !p);
     };
 
+    // Swipe detection for X axis (since framer-motion drag might interfere with tap zones on some browsers)
+    const onDragEnd = (event: any, info: any) => {
+        const { offset, velocity } = info;
+        
+        // Vertical Swipe (Up or Down) to close
+        if (Math.abs(offset.y) > 150 || Math.abs(velocity.y) > 500) {
+            onClose();
+            return;
+        }
+
+        // Horizontal Swipe (Next/Prev)
+        if (offset.x < -100 || velocity.x < -500) {
+            onNext();
+        } else if (offset.x > 100 || velocity.x > 500) {
+            onPrev();
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{
-                position: 'fixed', inset: 0, zIndex: 9999,
-                background: 'rgba(0,0,0,0.95)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-            }}
+            className="fixed inset-0 z-[99999] bg-black flex items-center justify-center overflow-hidden"
             onClick={onClose}
         >
-            <div style={{
-                position: 'relative',
-                width: '100vw',
-                maxWidth: 480,
-                height: '100vh',
-                maxHeight: 'min(100vh, 853px)',
-                aspectRatio: '9/16',
-                background: '#111',
-                overflow: 'hidden',
-                display: 'flex', flexDirection: 'column',
-                boxShadow: '0 0 50px rgba(0,0,0,0.8)'
-            }} onClick={e => e.stopPropagation()}>
+            <motion.div
+                drag
+                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                dragElastic={0.4}
+                onDragEnd={onDragEnd}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0, y: dragY.current > 0 ? 500 : -500 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: 480,
+                    height: '100%',
+                    background: '#000',
+                    display: 'flex', flexDirection: 'column',
+                    boxShadow: '0 0 50px rgba(0,0,0,0.8)',
+                    touchAction: 'none'
+                }} 
+                onClick={e => e.stopPropagation()}
+                className="md:h-[90vh] md:rounded-2xl md:aspect-[9/16] md:max-h-[850px]"
+            >
                 {/* Progress bars */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '8px 8px 0', zIndex: 10 }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '12px 12px 0', zIndex: 100 }}>
                     {stories.map((s, i) => (
-                        <div key={s.id} style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                        <div key={s.id} style={{ flex: 1, height: 2, borderRadius: 2, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
                             <div style={{
                                 height: '100%', borderRadius: 2,
                                 background: 'white',
-                                width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}% ` : '0%',
+                                width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%',
                                 transition: i === storyIndex ? 'none' : 'width 0.3s',
                             }} />
                         </div>
@@ -1048,122 +1073,157 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                 </div>
 
                 {/* Header */}
-                <div style={{ position: 'absolute', top: 18, left: 12, right: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                <div style={{ position: 'absolute', top: 22, left: 16, right: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100 }}>
                     <Link href={`/artist/profile/${story.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                        <Avatar name={story.artist?.stageName || 'Artist'} imageUrl={story.artist?.avatarUrl} size="sm" />
+                        <div style={{ border: '1.5px solid var(--color-accent)', borderRadius: '50%', padding: '1.5px' }}>
+                            <Avatar name={story.artist?.stageName || 'Artist'} imageUrl={story.artist?.avatarUrl} size="sm" />
+                        </div>
                         <div>
-                            <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white' }}>
+                            <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 800, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                                 {story.artist?.stageName || 'Artist'}
                             </p>
-                            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>
+                            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                 {new Date(story.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                {paused && ' · PAUSADO'}
                             </p>
                         </div>
                     </Link>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         {story.mediaType === 'VIDEO' && (
                             <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} style={{
                                 color: 'white', padding: 8,
                                 background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
-                                border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', lineHeight: 1,
+                                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', lineHeight: 1,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                backdropFilter: 'blur(10px)'
                             }}>
                                 {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                             </button>
                         )}
                         <button onClick={onClose} style={{
-                            color: 'white', fontSize: 20, padding: 8,
-                            background: 'rgba(255,255,255,0.1)', borderRadius: '50%',
-                            border: 'none', cursor: 'pointer', lineHeight: 1, width: 36, height: 36,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>✕</button>
+                            color: 'white', padding: 8,
+                            background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                            border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            backdropFilter: 'blur(10px)'
+                        }}>
+                            <X size={20} />
+                        </button>
                     </div>
                 </div>
 
                 {/* Media — tap zones */}
-                <div onClick={handleTap} style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-                    {story.mediaType === 'VIDEO' ? (
-                        <video
-                            ref={videoRef}
-                            src={story.mediaUrl}
-                            autoPlay
-                            muted={muted}
-                            playsInline
-                            onLoadedMetadata={handleVideoMetadata}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                            onClick={e => e.stopPropagation()}
-                        />
-                    ) : story.mediaType === 'AUDIO' ? (
-                        <div style={{ width: '90%', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}>
-                            <TrackPlayer url={story.mediaUrl} title="Audio Story" />
-                        </div>
-                    ) : (
-                        <img src={story.mediaUrl} alt="Story"
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                    )}
+                <div 
+                    onClick={handleTap} 
+                    style={{ 
+                        flex: 1, 
+                        width: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        cursor: 'pointer', 
+                        position: 'relative',
+                        background: '#000'
+                    }}
+                >
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={story.id}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ width: '100%', height: '100%' }}
+                        >
+                            {story.mediaType === 'VIDEO' ? (
+                                <video
+                                    ref={videoRef}
+                                    src={story.mediaUrl}
+                                    autoPlay
+                                    muted={muted}
+                                    playsInline
+                                    onLoadedMetadata={handleVideoMetadata}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onClick={e => e.stopPropagation()}
+                                />
+                            ) : story.mediaType === 'AUDIO' ? (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                                    <div style={{ width: '100%', padding: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <TrackPlayer url={story.mediaUrl} title="Audio Story" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <img src={story.mediaUrl} alt="Story"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Left/Right Tap Hints (briefly visible on tap or drag) */}
+                    <div className="absolute inset-y-0 left-0 w-1/4 pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 w-1/4 pointer-events-none" />
                 </div>
 
                 {/* Bottom interaction bar */}
                 <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-                    background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-                    padding: '40px 20px 24px',
+                    position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100,
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.9))',
+                    padding: '60px 20px 30px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                    {/* Like */}
-                    <motion.button whileTap={{ scale: 0.8 }}
-                        onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-                        style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: liked ? '#FF0055' : 'white',
-                        }}>
-                        <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2}
-                            style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none' }} />
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>
-                            {liked ? 'CURTIU' : 'CURTIR'}
-                        </span>
-                    </motion.button>
+                    {/* Reply Input */}
+                    <div style={{ flex: 1, marginRight: 15 }}>
+                        <input 
+                            onClick={e => { e.stopPropagation(); setPaused(true); }}
+                            onBlur={() => setPaused(false)}
+                            placeholder="Enviar mensagem..."
+                            style={{
+                                width: '100%', background: 'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.2)', borderRadius: '25px',
+                                padding: '10px 18px', color: 'white',
+                                fontFamily: 'Inter, sans-serif', fontSize: '13px',
+                                outline: 'none', backdropFilter: 'blur(10px)'
+                            }}
+                        />
+                    </div>
 
-                    {/* Comment - Redirects to DM */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); router.push(`/ marketplace / chat / ${story.artistId} `); onClose(); }}
-                        style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                            background: 'none', border: 'none', cursor: 'pointer', color: 'white',
-                        }}
-                    >
-                        <MessageCircle size={26} strokeWidth={2} />
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>CHAT</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
+                        {/* Like */}
+                        <motion.button whileTap={{ scale: 0.7 }}
+                            onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: liked ? '#FF0055' : 'white',
+                            }}>
+                            <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2.5}
+                                style={{ filter: liked ? 'drop-shadow(0 0 10px rgba(255,0,85,0.6))' : 'none' }} />
+                        </motion.button>
 
-                    {/* Share */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); alert('Link do story copiado!'); }}
-                        style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                            background: 'none', border: 'none', cursor: 'pointer', color: 'white',
-                        }}
-                    >
-                        <Share2 size={26} strokeWidth={2} />
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>ENVIAR</span>
-                    </button>
+                        {/* Share */}
+                        <motion.button whileTap={{ scale: 0.7 }}
+                            onClick={(e) => { e.stopPropagation(); alert('Link do story copiado!'); }}
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                            }}
+                        >
+                            <Share2 size={24} strokeWidth={2.5} />
+                        </motion.button>
 
-                    {/* Zap/fire */}
-                    <motion.button whileTap={{ scale: 0.8 }}
-                        onClick={(e) => { e.stopPropagation(); alert('Boost enviado!'); }}
-                        style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'var(--color-accent)',
-                        }}>
-                        <Zap size={26} fill="var(--color-accent)" strokeWidth={0} />
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700 }}>BOOST</span>
-                    </motion.button>
+                        {/* Zap/Fire */}
+                        <motion.button whileTap={{ scale: 0.7 }}
+                            onClick={(e) => { e.stopPropagation(); alert('🔥 Boost enviado!'); }}
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: 'var(--color-accent)',
+                            }}>
+                            <Zap size={24} fill="var(--color-accent)" strokeWidth={0} />
+                        </motion.button>
+                    </div>
                 </div>
-            </div>
+            </motion.div>
         </motion.div>
     );
 }
