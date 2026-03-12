@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
-import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis, FollowButton } from '@/components/ui';
 import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3 } from 'lucide-react';
 
 const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
@@ -438,21 +438,26 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
 
             {/* ── HEADER ── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 12px', borderBottom: '1px solid var(--color-nav-border)' }}>
-                <Link href={`/artist/profile/${post.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                    <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {/* BIG name */}
-                            <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '17px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1, letterSpacing: '-0.01em' }}>
-                                {post.artist?.stageName || 'Artist'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Link href={`/artist/profile/${post.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+                        <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '17px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1, letterSpacing: '-0.01em' }}>
+                                    {post.artist?.stageName || 'Artist'}
+                                </span>
+                                <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
+                            </div>
+                            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--color-muted)', textTransform: 'uppercase', marginTop: 4, display: 'block' }}>
+                                {timeAgo()} AGO
                             </span>
-                            <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
                         </div>
-                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--color-muted)', textTransform: 'uppercase', marginTop: 4, display: 'block' }}>
-                            {timeAgo()} AGO
-                        </span>
-                    </div>
-                </Link>
+                    </Link>
+                    
+                    {!isOwn && (
+                        <FollowButton artistId={post.artistId} size="sm" showIcon={false} className="h-7" />
+                    )}
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {/* Boost badge */}

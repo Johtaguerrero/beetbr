@@ -19,17 +19,22 @@ export function calculateScoreBeet(metrics: {
     engagement: number;    // percentage 0–100
     retention: number;     // percentage 0–100
     consistency: number;   // 0–100
-}, completionScore: number = 0): number {
+}, completionScore: number = 0, followerCounts: { artist: number; industry: number } = { artist: 0, industry: 0 }): number {
     const growthNormalized = Math.min(metrics.weeklyGrowth * 2, 100); // 50%+ growth -> 100
 
-    // 70% Metrics, 30% Profile Completion
+    // 60% Metrics, 30% Profile Completion, 10% Popularity
     const metricsScore =
         growthNormalized * 0.3 +
         metrics.engagement * 0.25 +
         metrics.retention * 0.25 +
         metrics.consistency * 0.2;
 
-    const finalScore = (metricsScore * 0.7) + (completionScore * 0.3);
+    // Popularity Score (0-100)
+    // Artist follows = 1pt, Industry follows = 3pts
+    const rawPopularity = (followerCounts.artist * 1) + (followerCounts.industry * 3);
+    const popularityScore = Math.min(rawPopularity * 2, 100); // 50 "weighted followers" scale to 100
+
+    const finalScore = (metricsScore * 0.6) + (completionScore * 0.3) + (popularityScore * 0.1);
 
     return Math.round(Math.min(Math.max(finalScore, 0), 100) * 10) / 10;
 }
@@ -87,7 +92,10 @@ export async function refreshArtistScore(artistProfileId: string): Promise<numbe
         engagement: artist.metrics.engagement,
         retention: artist.metrics.retention,
         consistency: artist.metrics.consistency,
-    }, completionScore);
+    }, completionScore, { 
+        artist: artist.followerCountArtist || 0, 
+        industry: artist.followerCountIndustry || 0 
+    });
 
     await prisma.artistProfile.update({
         where: { id: artistProfileId },

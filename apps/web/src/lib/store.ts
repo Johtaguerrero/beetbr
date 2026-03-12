@@ -50,7 +50,7 @@ export type {
 export type CollabType = CollabPost['type'];
 export type CollabMode = 'online' | 'presencial' | 'hibrido';
 
-export type UserRole = 'ARTIST' | 'INDUSTRY';
+export type UserRole = 'ARTIST' | 'INDUSTRY' | 'ADMIN';
 
 export interface AuthUser {
     id: string;
@@ -268,8 +268,9 @@ interface BeetrStore {
 
     fetchReceivedInterests: () => Promise<void>;
     updateInterestStatus: (id: string, status: 'ACCEPTED' | 'REJECTED') => Promise<void>;
-    toggleFollow: (userId: string) => Promise<void>;
-    isFollowing: (userId: string) => boolean;
+    toggleFollow: (artistId: string) => Promise<void>;
+    isFollowing: (artistId: string) => boolean;
+    fetchFollowing: () => Promise<void>;
 }
 
 export const useStore = create<BeetrStore>()(
@@ -319,7 +320,8 @@ export const useStore = create<BeetrStore>()(
                     accessToken,
                     refreshToken
                 });
-                get().addToast({ message: `Bem-vindo, ${profile.stageName}!`, type: 'success' });
+                    await get().fetchFollowing();
+                    get().addToast({ message: `Bem-vindo, ${res.data.user.stageName || 'Beetr'}!`, type: 'success' });
             },
 
             loginAsIndustry: async (email, password) => {
@@ -383,6 +385,12 @@ export const useStore = create<BeetrStore>()(
                 get().addToast({ message: 'Empresa registrada!', type: 'success' });
             },
 
+            setCurrentUser: (user: User | null) => {
+                set({ currentUser: user });
+                if (user) {
+                    get().fetchFollowing();
+                }
+            },
             logout: () => set({ currentUser: null, artistProfile: null, industryProfile: null, isAuthenticated: false, accessToken: null, refreshToken: null }),
             setAccessToken: (token) => set({ accessToken: token }),
 
@@ -438,7 +446,15 @@ export const useStore = create<BeetrStore>()(
                             boostExpiresAt: p.boostExpiresAt || boostExpires,
                         };
                     });
-                    set({ posts: enriched });
+                    const sorted = enriched.sort((a, b) => {
+                        const aFollowing = get().followings.includes(a.artistId);
+                        const bFollowing = get().followings.includes(b.artistId);
+                        if (aFollowing && !bFollowing) return -1;
+                        if (!aFollowing && bFollowing) return 1;
+                        return 0; // maintain original time-order otherwise
+                    });
+
+                    set({ posts: sorted });
                 } catch (error: any) {
                     console.error('Failed to fetch feed:', error);
                 }
@@ -968,24 +984,39 @@ export const useStore = create<BeetrStore>()(
 
             clearAllNotifications: () => set({ notifications: [] }),
 
-            toggleFollow: async (userId) => {
-                const { followings } = get();
-                const following = followings.includes(userId);
+            toggleFollow: async (artistId) => {
+                const { followings, isAuthenticated } = get();
+                if (!isAuthenticated) return;
+                
+                const isCurrentlyFollowing = followings.includes(artistId);
                 try {
-                    if (following) {
-                        await api.social.unfollow(userId);
-                        set({ followings: followings.filter(id => id !== userId) });
+                    if (isCurrentlyFollowing) {
+                        await api.artists.unfollow(artistId);
+                        set({ followings: followings.filter(id => id !== artistId) });
+                        get().addToast({ message: 'Você deixou de seguir o artista', type: 'info' });
                     } else {
-                        await api.social.follow(userId);
-                        set({ followings: [...followings, userId] });
+                        await api.artists.follow(artistId);
+                        set({ followings: [...followings, artistId] });
+                        get().addToast({ message: 'Seguindo artista! 🚀', type: 'success' });
                     }
                 } catch (error: any) {
-                    // Silently fail or toast if critical
+                    get().addToast({ message: 'Erro ao processar seguimento', type: 'error' });
                     console.error('Follow error:', error);
                 }
             },
 
-            isFollowing: (userId) => get().followings.includes(userId),
+            isFollowing: (artistId) => get().followings.includes(artistId),
+
+            fetchFollowing: async () => {
+                try {
+                    const res = await api.artists.getFollowing();
+                    if (res.success) {
+                        set({ followings: res.data });
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch followings:', error);
+                }
+            },
 
             addToast: (toast) => {
                 const id = `toast-${Date.now()}`;

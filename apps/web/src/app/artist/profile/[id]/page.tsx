@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ArtistProfile } from '@/lib/store';
-import { Avatar, ScoreBeetBadge, TrackPlayer, Skeleton, EmptyState } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, TrackPlayer, Skeleton, EmptyState, FollowButton } from '@/components/ui';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { api } from '@/lib/api';
 
@@ -51,20 +51,6 @@ export default function ArtistProfilePage() {
     const inShortlist = artist ? isInShortlist(artist.id) : false;
     const isSelf = params.id === 'me' || (currentUser && params.id === currentUser.id) || (myProfile && params.id === myProfile.id);
 
-    // Score calculation (mocked here, but based on fields)
-    const calculateScore = (art: any) => {
-        let score = 0;
-        if (art.avatarUrl) score += 10;
-        if (art.coverUrl) score += 10;
-        if (art.bio) score += 5;
-        if (art.bioFull) score += 10;
-        if (art.genres?.length) score += 5;
-        if (art.subGenres?.length) score += 5;
-        if (art.professionalQuestions) score += 30;
-        if (art.portfolioPdfUrl) score += 10;
-        if (art.instagram || art.spotifyUrl) score += 15;
-        return Math.min(score, 100);
-    };
     useEffect(() => {
         const fetchArtist = async () => {
             setLoading(true);
@@ -186,7 +172,7 @@ export default function ArtistProfilePage() {
 
                 {/* Score Badge flutuante próximo ao avatar */}
                 <div className="absolute -bottom-6 left-28 md:left-48 z-30 transform -translate-x-1/2 md:translate-x-0">
-                    <ScoreBeetBadge score={calculateScore(artist)} size="lg" showLabel />
+                    <ScoreBeetBadge score={artist.scoreBeet || 0} size="lg" showLabel />
                 </div>
 
                 {/* Edit Button - Agora logo abaixo do banner no mobile/desktop */}
@@ -241,9 +227,13 @@ export default function ArtistProfilePage() {
                     <div className="flex flex-col gap-3 min-w-[240px]">
                         {/* Ações principais (Visão Empresa ou Dono) */}
                         <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => !isSelf && toggleFollow(artist.id)} className={`btn-${followed ? 'outline' : 'accent'} py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2`}>
-                                {followed ? '👤 Seguindo' : isSelf ? '🏠 Meu Perfil' : '👤 Seguir Artista'}
-                            </button>
+                            {!isSelf ? (
+                                <FollowButton artistId={artist.id} size="md" className="col-span-2 h-12" />
+                            ) : (
+                                <button className="btn-outline h-12 text-[10px] font-black uppercase tracking-widest shadow-xl col-span-2 cursor-default opacity-60">
+                                    🏠 Meu Perfil
+                                </button>
+                            )}
 
                             {isIndustry && (
                                 <>
@@ -268,10 +258,10 @@ export default function ArtistProfilePage() {
                 {/* Métricas Rápidas (Banner Slim) */}
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Seguidores', value: artist.followersCount?.toLocaleString('pt-BR') || '0', icon: '👥' },
+                        { label: 'Seguidores', value: artist.followerCountTotal?.toLocaleString('pt-BR') || '0', icon: '👥' },
                         { label: 'Plays', value: artist.playsTotal ? (artist.playsTotal >= 1000000 ? `${(artist.playsTotal / 1000000).toFixed(1)}M` : `${Math.round(artist.playsTotal / 1000)}k`) : '0', icon: '▶️' },
-                        { label: 'Engajamento', value: `${artist.metrics?.engagement || 0}%`, icon: '🔥' },
-                        { label: 'Propostas', value: '12', icon: '📋' }, // Mock por enquanto
+                        { label: 'Indústria', value: artist.followerCountIndustry?.toLocaleString('pt-BR') || '0', icon: '🏢' },
+                        { label: 'Artistas', value: artist.followerCountArtist?.toLocaleString('pt-BR') || '0', icon: '🎸' },
                     ].map((stat) => (
                         <div key={stat.label} className="bg-beet-dark/40 border border-white/5 rounded-2xl p-4 hover:border-beet-accent/30 transition-all group">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-beet-muted flex items-center gap-2 group-hover:text-beet-accent">
@@ -318,7 +308,7 @@ export default function ArtistProfilePage() {
                                     <div className="pt-4 flex items-center gap-6">
                                         <div>
                                             <p className="text-[10px] text-beet-muted uppercase font-black mb-1">Status Atual</p>
-                                            <p className="text-lg text-white font-black uppercase tracking-tighter">{calculateScore(artist) > 80 ? '👑 Elite' : calculateScore(artist) > 50 ? '🥈 Pro' : '🥉 Starter'}</p>
+                                            <p className="text-lg text-white font-black uppercase tracking-tighter">{(artist.scoreBeet || 0) > 80 ? '👑 Elite' : (artist.scoreBeet || 0) > 50 ? '🥈 Pro' : '🥉 Starter'}</p>
                                         </div>
                                         <div className="h-10 w-px bg-white/10" />
                                         <div>
@@ -332,10 +322,10 @@ export default function ArtistProfilePage() {
                                     <div className="relative">
                                         <svg className="h-40 w-40 transform -rotate-90">
                                             <circle cx="80" cy="80" r="70" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-white/5" />
-                                            <circle cx="80" cy="80" r="70" fill="transparent" stroke="currentColor" strokeWidth="8" strokeDasharray={440} strokeDashoffset={440 - (440 * calculateScore(artist)) / 100} className="text-beet-accent transition-all duration-1000 ease-out" />
+                                            <circle cx="80" cy="80" r="70" fill="transparent" stroke="currentColor" strokeWidth="8" strokeDasharray={440} strokeDashoffset={440 - (440 * (artist.scoreBeet || 0)) / 100} className="text-beet-accent transition-all duration-1000 ease-out" />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                            <span className="text-4xl font-black text-white italic">{calculateScore(artist)}</span>
+                                            <span className="text-4xl font-black text-white italic">{Math.round(artist.scoreBeet || 0)}</span>
                                             <span className="text-[10px] text-beet-muted uppercase font-black -mt-1 tracking-widest">Beeats</span>
                                         </div>
                                     </div>

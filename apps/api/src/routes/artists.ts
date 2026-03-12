@@ -6,6 +6,33 @@ import { DiscoverFiltersSchema } from '@beetbr/shared';
 export const artistsRouter = Router();
 
 /**
+ * GET /api/artists/following — Get list of artist IDs the current user follows
+ */
+artistsRouter.get('/following', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const follows = await prisma.follow.findMany({
+            where: { followerId: req.user!.userId },
+            select: { followingId: true }
+        });
+        
+        // Map to artistId if needed? 
+        // Actually, the Follow table tracks followingId (which is the USER ID of the followed artist).
+        // Let's get the artistProfile.id instead to be consistent with the frontend store which uses artistId.
+        
+        const artistProfiles = await prisma.artistProfile.findMany({
+            where: { userId: { in: follows.map(f => f.followingId) } },
+            select: { id: true }
+        });
+
+        return res.json({ success: true, data: artistProfiles.map(p => p.id) });
+    } catch (error: any) {
+        console.error('[Following] Error:', error);
+        return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
+    }
+});
+
+
+/**
  * GET /api/artists/:id — Public artist profile
  */
 artistsRouter.get('/:id', async (req: Request, res: Response) => {
@@ -127,7 +154,129 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
     const { refreshArtistScore } = require('../services/beetAI');
     await refreshArtistScore(updated.id);
 
-    console.log(`[Artists] Profile updated for user ${req.user!.id}`);
+    console.log(`[Artists] Profile updated for user ${req.user!.userId}`);
     return res.json({ success: true, data: updated });
 });
 
+/**
+ * POST /api/artists/:id/follow
+ */
+artistsRouter.post('/:id/follow', authenticate, async (req: AuthRequest, res: Response) => {
+    const artistId = req.params.id;
+    const followerUserId = req.user!.userId;
+    const followerRole = req.user!.role;
+
+    try {
+        const artist = await prisma.artistProfile.findUnique({ where: { id: artistId } });
+        if (!artist) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Artista não encontrado' } });
+
+        // Prevents self-follow
+        if (artist.userId === followerUserId) {
+            return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Você não pode seguir a si mesmo' } });
+        }
+
+        // Create follow
+        await prisma.follow.upsert({
+            where: {
+                followerId_followingId: {
+                    followerId: followerUserId,
+                    followingId: artist.userId
+                }
+            },
+            update: { followerRole },
+            create: {
+                followerId: followerUserId,
+                followingId: artist.userId,
+                followerRole
+            }
+        });
+
+        // Update counters
+        const isArtistFollower = followerRole === 'ARTIST';
+        await prisma.artistProfile.update({
+            where: { id: artistId },
+            data: {
+                followerCountTotal: { increment: 1 },
+                followerCountArtist: isArtistFollower ? { increment: 1 } : undefined,
+                followerCountIndustry: !isArtistFollower ? { increment: 1 } : undefined,
+            }
+        });
+
+        // Notify artist
+        const followerName = isArtistFollower 
+            ? (await prisma.artistProfile.findUnique({ where: { userId: followerUserId } }))?.stageName 
+            : (await prisma.industryProfile.findUnique({ where: { userId: followerUserId } }))?.companyName;
+
+        await prisma.notification.create({
+            data: {
+                userId: artist.userId,
+                type: 'NEW_FOLLOWER',
+                title: 'Novo seguidor!',
+                message: `${followerName || 'Alguém'} começou a seguir você.`,
+                link: `/artist/profile/${artistId}` 
+            }
+        });
+
+        // Update score
+        const { refreshArtistScore } = require('../services/beetAI');
+        await refreshArtistScore(artistId);
+
+        return res.json({ success: true, message: 'Seguindo artista' });
+    } catch (error: any) {
+        console.error('[Follow] Error:', error);
+        return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
+    }
+});
+
+/**
+ * POST /api/artists/:id/unfollow
+ */
+artistsRouter.post('/:id/unfollow', authenticate, async (req: AuthRequest, res: Response) => {
+    const artistId = req.params.id;
+    const followerUserId = req.user!.userId;
+
+    try {
+        const artist = await prisma.artistProfile.findUnique({ where: { id: artistId } });
+        if (!artist) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Artista não encontrado' } });
+
+        const follow = await prisma.follow.findUnique({
+            where: {
+                followerId_followingId: {
+                    followerId: followerUserId,
+                    followingId: artist.userId
+                }
+            }
+        });
+
+        if (!follow) return res.json({ success: true, message: 'Não estava seguindo' });
+
+        await prisma.follow.delete({
+            where: {
+                followerId_followingId: {
+                    followerId: followerUserId,
+                    followingId: artist.userId
+                }
+            }
+        });
+
+        // Update counters
+        const isArtistFollower = follow.followerRole === 'ARTIST';
+        await prisma.artistProfile.update({
+            where: { id: artistId },
+            data: {
+                followerCountTotal: { decrement: 1 },
+                followerCountArtist: isArtistFollower ? { decrement: 1 } : undefined,
+                followerCountIndustry: !isArtistFollower ? { decrement: 1 } : undefined,
+            }
+        });
+
+        // Update score
+        const { refreshArtistScore } = require('../services/beetAI');
+        await refreshArtistScore(artistId);
+
+        return res.json({ success: true, message: 'Deixou de seguir' });
+    } catch (error: any) {
+        console.error('[Unfollow] Error:', error);
+        return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
+    }
+});

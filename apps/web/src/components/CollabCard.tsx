@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { CollabPost, COLLAB_TYPE_CONFIG } from '@/lib/store';
 import { api } from '@/lib/api';
+import { FollowButton } from '@/components/ui/FollowButton';
 
 interface CollabCardProps {
   collab: CollabPost & { 
@@ -61,8 +62,11 @@ export default function CollabCard({ collab, onInterest }: CollabCardProps) {
               <div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
             </div>
           </div>
-          <div className="text-sm text-white font-bold tracking-tight drop-shadow-md">
-            {collab.author.stageName}
+          <div className="flex flex-col">
+            <div className="text-sm text-white font-bold tracking-tight drop-shadow-md">
+              {collab.author.stageName}
+            </div>
+            <FollowButton artistId={collab.authorId} size="sm" showIcon={false} className="h-6 mt-1" />
           </div>
         </div>
       </div>

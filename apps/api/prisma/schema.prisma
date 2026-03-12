@@ -208,6 +208,11 @@ model ArtistProfile {
   portfolioPdfUrl    String?
   portfolioPdfName   String?
 
+  // Segidores
+  followerCountTotal    Int @default(0)
+  followerCountArtist   Int @default(0)
+  followerCountIndustry Int @default(0)
+
   // Redes Sociais
   instagram          String?
   youtubeUrl         String?
@@ -627,11 +632,12 @@ model Notification {
 // ============================================================
 
 model Follow {
-  followerId  String
-  follower    User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
-  followingId String
-  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  followerId   String
+  follower     User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId  String
+  following    User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  followerRole UserRole
+  createdAt    DateTime @default(now())
 
   @@id([followerId, followingId])
   @@index([followerId])

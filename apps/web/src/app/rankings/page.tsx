@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MOCK_ARTISTS } from '@/lib/store';
-import { Avatar, ScoreBeetBadge, Skeleton, EmptyState } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, FollowButton } from '@/components/ui';
 
 const GENRES = ['', 'Funk', 'Trap', 'R&B', 'Pop', 'Sertanejo', 'Forró', 'Gospel', 'Rock', 'Eletrônico', 'MPB'];
 const STATES = ['', 'SP', 'RJ', 'MG', 'BA', 'CE', 'RS', 'PR', 'PE'];
@@ -102,11 +102,15 @@ export default function Rankings() {
                                         <p className="meta-text" style={{ marginTop: 3 }}>{artist.genres.join(' · ')} · {artist.city}, {artist.state}</p>
                                     </div>
 
-                                    {/* Score + Trend */}
-                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                        <ScoreBeetBadge score={artist.scoreBeet} size="md" />
-                                        <div style={{ marginTop: 4, fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, color: TREND_COLOR[artist.trend] }}>
-                                            {TREND_ICON[artist.trend]} {Math.abs(artist.metrics.weeklyGrowth).toFixed(1)}%
+                                    {/* Score + Trend + Follow */}
+                                    <div className="flex items-center gap-4 flex-shrink-0">
+                                        <FollowButton artistId={artist.id} size="sm" showIcon={false} className="hidden md:flex" />
+                                        
+                                        <div style={{ textAlign: 'right' }}>
+                                            <ScoreBeetBadge score={artist.scoreBeet} size="md" />
+                                            <div style={{ marginTop: 4, fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, color: TREND_COLOR[artist.trend] }}>
+                                                {TREND_ICON[artist.trend]} {Math.abs(artist.metrics.weeklyGrowth).toFixed(1)}%
+                                            </div>
                                         </div>
                                     </div>
                                 </Link>

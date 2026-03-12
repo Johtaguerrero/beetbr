@@ -453,3 +453,4 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     );
 }
 
+export { FollowButton } from './FollowButton';

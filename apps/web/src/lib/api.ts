@@ -130,9 +130,12 @@ class ApiClient {
 
     // ── Artists ─────────────────────────────────────────────────
     artists = {
-        getPublic: (id: string) => this.get(`/artists/${id}`),
-        getPrivate: (id: string) => this.get(`/artists/${id}/private`),
-        updateMe: (data: object) => this.patch('/artists/me', data),
+        getPublic: (id: string) => this.get<{ data: any }>(`/artists/${id}`),
+        getPrivate: (id: string) => this.get<{ data: any }>(`/artists/${id}/private`),
+        updateMe: (data: object) => this.patch<{ data: any }>('/artists/me', data),
+        follow: (id: string) => this.post<{ success: boolean }>(`/artists/${id}/follow`),
+        unfollow: (id: string) => this.post<{ success: boolean }>(`/artists/${id}/unfollow`),
+        getFollowing: () => this.get<{ success: boolean; data: string[] }>('/artists/following'),
     };
 
     // ── Industry ────────────────────────────────────────────────
@@ -165,12 +168,7 @@ class ApiClient {
         remove: (artistId: string) => this.delete(`/shortlist/${artistId}`),
     };
 
-    // ── Social (Follows) ────────────────────────────────────────
-    social = {
-        follow: (userId: string) => this.post(`/social/follow/${userId}`),
-        unfollow: (userId: string) => this.delete(`/social/follow/${userId}`),
-        isFollowing: (userId: string) => this.get(`/social/is-following/${userId}`),
-    };
+
 
     // ── Contracts ───────────────────────────────────────────────
     contracts = {

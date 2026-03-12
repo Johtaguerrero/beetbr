@@ -54,8 +54,11 @@ export interface ArtistProfile {
     socialProofs?: SocialProof;
     portfolioPdfUrl?: string;
     portfolioPdfName?: string;
+    followerCountTotal: number;
+    followerCountArtist: number;
+    followerCountIndustry: number;
     ranking?: string;
-
+    
     instagram?: string;
     youtubeUrl?: string;
     spotifyUrl?: string;
