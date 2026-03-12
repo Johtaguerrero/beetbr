@@ -91,7 +91,11 @@ export default function MarketplaceChat() {
                                             style={{ background: 'var(--color-dark)' }}>🎤</div>
                                     )}
                                     <div className="max-w-[75%] space-y-0.5">
-                                        {!isMe && <p className="text-[10px] text-beet-muted ml-1">{msg.senderName}</p>}
+                                        {!isMe && (
+                                            <p className="text-[10px] text-beet-muted ml-1">
+                                                {msg.sender?.artistProfile?.stageName || msg.sender?.industryProfile?.companyName || 'Usuário'}
+                                            </p>
+                                        )}
                                         <div className="rounded-2xl px-4 py-2.5 text-sm"
                                             style={{
                                                 background: isMe ? 'var(--color-accent)' : 'var(--color-card)',
