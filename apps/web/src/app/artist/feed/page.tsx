@@ -335,7 +335,7 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 /* ══════════════════════════════════════════════════════════
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
-function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) {
+function PostCard({ post, isStoryOpen, onMediaClick }: { post: Post; isStoryOpen?: boolean; onMediaClick?: () => void }) {
     const { togglePostLike, artistProfile, currentUser, archivePost, deletePost, pinPost, unpinPost } = useStore();
     const [liked, setLiked] = useState(post.liked);
     const [showComments, setShowComments] = useState(false);
@@ -523,66 +523,76 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
             </div>
 
             {/* ── BODY ── */}
-            <div style={{ padding: '18px 18px 14px' }}>
+            <div style={{ padding: '18px 18px 14px' }} className="md:px-[18px] px-0">
                 {post.text && (
-                    <p style={{
-                        fontFamily: 'Space Grotesk, sans-serif',
-                        fontSize: '17px',     /* big! */
-                        lineHeight: 1.65,
-                        color: 'var(--color-primary-text)',
-                        marginBottom: 14,
-                        whiteSpace: 'pre-wrap', wordBreak: 'break-word'
-                    }}>
-                        {post.text.split(' ').map((w, i) =>
-                            w.startsWith('#')
-                                ? <span key={i} style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{w} </span>
-                                : <span key={i}>{w} </span>
-                        )}
-                    </p>
+                    <div className="px-[18px] md:px-0">
+                        <p style={{
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            fontSize: '17px',     /* big! */
+                            lineHeight: 1.65,
+                            color: 'var(--color-primary-text)',
+                            marginBottom: 14,
+                            whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+                        }}>
+                            {post.text.split(' ').map((w, i) =>
+                                w.startsWith('#')
+                                    ? <span key={i} style={{ color: 'var(--color-accent)', fontWeight: 700 }}>{w} </span>
+                                    : <span key={i}>{w} </span>
+                            )}
+                        </p>
+                    </div>
                 )}
 
                 {post.mediaUrl && post.type === 'VIDEO' && (
-                    <video ref={mediaRef as any} controls src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '4px', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '500px' }} />
+                    <div onClick={onMediaClick} style={{ cursor: onMediaClick ? 'pointer' : 'default' }}>
+                        <video ref={mediaRef as any} controls={!onMediaClick} src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '0', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '600px', objectFit: 'cover' }} className="md:rounded-sm" />
+                    </div>
                 )}
 
                 {post.mediaUrl && (post.type === 'LYRIC' || post.type === 'IMAGE') && (
-                    <img src={api.getMediaUrl(post.mediaUrl)} alt="Post media" style={{ width: '100%', borderRadius: '4px', marginBottom: 12, objectFit: 'contain', maxHeight: '500px', background: 'var(--color-nav-bg)' }} />
+                    <div onClick={onMediaClick} style={{ cursor: onMediaClick ? 'pointer' : 'default' }}>
+                        <img src={api.getMediaUrl(post.mediaUrl)} alt="Post media" style={{ width: '100%', borderRadius: '0', marginBottom: 12, objectFit: 'cover', maxHeight: '600px', background: 'var(--color-nav-bg)' }} className="md:rounded-sm" />
+                    </div>
                 )}
 
                 {post.type === 'TRACK' && (
-                    <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }}>
+                    <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }} className="mx-[12px] md:mx-0">
                         <TrackPlayer ref={mediaRef as any} url={post.mediaUrl} title="Faixa" />
                     </div>
                 )}
 
                 {post.type === 'MARKETPLACE' && post.listingId && (
-                    <Link href={`/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
-                        <div className="beet-card p-4 flex items-center gap-4 transition-all hover:border-[var(--color-accent)] group/market">
-                            <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20 border border-[var(--color-nav-border)]">
-                                {post.mediaUrl ? (
-                                    <img src={api.getMediaUrl(post.mediaUrl)} alt="Marketplace" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-beet-red mb-1">Novo Anúncio no Marketplace</p>
-                                <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate group-hover/market:text-beet-red transition-colors">{post.text || 'Anúncio sem título'}</h4>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-xs font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase tracking-tighter">Ver detalhes ›</span>
+                    <div className="px-[18px] md:px-0">
+                        <Link href={`/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
+                            <div className="beet-card p-4 flex items-center gap-4 transition-all hover:border-[var(--color-accent)] group/market">
+                                <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20 border border-[var(--color-nav-border)]">
+                                    {post.mediaUrl ? (
+                                        <img src={api.getMediaUrl(post.mediaUrl)} alt="Marketplace" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] uppercase tracking-widest font-black text-beet-red mb-1">Novo Anúncio no Marketplace</p>
+                                    <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate group-hover/market:text-beet-red transition-colors">{post.text || 'Anúncio sem título'}</h4>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-xs font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase tracking-tighter">Ver detalhes ›</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </Link>
+                        </Link>
+                    </div>
                 )}
 
                 {post.hashtags.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
-                        {post.hashtags.map(h => (
-                            <span key={h} style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: `${tc.color}90` }}>
-                                #{h.toUpperCase()}
-                            </span>
-                        ))}
+                    <div className="px-[18px] md:px-0">
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+                            {post.hashtags.map(h => (
+                                <span key={h} style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', color: `${tc.color}90` }}>
+                                    #{h.toUpperCase()}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -801,6 +811,7 @@ export default function FeedPage() {
     const feedPosts = getFeedPosts();
     const [loading, setLoading] = useState(true);
     const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+    const [selectedPostMedia, setSelectedPostMedia] = useState<Post | null>(null);
 
     useEffect(() => {
         fetchFeed();
@@ -856,7 +867,14 @@ export default function FeedPage() {
                             <EmptyState icon="🎵" title="Nenhuma publicação ainda" description="Siga artistas para ver o feed"
                                 action={<Link href="/rankings" className="btn-outline">EXPLORAR ARTISTAS</Link>} />
                         ) : (
-                            feedPosts.map(post => <PostCard key={post.id} post={post} isStoryOpen={!!selectedStory} />)
+                            feedPosts.map(post => (
+                                <PostCard 
+                                    key={post.id} 
+                                    post={post} 
+                                    isStoryOpen={!!selectedStory || !!selectedPostMedia} 
+                                    onMediaClick={() => setSelectedPostMedia(post)} 
+                                />
+                            ))
                         )}
                     </div>
                 </div>
@@ -936,20 +954,129 @@ export default function FeedPage() {
 
             <PublishFAB />
 
-            {/* ── Enhanced Story Viewer Modal ── */}
+            {/* ── Post Media Theater Modal ── */}
             <AnimatePresence>
-                {selectedStory && selectedStory.mediaUrl && (
-                    <StoryViewerModal
-                        story={selectedStory}
-                        stories={stories}
-                        storyIndex={storyIndex}
-                        onClose={() => setSelectedStory(null)}
-                        onNext={goNextStory}
-                        onPrev={goPrevStory}
+                {selectedPostMedia && (
+                    <PostMediaViewerModal
+                        post={selectedPostMedia}
+                        onClose={() => setSelectedPostMedia(null)}
                     />
                 )}
             </AnimatePresence>
         </>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════
+   POST MEDIA VIEWER MODAL — Immersive view for feed posts
+══════════════════════════════════════════════════════════ */
+function PostMediaViewerModal({ post, onClose }: { post: Post; onClose: () => void }) {
+    const [liked, setLiked] = useState(false);
+    const [muted, setMuted] = useState(false);
+    
+    // Swipe to close
+    const onDragEnd = (event: any, info: any) => {
+        if (Math.abs(info.offset.y) > 150 || Math.abs(info.velocity.y) > 500) {
+            onClose();
+        }
+    };
+
+    const tc = TC[post.type] || { label: 'POST', color: '#FFF' };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100000] bg-black/95 backdrop-blur-xl flex items-center justify-center overflow-hidden"
+            onClick={onClose}
+        >
+            <motion.div
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                onDragEnd={onDragEnd}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 100 }}
+                className="relative w-full h-full flex flex-col"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header info */}
+                <div className="absolute top-0 left-0 right-0 p-6 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+                    <div className="flex items-center gap-3">
+                        <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="sm" />
+                        <div>
+                            <p className="font-bold text-white text-sm Syne">{post.artist?.stageName}</p>
+                            <p className="text-[10px] text-white/50 SpaceMono">@{post.artist?.stageName?.toLowerCase().replace(/\s/g, '')}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Media Container */}
+                <div className="flex-1 flex items-center justify-center p-4">
+                    {post.type === 'VIDEO' ? (
+                        <video 
+                            src={api.getMediaUrl(post.mediaUrl!)} 
+                            controls 
+                            autoPlay 
+                            muted={muted}
+                            className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+                        />
+                    ) : post.type === 'TRACK' ? (
+                        <div className="w-full max-w-md p-8 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+                             <TrackPlayer url={post.mediaUrl} title={post.text || 'Faixa'} />
+                        </div>
+                    ) : (
+                        <img 
+                            src={api.getMediaUrl(post.mediaUrl!)} 
+                            alt="Media"
+                            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                        />
+                    )}
+                </div>
+
+                {/* Footer / Interaction */}
+                <div className="p-8 bg-gradient-to-t from-black/80 to-transparent">
+                    {post.text && (
+                        <p className="text-white text-lg mb-6 max-w-2xl mx-auto text-center font-medium leading-relaxed">
+                            {post.text}
+                        </p>
+                    )}
+                    
+                    <div className="flex items-center justify-center gap-10">
+                        <motion.button 
+                            whileTap={{ scale: 0.8 }}
+                            onClick={() => setLiked(!liked)}
+                            className={`flex flex-col items-center gap-2 ${liked ? 'text-beet-red' : 'text-white/70'}`}
+                        >
+                            <Heart size={32} fill={liked ? 'currentColor' : 'none'} className={liked ? 'drop-shadow-[0_0_10px_rgba(255,0,85,0.5)]' : ''} />
+                            <span className="text-[10px] font-bold SpaceMono">{post.likes + (liked ? 1 : 0)}</span>
+                        </motion.button>
+
+                        <button className="flex flex-col items-center gap-2 text-white/70">
+                            <MessageCircle size={32} />
+                            <span className="text-[10px] font-bold SpaceMono">{post.comments}</span>
+                        </button>
+
+                        <button className="flex flex-col items-center gap-2 text-white/70">
+                            <Share2 size={32} />
+                            <span className="text-[10px] font-bold SpaceMono">SHARE</span>
+                        </button>
+
+                        <motion.button 
+                            whileTap={{ scale: 0.8 }}
+                            className="flex flex-col items-center gap-2 text-beet-green"
+                        >
+                            <Zap size={32} fill="currentColor" />
+                            <span className="text-[10px] font-bold SpaceMono">BOOST</span>
+                        </motion.button>
+                    </div>
+                </div>
+            </motion.div>
+        </motion.div>
     );
 }
 
