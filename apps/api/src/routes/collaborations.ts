@@ -52,7 +52,7 @@ collaborationsRouter.get('/interests', authenticate, async (req: AuthRequest, re
             }
         },
         include: {
-            user: { select: { id: true, stageName: true, avatarUrl: true, genres: true } },
+            artist: { select: { id: true, stageName: true, avatarUrl: true, genres: true } },
             collab: { select: { id: true, title: true, type: true } }
         },
         orderBy: { createdAt: 'desc' }
