@@ -7,7 +7,7 @@ import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis, FollowButton } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3, ShoppingBag } from 'lucide-react';
 
 const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
     { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
@@ -335,13 +335,14 @@ function CommentSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 /* ══════════════════════════════════════════════════════════
    POST CARD — bigger fonts, left accent border
 ══════════════════════════════════════════════════════════ */
-function PostCard({ post, isStoryOpen, onMediaClick }: { post: Post; isStoryOpen?: boolean; onMediaClick?: () => void }) {
+function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post; isStoryOpen?: boolean; onMediaClick?: () => void; onReelsOpen?: () => void }) {
     const { togglePostLike, artistProfile, currentUser, archivePost, deletePost, pinPost, unpinPost } = useStore();
     const [liked, setLiked] = useState(post.liked);
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [comments, setComments] = useState<any[]>([]); // Local state for demo
     const [showMenu, setShowMenu] = useState(false);
+    const lastTap = useRef<number>(0);
     const tc = TC[post.type] || TC.TRACK;
 
     const isOwn = artistProfile?.id === post.artistId;
@@ -544,8 +545,31 @@ function PostCard({ post, isStoryOpen, onMediaClick }: { post: Post; isStoryOpen
                 )}
 
                 {post.mediaUrl && post.type === 'VIDEO' && (
-                    <div onClick={onMediaClick} style={{ cursor: onMediaClick ? 'pointer' : 'default' }}>
-                        <video ref={mediaRef as any} controls={!onMediaClick} src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '0', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '600px', objectFit: 'cover' }} className="md:rounded-sm" />
+                    <div 
+                        onClick={(e) => {
+                            const now = Date.now();
+                            if (now - lastTap.current < 300) {
+                                // Double tap
+                                if (onReelsOpen) onReelsOpen();
+                            } else {
+                                // Single tap
+                                if (mediaRef.current) {
+                                    if (mediaRef.current.paused) mediaRef.current.play();
+                                    else mediaRef.current.pause();
+                                }
+                            }
+                            lastTap.current = now;
+                        }} 
+                        style={{ cursor: 'pointer', position: 'relative' }}
+                    >
+                        <video ref={mediaRef as any} src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '0', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '600px', objectFit: 'cover' }} className="md:rounded-sm" />
+                        
+                        {/* Double tap hint for discovery */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Toque 2x para Reels</p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -812,6 +836,7 @@ export default function FeedPage() {
     const [loading, setLoading] = useState(true);
     const [selectedStory, setSelectedStory] = useState<Story | null>(null);
     const [selectedPostMedia, setSelectedPostMedia] = useState<Post | null>(null);
+    const [selectedReelsPost, setSelectedReelsPost] = useState<Post | null>(null);
 
     useEffect(() => {
         fetchFeed();
@@ -871,8 +896,9 @@ export default function FeedPage() {
                                 <PostCard 
                                     key={post.id} 
                                     post={post} 
-                                    isStoryOpen={!!selectedStory || !!selectedPostMedia} 
+                                    isStoryOpen={!!selectedStory || !!selectedPostMedia || !!selectedReelsPost} 
                                     onMediaClick={() => setSelectedPostMedia(post)} 
+                                    onReelsOpen={() => setSelectedReelsPost(post)}
                                 />
                             ))
                         )}
@@ -954,12 +980,37 @@ export default function FeedPage() {
 
             <PublishFAB />
 
+            {/* ── Story Viewer Modal ── */}
+            <AnimatePresence>
+                {selectedStory && selectedStory.mediaUrl && (
+                    <StoryViewerModal
+                        story={selectedStory}
+                        stories={stories}
+                        storyIndex={storyIndex}
+                        onClose={() => setSelectedStory(null)}
+                        onNext={goNextStory}
+                        onPrev={goPrevStory}
+                    />
+                )}
+            </AnimatePresence>
+
             {/* ── Post Media Theater Modal ── */}
             <AnimatePresence>
                 {selectedPostMedia && (
                     <PostMediaViewerModal
                         post={selectedPostMedia}
                         onClose={() => setSelectedPostMedia(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ── BeeatBR Reels Mode ── */}
+            <AnimatePresence>
+                {selectedReelsPost && (
+                    <ReelsViewerModal
+                        initialPost={selectedReelsPost}
+                        posts={feedPosts.filter(p => p.type === 'VIDEO')}
+                        onClose={() => setSelectedReelsPost(null)}
                     />
                 )}
             </AnimatePresence>
@@ -1347,6 +1398,206 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                             <Zap size={24} fill="var(--color-accent)" strokeWidth={0} />
                         </motion.button>
                     </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════
+   REELS VIEWER MODAL — Immersive vertical video discovery
+ ══════════════════════════════════════════════════════════ */
+function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; posts: Post[]; onClose: () => void }) {
+    const { togglePostLike, artistProfile, currentUser } = useStore();
+    const [currentIndex, setCurrentIndex] = useState(posts.findIndex(p => p.id === initialPost.id));
+    const [liked, setLiked] = useState(false);
+    const [following, setFollowing] = useState(false);
+    const post = posts[currentIndex] || initialPost;
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isMuted, setIsMuted] = useState(false);
+
+    // Sync liked state with post
+    useEffect(() => {
+        if (post) {
+            setLiked(post.liked || false);
+        }
+    }, [post]);
+
+    const handleNext = () => {
+        if (currentIndex < posts.length - 1) setCurrentIndex((prev: number) => prev + 1);
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) setCurrentIndex((prev: number) => prev - 1);
+    };
+
+    const onDragEnd = (event: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        const { offset, velocity } = info;
+        // Vertical swipe for navigation
+        if (offset.y < -100 || velocity.y < -500) handleNext();
+        else if (offset.y > 100 || velocity.y > 500) handlePrev();
+        // Horizontal swipe to close (optional but user mentioned swipe right)
+        else if (offset.x > 150 || velocity.x > 500) onClose();
+    };
+
+    if (!post) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100001] bg-black overflow-hidden flex items-center justify-center"
+        >
+            <motion.div
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={0.2}
+                onDragEnd={onDragEnd}
+                className="relative w-full h-full max-w-[500px] bg-black shadow-2xl overflow-hidden"
+            >
+                {/* Background Blur for horizontal videos */}
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src={api.getMediaUrl(post.mediaUrl)} 
+                        className="w-full h-full object-cover blur-[80px] opacity-40 scale-110" 
+                        alt="bg-blur"
+                    />
+                </div>
+
+                {/* Main Video Content */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center" onClick={() => {
+                    if (videoRef.current) {
+                        if (videoRef.current.paused) videoRef.current.play();
+                        else videoRef.current.pause();
+                    }
+                }}>
+                    <video
+                        key={post.id}
+                        ref={videoRef}
+                        src={api.getMediaUrl(post.mediaUrl)}
+                        autoPlay
+                        loop
+                        muted={isMuted}
+                        playsInline
+                        className="w-full h-full object-contain md:object-cover"
+                    />
+                </div>
+
+                {/* Overlay Interface */}
+                <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-end p-4 pb-12 bg-gradient-to-t from-black/80 via-transparent to-black/40">
+                    {/* Header Controls (Right side for mobile ergonomics) */}
+                    <div className="absolute top-6 right-4 flex flex-col gap-4 pointer-events-auto">
+                        <button onClick={onClose} className="p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white">
+                            <X size={24} />
+                        </button>
+                        <button onClick={() => setIsMuted(!isMuted)} className="p-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white">
+                            {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                        </button>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                        {/* Left Side: Info */}
+                        <div className="flex-1 pr-12 pointer-events-auto">
+                            {/* Context Badges */}
+                            <div className="flex gap-2 mb-4">
+                                {post.type === 'VIDEO' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-purple text-white uppercase">REELS</span>}
+                                {post.type === 'MARKETPLACE' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-red text-white uppercase">MARKETPLACE</span>}
+                                {post.type === 'TRACK' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-green text-black uppercase">MÚSICA</span>}
+                                {post.status === 'BOOSTED_48H' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-neon text-black uppercase">FLY</span>}
+                            </div>
+
+                            <div className="flex items-center gap-3 mb-4">
+                                <Link href={`/artist/profile/${post.artistId}`} className="relative ring-2 ring-beet-green ring-offset-2 ring-offset-black rounded-full p-0.5">
+                                    <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
+                                </Link>
+                                <div>
+                                    <h3 className="text-sm font-bold text-white font-display uppercase tracking-wider">{post.artist?.stageName || 'Artist'}</h3>
+                                    <p className="text-[10px] text-white/70 font-mono italic">Brasil • Pop/Trap</p>
+                                </div>
+                                <button 
+                                    onClick={() => setFollowing(!following)}
+                                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter transition-all ${following ? 'bg-white/10 text-white/50' : 'bg-beet-green text-black'}`}
+                                >
+                                    {following ? 'Seguindo' : 'Seguir'}
+                                </button>
+                            </div>
+
+                            <p className="text-xs text-white/90 line-clamp-2 mb-4 font-body leading-relaxed max-w-xs">{post.text}</p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {post.hashtags?.map(h => (
+                                    <span key={h} className="text-[10px] font-bold text-beet-green/80">#{h.toUpperCase()}</span>
+                                ))}
+                            </div>
+
+                            {/* Contextual Action Buttons */}
+                            <div className="flex flex-col gap-2">
+                                <Link href={`/artist/profile/${post.artistId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/20 transition-all">
+                                    <UserPlus size={14} /> Ver Perfil
+                                </Link>
+                                
+                                {post.type === 'MARKETPLACE' && (
+                                    <Link href={`/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-red text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-red/20">
+                                        <ShoppingBag size={14} /> Ver Anúncio
+                                    </Link>
+                                )}
+                                
+                                {currentUser?.role === 'INDUSTRY' && (
+                                    <button className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-blue text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-blue/20">
+                                        <PenLine size={14} /> Enviar Proposta
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Side: Quick Actions */}
+                        <div className="flex flex-col items-center gap-6 pointer-events-auto">
+                            <motion.button 
+                                whileTap={{ scale: 0.8 }}
+                                onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
+                                className="flex flex-col items-center gap-1"
+                            >
+                                <div className={`p-3 rounded-full backdrop-blur-md border border-white/10 transition-all ${liked ? 'bg-beet-red border-beet-red shadow-[0_0_20px_rgba(255,0,85,0.4)]' : 'bg-black/40 text-white/80'}`}>
+                                    <Heart size={24} fill={liked ? 'currentColor' : 'none'} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[10px] font-bold font-mono text-white/90">{post.likes + (liked && !post.liked ? 1 : 0)}</span>
+                            </motion.button>
+
+                            <button className="flex flex-col items-center gap-1">
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
+                                    <MessageCircle size={24} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[10px] font-bold font-mono text-white/90">{post.comments}</span>
+                            </button>
+
+                            <button className="flex flex-col items-center gap-1" onClick={() => alert("Link copiado!")}>
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
+                                    <Share2 size={24} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[10px] font-bold font-mono text-white/90 italic">SHARE</span>
+                            </button>
+
+                            <button className="flex flex-col items-center gap-1">
+                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
+                                    <Bookmark size={24} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[10px] font-bold font-mono text-white/90 italic">SAVE</span>
+                            </button>
+
+                            <div className="flex flex-col items-center gap-1 mt-2">
+                                <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="md" />
+                                <span className="text-[8px] font-black text-neon/60 tracking-widest uppercase">SCORE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Vertical Indicator */}
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1 z-30 opacity-20 hover:opacity-100 transition-opacity">
+                    {posts.slice(Math.max(0, currentIndex - 2), currentIndex + 3).map((p, i) => (
+                        <div key={p.id} className={`w-1 h-8 rounded-full transition-all ${p.id === post.id ? 'bg-beet-green h-12' : 'bg-white/20'}`} />
+                    ))}
                 </div>
             </motion.div>
         </motion.div>
