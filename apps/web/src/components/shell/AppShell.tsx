@@ -11,7 +11,7 @@ import {
     BarChart2, Users, Briefcase, Music, Star, Package,
     Sparkles, MessageSquare, Lock, Radio, Mic2, Heart,
     Share2, Play, Send, Check, AlertCircle, Info, Sun, Moon,
-    ChevronLeft, SquarePen
+    ChevronLeft, SquarePen, Handshake
 } from 'lucide-react';
 import { useStore, type Notification } from '@/lib/store';
 import { ScoreBeetBadge, Avatar, Spinner } from '@/components/ui';
@@ -59,7 +59,7 @@ function CollabTabGroup({ pathname, sidebarExpanded }: { pathname: string; sideb
             label: 'COLABS',
             sub: 'Explorar',
             href: '/collabs',
-            icon: <Repeat2 size={sidebarExpanded ? 18 : 22} strokeWidth={1.75} />,
+            icon: <Handshake size={sidebarExpanded ? 18 : 22} strokeWidth={1.75} />,
         },
         {
             label: 'MINHAS',
@@ -497,14 +497,14 @@ function TabBar({
             { label: 'Dash', href: '/industry/dashboard', icon: <LayoutDashboard size={TC} strokeWidth={1.75} /> },
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
             { label: 'Post', id: 'post-menu', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
-            { label: 'Colabs', href: '/collabs', icon: <Repeat2 size={TC} strokeWidth={1.75} /> },
+            { label: 'Colabs', href: '/collabs', icon: <Handshake size={TC} strokeWidth={1.75} /> },
             { label: 'Deals', href: '/industry/deals', icon: <Briefcase size={TC} strokeWidth={1.75} /> },
         ]
         : [
             { label: 'Feed', href: '/artist/feed', icon: <Zap size={TC} strokeWidth={1.75} /> },
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
             { label: 'Post', href: '/artist/post/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
-            { label: 'Colabs', href: '/collabs', icon: <Repeat2 size={TC} strokeWidth={1.75} /> },
+            { label: 'Colabs', href: '/collabs', icon: <Handshake size={TC} strokeWidth={1.75} /> },
             { label: 'Perfil', href: '/artist/profile/me', icon: <User size={TC} strokeWidth={1.75} /> },
         ];
 

@@ -167,38 +167,54 @@ function CollabExplorerContent() {
           {activeTab !== 'interesses' ? (
             <>
               {/* Filters Bar */}
-              <div className="flex flex-wrap items-center gap-4 mb-8 bg-beet-dark-lighter p-4 rounded-2xl border border-white/5">
-                <div className="flex-1 min-w-[200px] relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                  <input 
-                    type="text"
-                    placeholder="Buscar por título, gênero, instrumento..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/5 border-none rounded-xl py-3 pl-12 pr-4 text-sm text-white focus:ring-1 focus:ring-beet-green"
-                  />
-                </div>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                  <div className="flex-1 w-full max-w-md relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                    <input 
+                      type="text"
+                      placeholder="Buscar por título, gênero, instrumento..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-beet-green transition-all"
+                    />
+                  </div>
 
-                <div className="flex items-center gap-3">
-                  <select 
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="bg-white/5 border-none rounded-xl py-3 px-4 text-sm text-white focus:ring-1 focus:ring-beet-green"
-                  >
-                    <option value="all">Todos os tipos</option>
-                    {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
-                      <option key={key} value={key}>{cfg.label}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                      <button
+                        onClick={() => setFilterType('all')}
+                        className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
+                          filterType === 'all' 
+                            ? 'bg-beet-green border-beet-green text-black shadow-[0_0_15px_rgba(0,255,136,0.3)]' 
+                            : 'bg-white/5 border-white/10 text-beet-muted hover:text-white hover:border-white/30'
+                        }`}
+                      >
+                        TODOS
+                      </button>
+                      {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+                        <button
+                          key={key}
+                          onClick={() => setFilterType(key)}
+                          className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
+                            filterType === key 
+                              ? 'bg-beet-green border-beet-green text-black shadow-[0_0_15px_rgba(0,255,136,0.3)]' 
+                              : 'bg-white/5 border-white/10 text-beet-muted hover:text-white hover:border-white/30'
+                          }`}
+                        >
+                          {cfg.label.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
 
-                  <button 
-                    onClick={loadContent}
-                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-beet-muted hover:text-white transition-colors"
-                  >
-                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                  </button>
+                    <button 
+                      onClick={loadContent}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-beet-muted hover:text-white transition-colors border border-white/10"
+                      title="Atualizar"
+                    >
+                      <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
               {/* Grid */}
               {loading ? (

@@ -17,7 +17,8 @@ import {
   MapPin,
   Clock,
   DollarSign,
-  Share2
+  Share2,
+  Tags
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { api } from '@/lib/api';
@@ -25,12 +26,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const steps = [
   { id: 1, title: 'Tipo de Collab', icon: Music },
-  { id: 2, title: 'Título', icon: PlusCircle },
-  { id: 3, title: 'Descrição', icon: PlusCircle },
-  { id: 4, title: 'Informações', icon: MapPin },
-  { id: 5, title: 'Acordo', icon: DollarSign },
-  { id: 6, title: 'Uploads', icon: Upload },
-  { id: 7, title: 'Visibilidade', icon: Share2 }
+  { id: 2, title: 'Gêneros', icon: Tags },
+  { id: 3, title: 'Título', icon: PlusCircle },
+  { id: 4, title: 'Descrição', icon: PlusCircle },
+  { id: 5, title: 'Informações', icon: MapPin },
+  { id: 6, title: 'Acordo', icon: DollarSign },
+  { id: 7, title: 'Uploads', icon: Upload },
+  { id: 8, title: 'Visibilidade', icon: Share2 }
+];
+
+const PRESET_GENRES = [
+  'Trap', 'Boom Bap', 'R&B', 'Drill', 'Funk', 'Pop', 'Rock', 'Reggae', 'Gospel', 'Eletrônica'
 ];
 
 const collabTypes = [
@@ -44,6 +50,8 @@ const collabTypes = [
   { value: 'VIDEO_EDITOR', label: 'Editor de vídeo' },
   { value: 'VIDEOMAKER', label: 'Videomaker' },
   { value: 'DESIGNER', label: 'Designer / capa' },
+  { value: 'FEAT', label: 'FEAT' },
+  { value: 'MIX_MASTER', label: 'Mix / Master' },
   { value: 'OTHER', label: 'Outro' },
 ];
 
@@ -132,10 +140,15 @@ export default function NewCollabPage() {
 
     setLoading(true);
     try {
-      await createCollabPost(formData as any);
-      addToast({ message: 'Collab publicada!', type: 'success' });
-      router.push('/collabs');
-    } catch (error) {
+      const res = await createCollabPost(formData as any);
+      if (res) {
+        addToast({ message: 'Collab publicada!', type: 'success' });
+        router.push('/collabs');
+      } else {
+        addToast({ message: 'Erro ao publicar (Verifique os campos)', type: 'error' });
+      }
+    } catch (error: any) {
+      addToast({ message: error.message || 'Erro ao publicar collab', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -170,8 +183,42 @@ export default function NewCollabPage() {
             </div>
           </div>
         );
-
+      
       case 2:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Gêneros musicais</h2>
+            <p className="text-beet-muted text-sm">Selecione os estilos que melhor definem o projeto.</p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {PRESET_GENRES.map(g => {
+                const selected = formData.genres.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => {
+                      const newGenres = selected 
+                        ? formData.genres.filter(item => item !== g)
+                        : [...formData.genres, g];
+                      setFormData({ ...formData, genres: newGenres });
+                    }}
+                    className={`px-4 py-2 rounded-full border transition-all ${
+                      selected 
+                        ? 'border-beet-green bg-beet-green text-black' 
+                        : 'border-white/10 bg-white/5 text-beet-muted hover:border-white/30'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+            {formData.genres.length === 0 && (
+              <p className="text-beet-red text-xs mt-2">Selecione pelo menos um gênero para continuar.</p>
+            )}
+          </div>
+        );
+
+      case 3:
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white">Título da Collab</h2>
@@ -186,7 +233,7 @@ export default function NewCollabPage() {
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white">Descrição</h2>
@@ -201,7 +248,7 @@ export default function NewCollabPage() {
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white">Informações principais</h2>
@@ -269,7 +316,7 @@ export default function NewCollabPage() {
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white">Tipo de acordo</h2>
@@ -308,7 +355,7 @@ export default function NewCollabPage() {
           </div>
         );
 
-      case 6:
+      case 7:
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-white">Uploads da Collab</h2>
@@ -373,7 +420,7 @@ export default function NewCollabPage() {
           </div>
         );
 
-      case 7:
+      case 8:
         return (
           <div className="space-y-8">
             <h2 className="text-xl font-bold text-white">Onde publicar?</h2>
@@ -501,7 +548,7 @@ export default function NewCollabPage() {
             ) : (
               <button
                 onClick={nextStep}
-                disabled={currentStep === 1 && !formData.type}
+                disabled={(currentStep === 1 && !formData.type) || (currentStep === 2 && formData.genres.length === 0)}
                 className="bg-white text-black px-10 py-3 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100"
               >
                 Continuar
