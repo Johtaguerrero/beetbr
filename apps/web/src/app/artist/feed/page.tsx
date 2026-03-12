@@ -562,7 +562,23 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                         }} 
                         style={{ cursor: 'pointer', position: 'relative' }}
                     >
-                        <video ref={mediaRef as any} src={api.getMediaUrl(post.mediaUrl)} preload="metadata" playsInline style={{ width: '100%', borderRadius: '0', marginBottom: 12, outline: 'none', background: 'black', maxHeight: '600px', objectFit: 'cover' }} className="md:rounded-sm" />
+                        <video 
+                            ref={mediaRef as any} 
+                            src={api.getMediaUrl(post.mediaUrl)} 
+                            preload="metadata" 
+                            playsInline 
+                            style={{ 
+                                width: '100%', 
+                                borderRadius: '0', 
+                                marginBottom: 12, 
+                                outline: 'none', 
+                                background: 'black', 
+                                maxHeight: 'min(85vh, 820px)', 
+                                height: 'auto',
+                                objectFit: 'cover' 
+                            }} 
+                            className="md:rounded-sm" 
+                        />
                         
                         {/* Double tap hint for discovery */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
@@ -575,7 +591,20 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
 
                 {post.mediaUrl && (post.type === 'LYRIC' || post.type === 'IMAGE') && (
                     <div onClick={onMediaClick} style={{ cursor: onMediaClick ? 'pointer' : 'default' }}>
-                        <img src={api.getMediaUrl(post.mediaUrl)} alt="Post media" style={{ width: '100%', borderRadius: '0', marginBottom: 12, objectFit: 'cover', maxHeight: '600px', background: 'var(--color-nav-bg)' }} className="md:rounded-sm" />
+                        <img 
+                            src={api.getMediaUrl(post.mediaUrl)} 
+                            alt="Post media" 
+                            style={{ 
+                                width: '100%', 
+                                borderRadius: '0', 
+                                marginBottom: 12, 
+                                objectFit: 'cover', 
+                                maxHeight: 'min(85vh, 820px)', 
+                                height: 'auto',
+                                background: 'var(--color-nav-bg)' 
+                            }} 
+                            className="md:rounded-sm" 
+                        />
                     </div>
                 )}
 
