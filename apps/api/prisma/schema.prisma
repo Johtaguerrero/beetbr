@@ -208,10 +208,11 @@ model ArtistProfile {
   portfolioPdfUrl    String?
   portfolioPdfName   String?
 
-  // Segidores
+  // Seguidores
   followerCountTotal    Int @default(0)
   followerCountArtist   Int @default(0)
   followerCountIndustry Int @default(0)
+  followingCount       Int @default(0)
 
   // Redes Sociais
   instagram          String?

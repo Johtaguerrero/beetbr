@@ -136,6 +136,7 @@ class ApiClient {
         follow: (id: string) => this.post<{ success: boolean }>(`/artists/${id}/follow`),
         unfollow: (id: string) => this.post<{ success: boolean }>(`/artists/${id}/unfollow`),
         getFollowing: () => this.get<{ success: boolean; data: string[] }>('/artists/following'),
+        getFollowingDetailed: () => this.get<{ success: boolean; data: any[] }>('/artists/following/detailed'),
     };
 
     // ── Industry ────────────────────────────────────────────────

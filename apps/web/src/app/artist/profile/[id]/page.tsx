@@ -256,9 +256,10 @@ export default function ArtistProfilePage() {
                 </div>
 
                 {/* Métricas Rápidas (Banner Slim) */}
-                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-4">
                     {[
                         { label: 'Seguidores', value: artist.followerCountTotal?.toLocaleString('pt-BR') || '0', icon: '👥' },
+                        { label: 'Seguindo', value: artist.followingCount?.toLocaleString('pt-BR') || '0', icon: '🏃' },
                         { label: 'Plays', value: artist.playsTotal ? (artist.playsTotal >= 1000000 ? `${(artist.playsTotal / 1000000).toFixed(1)}M` : `${Math.round(artist.playsTotal / 1000)}k`) : '0', icon: '▶️' },
                         { label: 'Indústria', value: artist.followerCountIndustry?.toLocaleString('pt-BR') || '0', icon: '🏢' },
                         { label: 'Artistas', value: artist.followerCountArtist?.toLocaleString('pt-BR') || '0', icon: '🎸' },

@@ -98,6 +98,7 @@ collaborationsRouter.post('/', authenticate, async (req: AuthRequest, res: Respo
             compensation: validated.data.compensation as any,
             mode: validated.data.mode as any,
             compensationValue: validated.data.compensationValue,
+            targetArtistId: req.body.targetArtistId || null,
         },
     });
 

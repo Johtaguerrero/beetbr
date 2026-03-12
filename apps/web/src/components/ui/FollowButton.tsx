@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus, UserCheck, UserMinus, Loader2 } from 'lucide-react';
+import { UserPlus, UserCheck, UserMinus, Loader2, MessageSquarePlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 
 interface FollowButtonProps {
@@ -15,6 +16,7 @@ export function FollowButton({ artistId, showIcon = true, size = 'md', className
     const { isFollowing, toggleFollow, isAuthenticated, artistProfile } = useStore();
     const [loading, setLoading] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const router = useRouter();
     
     // Check if it's following themselves
     const isSelf = artistProfile?.id === artistId;
@@ -53,23 +55,27 @@ export function FollowButton({ artistId, showIcon = true, size = 'md', className
     if (followed) {
         return (
             <motion.button
-                onClick={handleToggle}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(`/collabs/new?targetArtistId=${artistId}`);
+                }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={`flex items-center rounded-sm font-['Space_Mono'] font-bold uppercase tracking-widest transition-all border ${sizes[size]} ${className}`}
                 style={{
-                    background: isHovered ? 'rgba(255, 45, 45, 0.08)' : 'rgba(0, 255, 136, 0.05)',
-                    borderColor: isHovered ? '#FF2D2D' : 'rgba(0, 255, 136, 0.4)',
-                    color: isHovered ? '#FF2D2D' : 'var(--color-accent)',
-                    boxShadow: isHovered ? '0 0 15px rgba(255, 45, 45, 0.15)' : 'none'
+                    background: isHovered ? 'var(--color-accent)' : 'rgba(0, 255, 136, 0.05)',
+                    borderColor: 'var(--color-accent)',
+                    color: isHovered ? '#000' : 'var(--color-accent)',
+                    boxShadow: isHovered ? '0 0 20px rgba(0, 255, 136, 0.4)' : 'none'
                 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
             >
                 {isHovered ? (
                     <>
-                        {showIcon && <UserMinus size={12} />}
-                        <span>Deixar de seguir</span>
+                        <MessageSquarePlus size={12} fill={isHovered ? "#000" : "none"} />
+                        <span>Mandar Colab</span>
                     </>
                 ) : (
                     <>

@@ -12,7 +12,7 @@ import {
     Proposal,
     ProposalStatus,
     ProposalType,
-    ProposalMessage as Message,
+    ChatMessage,
     ContractFileVersion as ContractVersion,
     Listing,
     ListingStatus,
@@ -35,7 +35,7 @@ export type {
     Proposal,
     ProposalStatus,
     ProposalType,
-    Message,
+    ChatMessage as Message,
     ContractVersion,
     Listing,
     ListingStatus,
@@ -83,18 +83,6 @@ export interface Notification {
     link?: string;
 }
 
-export interface ChatMessage {
-    id: string;
-    threadId: string;
-    senderId: string;
-    senderName: string;
-    senderAvatar?: string;
-    content: string;
-    attachmentUrl?: string;
-    attachmentName?: string;
-    isSystem: boolean;
-    createdAt: string;
-}
 
 export interface ChatThread {
     id: string;
@@ -180,6 +168,7 @@ interface BeetrStore {
     artistNotes: Record<string, string>;
     likedPosts: Set<string>;
     followings: string[];
+    followingProfiles: ArtistProfile[];
 
     listings: Listing[];
     savedListings: string[];
@@ -271,6 +260,7 @@ interface BeetrStore {
     toggleFollow: (artistId: string) => Promise<void>;
     isFollowing: (artistId: string) => boolean;
     fetchFollowing: () => Promise<void>;
+    fetchFollowingDetailed: () => Promise<void>;
 }
 
 export const useStore = create<BeetrStore>()(
@@ -302,6 +292,7 @@ export const useStore = create<BeetrStore>()(
             listings: MOCK_LISTINGS,
             savedListings: [],
             followings: [],
+            followingProfiles: [],
             myListings: [],
             collabPosts: MOCK_COLLAB_POSTS,
             collabInterests: [],
@@ -1015,6 +1006,17 @@ export const useStore = create<BeetrStore>()(
                     }
                 } catch (error) {
                     console.error('Failed to fetch followings:', error);
+                }
+            },
+            
+            fetchFollowingDetailed: async () => {
+                try {
+                    const res: any = await api.artists.getFollowingDetailed();
+                    if (res.success) {
+                        set({ followingProfiles: res.data });
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch following detailed:', error);
                 }
             },
 

@@ -57,6 +57,7 @@ export interface ArtistProfile {
     followerCountTotal: number;
     followerCountArtist: number;
     followerCountIndustry: number;
+    followingCount: number;
     ranking?: string;
     
     instagram?: string;

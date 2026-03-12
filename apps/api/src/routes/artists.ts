@@ -15,10 +15,6 @@ artistsRouter.get('/following', authenticate, async (req: AuthRequest, res: Resp
             select: { followingId: true }
         });
         
-        // Map to artistId if needed? 
-        // Actually, the Follow table tracks followingId (which is the USER ID of the followed artist).
-        // Let's get the artistProfile.id instead to be consistent with the frontend store which uses artistId.
-        
         const artistProfiles = await prisma.artistProfile.findMany({
             where: { userId: { in: follows.map(f => f.followingId) } },
             select: { id: true }
@@ -27,6 +23,37 @@ artistsRouter.get('/following', authenticate, async (req: AuthRequest, res: Resp
         return res.json({ success: true, data: artistProfiles.map(p => p.id) });
     } catch (error: any) {
         console.error('[Following] Error:', error);
+        return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
+    }
+});
+
+/**
+ * GET /api/artists/following/detailed — Get full profiles of followed artists
+ */
+artistsRouter.get('/following/detailed', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const follows = await prisma.follow.findMany({
+            where: { followerId: req.user!.userId },
+            select: { followingId: true }
+        });
+        
+        const profiles = await prisma.artistProfile.findMany({
+            where: { userId: { in: follows.map(f => f.followingId) } },
+            include: {
+                metrics: true,
+                user: { select: { verified: true } }
+            }
+        });
+
+        const formatted = profiles.map(p => ({
+            ...p,
+            verified: p.user.verified,
+            user: undefined
+        }));
+
+        return res.json({ success: true, data: formatted });
+    } catch (error: any) {
+        console.error('[Following Detailed] Error:', error);
         return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
     }
 });
@@ -202,6 +229,14 @@ artistsRouter.post('/:id/follow', authenticate, async (req: AuthRequest, res: Re
             }
         });
 
+        // Update followingCount for the follower if they are an artist
+        if (isArtistFollower) {
+            await prisma.artistProfile.update({
+                where: { userId: followerUserId },
+                data: { followingCount: { increment: 1 } }
+            }).catch(e => console.warn(`[Follow] Failed to increment followingCount for user ${followerUserId}`, e));
+        }
+
         // Notify artist
         const followerName = isArtistFollower 
             ? (await prisma.artistProfile.findUnique({ where: { userId: followerUserId } }))?.stageName 
@@ -269,6 +304,14 @@ artistsRouter.post('/:id/unfollow', authenticate, async (req: AuthRequest, res: 
                 followerCountIndustry: !isArtistFollower ? { decrement: 1 } : undefined,
             }
         });
+
+        // Update followingCount for the follower if they are an artist
+        if (isArtistFollower) {
+            await prisma.artistProfile.update({
+                where: { userId: followerUserId },
+                data: { followingCount: { decrement: 1 } }
+            }).catch(e => console.warn(`[Unfollow] Failed to decrement followingCount for user ${followerUserId}`, e));
+        }
 
         // Update score
         const { refreshArtistScore } = require('../services/beetAI');

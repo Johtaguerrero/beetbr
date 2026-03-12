@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Music, 
   Upload, 
@@ -78,7 +78,10 @@ const deadlines = [
 
 export default function NewCollabPage() {
   const router = useRouter();
-  const { createCollabPost, artistProfile, addToast } = useStore();
+  const searchParams = useSearchParams();
+  const targetArtistId = searchParams.get('targetArtistId');
+  
+  const { createCollabPost, artistProfile, addToast, artists } = useStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
@@ -100,8 +103,11 @@ export default function NewCollabPage() {
     videoUrl: '',
     links: [] as string[],
     publishedInFeed: true,
-    publishedInStory: false
+    publishedInStory: false,
+    targetArtistId: targetArtistId || ''
   });
+
+  const targetArtist = artists.find(a => a.id === targetArtistId);
 
   const [newLink, setNewLink] = useState('');
 
@@ -163,6 +169,17 @@ export default function NewCollabPage() {
       case 1:
         return (
           <div className="space-y-4">
+            {targetArtist && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-beet-accent/5 border border-beet-accent/20 mb-6">
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-beet-accent/20">
+                  <img src={targetArtist.avatarUrl} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-sm">Convite para {targetArtist.stageName}</h4>
+                  <p className="text-beet-muted text-[10px] uppercase tracking-widest font-black">Proposta de Colaboração Direta</p>
+                </div>
+              </div>
+            )}
             <h2 className="text-xl font-bold text-white mb-6">O que você está procurando?</h2>
             <div className="grid grid-cols-2 gap-3">
               {collabTypes.map((type) => (
