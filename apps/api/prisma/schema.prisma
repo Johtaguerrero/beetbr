@@ -81,6 +81,59 @@ enum ContractStatus {
 }
 
 // ============================================================
+// CHAT SYSTEM (UNIFIED)
+// ============================================================
+
+enum ChatThreadType {
+  PROPOSAL
+  COLLAB
+  MARKETPLACE
+  DIRECT
+}
+
+model ChatThread {
+  id          String         @id @default(uuid())
+  type        ChatThreadType
+  status      String         @default("ACTIVE")
+  
+  // Context IDs (Optional depending on type)
+  proposalId  String?        @unique
+  proposal    Proposal?      @relation("ProposalChat", fields: [proposalId], references: [id])
+  
+  collabId    String?        @unique
+  collab      CollabPost?    @relation("CollabChat", fields: [collabId], references: [id])
+  
+  listingId   String?        @unique
+  listing     Listing?       @relation("ListingChat", fields: [listingId], references: [id])
+  
+  lastMessage String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  participants User[]        @relation("ChatParticipants")
+  messages     ChatMessage[]
+
+  @@map("chat_threads")
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  threadId      String
+  thread        ChatThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId      String
+  sender        User        @relation(fields: [senderId], references: [id])
+  content       String      @db.Text
+  attachmentUrl String?
+  attachmentName String?
+  isSystem      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+  @@map("chat_messages")
+}
+
+// ============================================================
 // USER
 // ============================================================
 
@@ -101,12 +154,14 @@ model User {
 
   artistProfile   ArtistProfile?
   industryProfile IndustryProfile?
-  sentMessages    ProposalMessage[]
   auditLogs       AuditLog[]
   notifications   Notification[]
   followers       Follow[]         @relation("UserFollowers")
   following       Follow[]         @relation("UserFollows")
-  listingMessages ListingMessage[]
+  
+  // Chat relationships
+  participatingChats ChatThread[]   @relation("ChatParticipants")
+  chatMessages       ChatMessage[]
 
   @@map("users")
 }
@@ -287,25 +342,10 @@ model Proposal {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  messages  ProposalMessage[]
   contract  Contract?
+  chat      ChatThread? @relation("ProposalChat")
 
   @@map("proposals")
-}
-
-model ProposalMessage {
-  id            String   @id @default(uuid())
-  proposalId    String
-  proposal      Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-  senderUserId  String
-  sender        User     @relation(fields: [senderUserId], references: [id])
-  message       String?  @db.Text
-  attachmentUrl String?
-  attachmentName String?
-  systemMessage Boolean  @default(false)
-  createdAt     DateTime @default(now())
-
-  @@map("proposal_messages")
 }
 
 // ============================================================
@@ -447,26 +487,12 @@ model Listing {
 
   artistSeller   ArtistProfile?   @relation(fields: [artistSellerId], references: [id])
   industrySeller IndustryProfile? @relation(fields: [industrySellerId], references: [id])
-  messages       ListingMessage[]
   posts          Post[]
+  chatThread     ChatThread?      @relation("ListingChat")
 
   @@index([category])
   @@index([sellerId])
   @@map("listings")
-}
-
-model ListingMessage {
-  id        String   @id @default(uuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  senderId  String
-  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  message   String   @db.Text
-  createdAt DateTime @default(now())
-
-  @@index([listingId])
-  @@index([senderId])
-  @@map("listing_messages")
 }
 
 // ============================================================
@@ -544,6 +570,7 @@ model CollabPost {
 
   interests    CollabInterest[]
   posts        Post[]
+  chatThread   ChatThread?      @relation("CollabChat")
 
   @@index([authorId])
   @@index([targetArtistId])

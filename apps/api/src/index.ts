@@ -14,6 +14,7 @@ import { proposalsRouter } from './routes/proposals';
 import { uploadsRouter } from './routes/uploads';
 import { marketplaceRouter } from './routes/marketplace';
 import { collaborationsRouter } from './routes/collaborations';
+import { chatsRouter } from './routes/chats';
 import { industryRouter } from './routes/industry';
 import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
@@ -57,6 +58,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/marketplace', marketplaceRouter);
 app.use('/api/collaborations', collaborationsRouter);
+app.use('/api/chats', chatsRouter);
 app.use('/api/industry', industryRouter);
 
 // ── Error Handler (must be last) ──────────────────────────────

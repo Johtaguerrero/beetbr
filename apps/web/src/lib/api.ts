@@ -3,6 +3,34 @@ import { useStore } from './store';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 class ApiClient {
+
+    private async handleUnauthorized<T>(
+        callback: (token: string) => Promise<T>,
+        logoutOnFailure = true
+    ): Promise<T> {
+        const { refreshToken, setAccessToken, logout } = useStore.getState();
+        if (refreshToken) {
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken }),
+            });
+
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                const newToken = data.data.accessToken;
+                setAccessToken(newToken);
+                return callback(newToken);
+            }
+        }
+
+        if (logoutOnFailure) {
+            logout();
+            window.location.href = '/auth';
+        }
+        throw new Error('Sessão expirada');
+    }
+
     private async request<T>(
         path: string,
         options: RequestInit = {}
@@ -17,37 +45,13 @@ class ApiClient {
 
         const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
-        // Token expired — try refresh
         if (res.status === 401) {
-            const { refreshToken, setAccessToken, logout } = useStore.getState();
-            if (refreshToken) {
-                const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ refreshToken }),
-                });
-                if (refreshRes.ok) {
-                    const data = await refreshRes.json();
-                    setAccessToken(data.data.accessToken);
-                    // Retry original request with new token
-                    const retryRes = await fetch(`${API_BASE}${path}`, {
-                        ...options,
-                        headers: {
-                            ...headers,
-                            Authorization: `Bearer ${data.data.accessToken}`,
-                        },
-                    });
-                    if (!retryRes.ok) {
-                        const err = await retryRes.json();
-                        throw new Error(err.error?.message || 'Erro desconhecido');
-                    }
-                    return retryRes.json();
-                } else {
-                    logout();
-                    window.location.href = '/auth';
-                    throw new Error('Sessão expirada');
-                }
-            }
+            return this.handleUnauthorized((newToken) => 
+                fetch(`${API_BASE}${path}`, {
+                    ...options,
+                    headers: { ...headers, Authorization: `Bearer ${newToken}` },
+                }).then(r => r.json())
+            );
         }
 
         if (!res.ok) {
@@ -62,51 +66,40 @@ class ApiClient {
         const formData = new FormData();
         formData.append('file', file);
 
-        const sendRequest = async (token?: string | null) => {
+        const executeUpload = async (token?: string | null) => {
             const headers: HeadersInit = {
                 ...(token && { Authorization: `Bearer ${token}` }),
             };
-            return fetch(`${API_BASE}/uploads`, {
+            const res = await fetch(`${API_BASE}/uploads`, {
                 method: 'POST',
                 headers,
                 body: formData,
             });
+
+            if (res.status === 401) {
+                return this.handleUnauthorized(async (newToken) => {
+                    const retryRes = await fetch(`${API_BASE}/uploads`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${newToken}` },
+                        body: formData,
+                    });
+                    if (!retryRes.ok) throw new Error('Falha no retry do upload');
+                    const json = await retryRes.json();
+                    return json.data;
+                });
+            }
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error?.message || 'Erro no upload');
+            }
+
+            const json = await res.json();
+            return json.data;
         };
 
         const { accessToken } = useStore.getState();
-        let res = await sendRequest(accessToken);
-
-        // Token expired — try refresh
-        if (res.status === 401) {
-            const { refreshToken, setAccessToken, logout } = useStore.getState();
-            if (refreshToken) {
-                const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ refreshToken }),
-                });
-
-                if (refreshRes.ok) {
-                    const data = await refreshRes.json();
-                    const newToken = data.data.accessToken;
-                    setAccessToken(newToken);
-                    // Retry upload with new token
-                    res = await sendRequest(newToken);
-                } else {
-                    logout();
-                    window.location.href = '/auth';
-                    throw new Error('Sessão expirada');
-                }
-            }
-        }
-
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error?.message || 'Erro no upload');
-        }
-
-        const json = await res.json();
-        return json.data;
+        return executeUpload(accessToken);
     }
 
     get = <T>(path: string) => this.request<T>(path, { method: 'GET' });
@@ -198,6 +191,7 @@ class ApiClient {
         list: (params?: object) => this.get(`/marketplace${params ? '?' + new URLSearchParams(params as any).toString() : ''}`),
         get: (id: string) => this.get(`/marketplace/${id}`),
         create: (data: object) => this.post('/marketplace', data),
+        inquiry: (id: string, message: string) => this.post(`/marketplace/${id}/inquiry`, { message }),
     };
 
     // ── Collaborations ──────────────────────────────────────────
@@ -207,6 +201,14 @@ class ApiClient {
         expressInterest: (collabId: string, data: { message: string }) => this.post(`/collaborations/${collabId}/interest`, data),
         getInterests: () => this.get('/collaborations/interests'),
         updateInterestStatus: (id: string, status: 'ACCEPTED' | 'REJECTED') => this.patch(`/collaborations/interests/${id}`, { status }),
+    };
+    
+    // ── Chats ───────────────────────────────────────────────────
+    chats = {
+        list: () => this.get('/chats'),
+        get: (id: string) => this.get(`/chats/${id}`),
+        sendMessage: (id: string, data: { content: string; attachmentUrl?: string; attachmentName?: string }) => 
+            this.post(`/chats/${id}/messages`, data),
     };
     getMediaUrl(path: string | null | undefined): string | undefined {
         if (!path) return undefined;

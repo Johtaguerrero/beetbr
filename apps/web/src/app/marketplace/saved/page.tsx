@@ -8,13 +8,13 @@ import { ScoreBeetBadge, EmptyState } from '@/components/ui';
 
 export default function SavedListings() {
     useAuthGuard();
-    const { listings, savedListings, toggleSaveListing, marketplaceChats, currentUser } = useStore();
+    const { listings, savedListings, toggleSaveListing, chatThreads, currentUser } = useStore();
     const [tab, setTab] = useState<'saved' | 'chats'>('saved');
 
     const saved = listings.filter((l) => savedListings.includes(l.id));
 
-    const myChats = marketplaceChats.filter(
-        (c) => c.buyerId === currentUser?.id || c.sellerId === currentUser?.id
+    const myChats = chatThreads.filter(
+        (t) => t.type === 'MARKETPLACE' && (t.participants?.some(p => p.id === currentUser?.id))
     );
 
     return (
@@ -100,9 +100,10 @@ export default function SavedListings() {
                         ) : (
                             <div className="space-y-3">
                                 {myChats.map((chat, i) => {
-                                    const lastMsg = chat.messages[chat.messages.length - 1];
-                                    const isBuyer = chat.buyerId === currentUser?.id;
-                                    const otherName = isBuyer ? chat.sellerName : chat.buyerName;
+                                    const lastMsg = chat.messages?.[chat.messages.length - 1];
+                                    const otherParticipant = chat.participants?.find(p => p.id !== currentUser?.id);
+                                    const otherName = otherParticipant?.name || 'Usuário';
+                                    const isBuyer = chat.metadata?.buyerId === currentUser?.id;
                                     return (
                                         <motion.div key={chat.id}
                                             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -111,13 +112,13 @@ export default function SavedListings() {
                                                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xl"
                                                     style={{ background: 'var(--color-accent-dim)' }}>🛍️</div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-semibold text-[var(--color-primary-text,white)] text-sm line-clamp-1">{chat.listingTitle}</p>
+                                                    <p className="font-semibold text-[var(--color-primary-text,white)] text-sm line-clamp-1">{chat.listing?.title || 'Anúncio'}</p>
                                                     <p className="text-xs text-beet-muted">{isBuyer ? `Vendedor: ${otherName}` : `Comprador: ${otherName}`}</p>
                                                     {lastMsg && (
-                                                        <p className="text-xs text-beet-muted mt-0.5 line-clamp-1">{lastMsg.text}</p>
+                                                        <p className="text-xs text-beet-muted mt-0.5 line-clamp-1">{lastMsg.content}</p>
                                                     )}
                                                 </div>
-                                                <span className="text-xs text-beet-muted flex-shrink-0">{chat.messages.length} msgs</span>
+                                                <span className="text-xs text-beet-muted flex-shrink-0">{chat.messages?.length || 0} msgs</span>
                                             </Link>
                                         </motion.div>
                                     );

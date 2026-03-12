@@ -127,6 +127,7 @@ artistsRouter.patch('/me', authenticate, requireRole('ARTIST'), async (req: Auth
     const { refreshArtistScore } = require('../services/beetAI');
     await refreshArtistScore(updated.id);
 
+    console.log(`[Artists] Profile updated for user ${req.user!.id}`);
     return res.json({ success: true, data: updated });
 });
 

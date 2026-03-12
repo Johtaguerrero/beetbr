@@ -34,7 +34,7 @@ function ListingMetricCard({ label, value, icon, trend }: { label: string; value
 
 export default function SellerPanel() {
     useAuthGuard('ARTIST');
-    const { listings, artistProfile, updateListingStatus, addToast, marketplaceChats } = useStore();
+    const { listings, artistProfile, updateListingStatus, addToast, chatThreads } = useStore();
     const [tab, setTab] = useState<ListingStatus | 'all' | 'leads'>('all');
     const [loading, setLoading] = useState(true);
 
@@ -46,9 +46,10 @@ export default function SellerPanel() {
     const myListings = listings.filter((l) => l.sellerId === artistProfile?.id || l.sellerId === 'artist-demo');
     const filtered = tab === 'all' ? myListings : tab === 'leads' ? [] : myListings.filter((l) => l.status === tab);
 
-    // Simple filter for chats related to seller's listings
-    const myLeads = marketplaceChats.filter(chat =>
-        myListings.some(l => l.id === chat.listingId)
+    // Filter chat threads related to seller's listings
+    const myLeads = chatThreads.filter(chat =>
+        chat.type === 'MARKETPLACE' && chat.metadata?.listingId &&
+        myListings.some(l => l.id === chat.metadata?.listingId)
     );
 
     const totalViews = myListings.reduce((s, l) => s + l.views, 0);
@@ -112,11 +113,11 @@ export default function SellerPanel() {
                             <div key={chat.id} className="beet-card p-5 flex items-center justify-between group">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full bg-beet-dark flex items-center justify-center border border-white/10 overflow-hidden">
-                                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${chat.buyerId}`} alt="Buyer" className="w-full h-full object-cover" />
+                                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${chat.metadata?.buyerId || chat.id}`} alt="Buyer" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-black text-white uppercase tracking-tight">Interesse no Anúncio #{chat.listingId.split('-')[0]}</p>
-                                        <p className="text-[11px] text-beet-muted mt-0.5">Última mensagem: {chat.messages[chat.messages.length - 1]?.text || 'Nenhuma mensagem'}</p>
+                                        <p className="text-sm font-black text-white uppercase tracking-tight">Interesse no Anúncio #{(chat.metadata?.listingId || '').split('-')[0]}</p>
+                                        <p className="text-[11px] text-beet-muted mt-0.5">Última mensagem: {chat.messages?.[chat.messages.length - 1]?.content || 'Nenhuma mensagem'}</p>
                                     </div>
                                 </div>
                                 <Link href={`/artist/marketplace/chat/${chat.id}`} className="btn-accent px-6 py-2 text-[10px]">RESPONDER</Link>

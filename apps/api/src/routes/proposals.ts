@@ -40,9 +40,31 @@ proposalsRouter.post('/', requireRole('INDUSTRY'), proposalLimiter, async (req: 
             status: 'SENT',
         },
         include: {
-            artist: { select: { stageName: true, avatarUrl: true } },
-            industry: { select: { companyName: true, logoUrl: true } },
+            artist: { select: { userId: true, stageName: true, avatarUrl: true } },
+            industry: { select: { userId: true, companyName: true, logoUrl: true } },
         },
+    });
+
+    // Create Unified Chat Thread
+    await prisma.chatThread.create({
+        data: {
+            type: 'PROPOSAL',
+            proposalId: proposal.id,
+            participants: {
+                connect: [
+                    { id: proposal.industry.userId },
+                    { id: proposal.artist.userId }
+                ]
+            },
+            lastMessage: '📝 Nova proposta enviada',
+            messages: {
+                create: {
+                    senderId: req.user!.userId,
+                    content: `📝 Nova proposta de ${proposal.industry.companyName} enviada para ${proposal.artist.stageName}.`,
+                    isSystem: true
+                }
+            }
+        }
     });
 
     // Auto-create contract record
@@ -117,9 +139,10 @@ proposalsRouter.get('/:proposalId', requireProposalParticipant, async (req: Auth
             industry: { select: { companyName: true, logoUrl: true, type: true } },
             messages: {
                 orderBy: { createdAt: 'asc' },
-                include: { sender: { select: { role: true } } },
+                include: { sender: { select: { role: true, artistProfile: { select: { stageName: true } }, industryProfile: { select: { companyName: true } } } } },
             },
             contract: { include: { versions: { orderBy: { version: 'desc' } } } },
+            chat: { select: { id: true } }
         },
     });
 
@@ -148,14 +171,21 @@ proposalsRouter.post('/:proposalId/accept', requireRole('ARTIST'), requirePropos
     });
 
     // System message in chat
-    await prisma.proposalMessage.create({
-        data: {
-            proposalId: proposal.id,
-            senderUserId: req.user!.userId,
-            systemMessage: true,
-            message: `✅ Proposta aceita pelo artista.`,
-        },
-    });
+    const chat = await prisma.chatThread.findUnique({ where: { proposalId: proposal.id } });
+    if (chat) {
+        await prisma.chatMessage.create({
+            data: {
+                threadId: chat.id,
+                senderId: req.user!.userId,
+                isSystem: true,
+                content: `✅ Proposta aceita pelo artista.`,
+            },
+        });
+        await prisma.chatThread.update({
+            where: { id: chat.id },
+            data: { lastMessage: `✅ Proposta aceita` }
+        });
+    }
 
     await prisma.auditLog.create({
         data: {
@@ -180,9 +210,21 @@ proposalsRouter.post('/:proposalId/reject', requireRole('ARTIST'), requirePropos
 
     const updated = await prisma.proposal.update({ where: { id: proposal.id }, data: { status: 'REJECTED' } });
 
-    await prisma.proposalMessage.create({
-        data: { proposalId: proposal.id, senderUserId: req.user!.userId, systemMessage: true, message: '❌ Proposta recusada pelo artista.' },
-    });
+    const chat = await prisma.chatThread.findUnique({ where: { proposalId: proposal.id } });
+    if (chat) {
+        await prisma.chatMessage.create({
+            data: {
+                threadId: chat.id,
+                senderId: req.user!.userId,
+                isSystem: true,
+                content: '❌ Proposta recusada pelo artista.'
+            },
+        });
+        await prisma.chatThread.update({
+            where: { id: chat.id },
+            data: { lastMessage: '❌ Proposta recusada' }
+        });
+    }
 
     return res.json({ success: true, data: updated });
 });
@@ -200,9 +242,21 @@ proposalsRouter.post('/:proposalId/cancel', requireRole('INDUSTRY'), requireProp
 
     const updated = await prisma.proposal.update({ where: { id: proposal.id }, data: { status: 'CANCELLED' } });
 
-    await prisma.proposalMessage.create({
-        data: { proposalId: proposal.id, senderUserId: req.user!.userId, systemMessage: true, message: '🚫 Proposta cancelada pela empresa.' },
-    });
+    const chat = await prisma.chatThread.findUnique({ where: { proposalId: proposal.id } });
+    if (chat) {
+        await prisma.chatMessage.create({
+            data: {
+                threadId: chat.id,
+                senderId: req.user!.userId,
+                isSystem: true,
+                content: '🚫 Proposta cancelada pela empresa.'
+            },
+        });
+        await prisma.chatThread.update({
+            where: { id: chat.id },
+            data: { lastMessage: '🚫 Proposta cancelada' }
+        });
+    }
 
     return res.json({ success: true, data: updated });
 });

@@ -102,3 +102,78 @@ marketplaceRouter.get('/:id', async (req, res) => {
 
     return res.json({ success: true, data: listing });
 });
+
+/**
+ * POST /api/marketplace/:id/inquiry
+ * Start a chat about a listing
+ */
+marketplaceRouter.post('/:id/inquiry', authenticate, async (req: AuthRequest, res: Response) => {
+    const { message } = req.body;
+    const userId = req.user!.userId;
+
+    const listing = await prisma.listing.findUnique({
+        where: { id: req.params.id },
+        include: {
+            artistSeller: { select: { userId: true } },
+            industrySeller: { select: { userId: true } },
+        }
+    });
+
+    if (!listing) return res.status(404).json({ success: false, error: { message: 'Anúncio não encontrado' } });
+
+    const sellerUserId = listing.artistSeller?.userId || listing.industrySeller?.userId;
+    if (!sellerUserId) return res.status(500).json({ success: false, error: { message: 'Erro ao identificar vendedor' } });
+
+    if (sellerUserId === userId) {
+        return res.status(400).json({ success: false, error: { message: 'Você não pode iniciar um chat com seu próprio anúncio' } });
+    }
+
+    // Find or create thread
+    let thread = await prisma.chatThread.findFirst({
+        where: {
+            type: 'MARKETPLACE',
+            listingId: listing.id,
+            participants: {
+                every: {
+                    id: { in: [userId, sellerUserId] }
+                }
+            }
+        },
+        include: { participants: true }
+    });
+
+    if (!thread) {
+        thread = await prisma.chatThread.create({
+            data: {
+                type: 'MARKETPLACE',
+                listingId: listing.id,
+                participants: {
+                    connect: [{ id: userId }, { id: sellerUserId }]
+                },
+                lastMessage: message || 'Interesse no anúncio',
+                messages: {
+                    create: {
+                        senderId: userId,
+                        content: message || `Olá, tenho interesse no seu anúncio: ${listing.title}`,
+                    }
+                }
+            },
+            include: { participants: true }
+        });
+    } else {
+        // Add message to existing thread
+        await prisma.chatMessage.create({
+            data: {
+                threadId: thread.id,
+                senderId: userId,
+                content: message || `Olá, tenho interesse no seu anúncio: ${listing.title}`,
+            }
+        });
+        await prisma.chatThread.update({
+            where: { id: thread.id },
+            data: { lastMessage: message || 'Interesse no anúncio' }
+        });
+    }
+
+    return res.json({ success: true, data: thread });
+});

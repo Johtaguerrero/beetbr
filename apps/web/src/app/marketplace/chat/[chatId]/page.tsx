@@ -21,37 +21,41 @@ export default function MarketplaceChat() {
     useAuthGuard();
     const params = useParams();
     const chatId = params.chatId as string;
-    const { marketplaceChats, sendMarketMessage, currentUser, listings } = useStore();
+    const { chatThreads, sendChatMessage, currentUser, fetchThreadMessages } = useStore();
     const [text, setText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const chat = marketplaceChats.find((c) => c.id === chatId);
-    const listing = chat ? listings.find((l) => l.id === chat.listingId) : null;
+    const chat = chatThreads.find((c) => c.id === chatId);
+    const listing = chat?.listing;
+
+    useEffect(() => {
+        if (chatId) {
+            fetchThreadMessages(chatId);
+        }
+    }, [chatId, fetchThreadMessages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [chat?.messages.length]);
+    }, [chat?.messages?.length]);
 
     const handleSend = () => {
         if (!text.trim() || !chatId) return;
-        sendMarketMessage(chatId, text.trim());
+        sendChatMessage(chatId, text.trim());
         setText('');
     };
 
     if (!chat) {
         return (
-            <>
-                <div className="empty-state">
-                    <p className="text-5xl">💬</p>
-                    <p className="text-[var(--color-primary-text,white)] font-semibold">Conversa não encontrada</p>
-                    <Link href="/marketplace/saved" className="btn-outline text-sm">← Meus interesses</Link>
-                </div>
-            </>
+            <div className="empty-state">
+                <p className="text-5xl">💬</p>
+                <p className="text-white font-semibold">Conversa não encontrada</p>
+                <Link href="/marketplace" className="btn-outline text-sm">← Voltar ao Marketplace</Link>
+            </div>
         );
     }
 
-    const isBuyer = chat.buyerId === currentUser?.id;
-    const otherName = isBuyer ? chat.sellerName : chat.buyerName;
+    const otherParticipant = chat.participants?.find(p => p.id !== currentUser?.id);
+    const otherName = otherParticipant?.name || 'Vendedor';
 
     return (
         <>
@@ -60,12 +64,12 @@ export default function MarketplaceChat() {
                     {/* Header */}
                     <div className="flex items-center gap-3 border-b px-4 py-3 flex-shrink-0"
                         style={{ borderColor: 'var(--color-border)' }}>
-                        <Link href="/marketplace/saved" className="text-beet-muted hover:text-[var(--color-primary-text,white)] transition-colors">←</Link>
+                        <Link href="/marketplace" className="text-beet-muted hover:text-white transition-colors">←</Link>
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl text-lg"
                             style={{ background: 'var(--color-accent-dim)' }}>🛍️</div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[var(--color-primary-text,white)] text-sm line-clamp-1">{chat.listingTitle}</p>
-                            <p className="text-[11px] text-beet-muted">{isBuyer ? `Vendedor: ${otherName}` : `Comprador: ${otherName}`}</p>
+                            <p className="font-semibold text-white text-sm line-clamp-1">{listing?.title || 'Anúncio'}</p>
+                            <p className="text-[11px] text-beet-muted">{otherName}</p>
                         </div>
                         {listing && (
                             <Link href={`/marketplace/listing/${listing.id}`}
@@ -77,7 +81,7 @@ export default function MarketplaceChat() {
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                        {chat.messages.map((msg, i) => {
+                        {chat.messages?.map((msg, i) => {
                             const isMe = msg.senderId === currentUser?.id;
                             return (
                                 <motion.div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
@@ -87,7 +91,7 @@ export default function MarketplaceChat() {
                                             style={{ background: 'var(--color-dark)' }}>🎤</div>
                                     )}
                                     <div className="max-w-[75%] space-y-0.5">
-                                        {!isMe && <p className="text-[10px] text-beet-muted ml-1">{otherName}</p>}
+                                        {!isMe && <p className="text-[10px] text-beet-muted ml-1">{msg.senderName}</p>}
                                         <div className="rounded-2xl px-4 py-2.5 text-sm"
                                             style={{
                                                 background: isMe ? 'var(--color-accent)' : 'var(--color-card)',
@@ -96,7 +100,7 @@ export default function MarketplaceChat() {
                                                 borderBottomLeftRadius: !isMe ? 4 : undefined,
                                                 border: !isMe ? '1px solid var(--color-border)' : 'none',
                                             }}>
-                                            <RenderTextWithEmojis text={msg.text} />
+                                            <RenderTextWithEmojis text={msg.content} />
                                         </div>
                                         <p className="text-[9px] text-beet-muted px-1 text-right">
                                             {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}

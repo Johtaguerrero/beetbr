@@ -29,7 +29,11 @@ import { PROFESSIONAL_QUESTIONS_LABELS, QUESTION_VALUE_LABELS } from './constant
 export default function ArtistProfilePage() {
     useAuthGuard();
     const params = useParams<{ id: string }>();
-    const { artists, currentUser, artistProfile: myProfile, updateArtistProfile, toggleFollow, isFollowing, toggleShortlist, isInShortlist, getProfilePosts, restorePost } = useStore();
+    const { 
+        artists, currentUser, artistProfile: myProfile, updateArtistProfile, 
+        toggleFollow, isFollowing, toggleShortlist, isInShortlist, 
+        getProfilePosts, restorePost, addToast 
+    } = useStore();
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
@@ -95,9 +99,10 @@ export default function ArtistProfilePage() {
         try {
             const { url } = await api.upload(file);
             await updateArtistProfile({ [type === 'avatar' ? 'avatarUrl' : 'coverUrl']: url });
+            addToast({ message: `${type === 'avatar' ? 'Avatar' : 'Banner'} atualizado com sucesso!`, type: 'success' });
         } catch (err) {
             console.error(`Error uploading ${type}:`, err);
-            alert(`Erro ao carregar ${type}. Tente novamente.`);
+            addToast({ message: `Erro ao carregar ${type}. Tente novamente.`, type: 'error' });
         } finally {
             setUploading(prev => ({ ...prev, [type]: false }));
         }
@@ -128,9 +133,9 @@ export default function ArtistProfilePage() {
         <div className="mx-auto max-w-5xl pb-24 lg:pb-12">
             {/* 1. HEADER VISUAL (BANNER & AVATAR OVERLAP) */}
             <div className="relative mb-20 md:mb-24 px-4 pt-4">
-                {/* Banner cinematográfico 3:1 */}
+                {/* Banner cinematográfico - Maior no mobile */}
                 <div
-                    className={`relative w-full aspect-video md:aspect-[3/1] rounded-3xl bg-beet-dark overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5 ${isSelf ? 'cursor-pointer' : ''}`}
+                    className={`relative w-full h-[280px] md:h-auto md:aspect-[3/1] rounded-3xl bg-beet-dark overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5 ${isSelf ? 'cursor-pointer' : ''}`}
                     onClick={() => isSelf && coverInputRef.current?.click()}
                 >
                     {artist.coverUrl && !bannerError ? (
@@ -183,6 +188,15 @@ export default function ArtistProfilePage() {
                 <div className="absolute -bottom-6 left-28 md:left-48 z-30 transform -translate-x-1/2 md:translate-x-0">
                     <ScoreBeetBadge score={calculateScore(artist)} size="lg" showLabel />
                 </div>
+
+                {/* Edit Button - Agora logo abaixo do banner no mobile/desktop */}
+                {isSelf && (
+                    <div className="absolute top-4 right-8 z-30">
+                        <button onClick={() => setIsEditModalOpen(true)} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full border border-white/20 transition-all flex items-center gap-2">
+                            ✏️ Editar Perfil
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* 2. IDENTIDADE & INFO PRINCIPAIS */}
@@ -205,7 +219,7 @@ export default function ArtistProfilePage() {
                                 {artist.availabilityStatus || 'Disponível'}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg bg-beet-blue/10 text-beet-blue border border-beet-blue/20">
-                                {artist.status || (artist.roles && artist.roles[0]) || (artist.genres && artist.genres[0]) || 'Perfil'}
+                                {artist.status || (artist.roles && artist.roles[0]) || (artist.genres && artist.genres[0]) || 'Artista'}
                             </span>
                         </div>
 
@@ -230,12 +244,6 @@ export default function ArtistProfilePage() {
                             <button onClick={() => !isSelf && toggleFollow(artist.id)} className={`btn-${followed ? 'outline' : 'accent'} py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2`}>
                                 {followed ? '👤 Seguindo' : isSelf ? '🏠 Meu Perfil' : '👤 Seguir Artista'}
                             </button>
-
-                            {isSelf && (
-                                <button onClick={() => setIsEditModalOpen(true)} className="btn-outline py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2 border-white/20 text-white">
-                                    ✏️ Editar Perfil
-                                </button>
-                            )}
 
                             {isIndustry && (
                                 <>

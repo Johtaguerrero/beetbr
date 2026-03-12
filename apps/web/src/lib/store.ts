@@ -83,37 +83,37 @@ export interface Notification {
     link?: string;
 }
 
-export interface MarketplaceChat {
+export interface ChatMessage {
     id: string;
-    listingId: string;
-    listingTitle: string;
-    sellerId: string;
-    sellerName: string;
-    buyerId: string;
-    buyerName: string;
-    messages: { id: string; senderId: string; text: string; createdAt: string }[];
-}
-
-export interface CollabMessage {
-    id: string;
+    threadId: string;
     senderId: string;
-    text: string;
+    senderName: string;
+    senderAvatar?: string;
+    content: string;
+    attachmentUrl?: string;
+    attachmentName?: string;
+    isSystem: boolean;
     createdAt: string;
 }
 
-export interface CollabThread {
+export interface ChatThread {
     id: string;
-    collabId: string;
-    collabPostTitle: string;
-    authorUserId: string;
-    authorName: string;
-    authorScore?: number;
-    interestedUserId: string;
-    interestedUserName: string;
-    interestedUserScore?: number;
-    messages: CollabMessage[];
-    status: 'ACTIVE' | 'ARCHIVED' | string;
+    type: 'PROPOSAL' | 'COLLAB' | 'MARKETPLACE' | 'DIRECT';
+    status: string;
+    lastMessage?: string;
+    participants: any[];
+    messages?: ChatMessage[];
+    proposal?: any;
+    collab?: any;
+    listing?: any;
     updatedAt: string;
+    metadata?: {
+        buyerId?: string;
+        sellerId?: string;
+        listingId?: string;
+        collabId?: string;
+        proposalId?: string;
+    };
 }
 
 // ── Mock Data (Empty for Real Persistence) ───────────────────────────
@@ -183,12 +183,14 @@ interface BeetrStore {
 
     listings: Listing[];
     savedListings: string[];
-    marketplaceChats: MarketplaceChat[];
     myListings: Listing[];
 
     collabPosts: CollabPost[];
     collabInterests: CollabInterest[];
-    collabThreads: CollabThread[];
+    
+    // Unified Chat
+    chatThreads: ChatThread[];
+    activeThread: ChatThread | null;
 
     toasts: Toast[];
     notifications: Notification[];
@@ -232,7 +234,6 @@ interface BeetrStore {
     setArtistNote: (artistId: string, note: string) => void;
 
     createProposal: (data: any) => string;
-    sendMessage: (proposalId: string, message: string) => void;
     acceptProposal: (proposalId: string) => void;
     rejectProposal: (proposalId: string) => void;
     cancelProposal: (proposalId: string) => void;
@@ -242,8 +243,6 @@ interface BeetrStore {
     createListing: (data: any) => Promise<boolean>;
     toggleSaveListing: (listingId: string) => void;
     isListingSaved: (listingId: string) => boolean;
-    startMarketplaceChat: (listingId: string, listingTitle: string, sellerId: string, sellerName: string) => string;
-    sendMarketMessage: (chatId: string, text: string) => void;
     updateListingStatus: (listingId: string, status: ListingStatus) => void;
 
     fetchCollabPosts: (params?: object) => Promise<void>;
@@ -252,8 +251,14 @@ interface BeetrStore {
     expressInterest: (collabId: string, message: string) => Promise<void>;
     acceptInterest: (interestId: string) => void;
     rejectInterest: (interestId: string) => void;
-    sendCollabMessage: (threadId: string, text: string) => void;
     updateCollabStatus: (collabId: string, status: CollabPostStatus) => void;
+
+    // Unified Chat Actions
+    fetchChatThreads: () => Promise<void>;
+    fetchThreadMessages: (threadId: string) => Promise<void>;
+    sendChatMessage: (threadId: string, content: string, attachment?: { url: string, name: string }) => Promise<void>;
+    sendMessage: (threadId: string, content: string) => Promise<void>;
+    startMarketplaceInquiry: (listingId: string, message?: string) => Promise<string>;
 
     addToast: (toast: Omit<Toast, 'id'>) => void;
     removeToast: (id: string) => void;
@@ -295,12 +300,12 @@ export const useStore = create<BeetrStore>()(
             postComments: {},
             listings: MOCK_LISTINGS,
             savedListings: [],
-            marketplaceChats: [],
             followings: [],
             myListings: [],
             collabPosts: MOCK_COLLAB_POSTS,
             collabInterests: [],
-            collabThreads: [],
+            chatThreads: [],
+            activeThread: null,
 
             loginAsArtist: async (email, password) => {
                 const res: any = await api.auth.login({ email, password });
@@ -679,24 +684,8 @@ export const useStore = create<BeetrStore>()(
                 return id;
             },
 
-            sendMessage: (proposalId, message) => {
-                const { currentUser, artistProfile, industryProfile } = get();
-                if (!currentUser) return;
-                const msg: Message = {
-                    id: `msg-${Date.now()}`,
-                    proposalId,
-                    senderUserId: currentUser.id,
-                    senderId: currentUser.id,
-                    senderName: artistProfile?.stageName || industryProfile?.companyName || 'Usuário',
-                    senderRole: currentUser.role,
-                    message,
-                    systemMessage: false,
-                    isSystem: false,
-                    createdAt: new Date().toISOString()
-                };
-                set((s) => ({
-                    proposals: s.proposals.map((p) => p.id === proposalId ? { ...p, messages: [...((p as any).messages || []), msg], updatedAt: new Date().toISOString() } : p)
-                }));
+            sendMessage: async (threadId: string, content: string) => {
+                await get().sendChatMessage(threadId, content);
             },
 
             acceptProposal: async (proposalId) => {
@@ -836,29 +825,19 @@ export const useStore = create<BeetrStore>()(
 
             isListingSaved: (listingId) => get().savedListings.includes(listingId),
 
-            startMarketplaceChat: (listingId, listingTitle, sellerId, sellerName) => {
-                const id = `chat-${Date.now()}`;
-                const { currentUser } = get();
-                const newChat: MarketplaceChat = {
-                    id,
-                    listingId,
-                    listingTitle,
-                    sellerId,
-                    sellerName,
-                    buyerId: currentUser?.id || 'guest',
-                    buyerName: currentUser?.role === 'ARTIST' ? (get().artistProfile?.stageName || 'Visitante') : (get().industryProfile?.companyName || 'Empresa'),
-                    messages: []
-                };
-                set((s) => ({ marketplaceChats: [newChat, ...s.marketplaceChats] }));
-                return id;
-            },
-
-            sendMarketMessage: (chatId, text) => {
-                const { currentUser } = get();
-                if (!currentUser) return;
-                set((s) => ({
-                    marketplaceChats: s.marketplaceChats.map((c) => c.id === chatId ? { ...c, messages: [...c.messages, { id: `msg-${Date.now()}`, senderId: currentUser.id, text, createdAt: new Date().toISOString() }] } : c)
-                }));
+            startMarketplaceInquiry: async (listingId, message) => {
+                try {
+                    const res: any = await api.marketplace.inquiry(listingId, message || 'Tenho interesse neste anúncio');
+                    if (res.success) {
+                        get().addToast({ message: 'Iniciando conversa...', type: 'success' });
+                        await get().fetchChatThreads();
+                        return res.data.id;
+                    }
+                    return '';
+                } catch (error: any) {
+                    get().addToast({ message: error.message, type: 'error' });
+                    return '';
+                }
             },
 
             updateListingStatus: (listingId, status) => {
@@ -942,16 +921,49 @@ export const useStore = create<BeetrStore>()(
                 set((s) => ({ collabInterests: s.collabInterests.map((i) => i.id === interestId ? { ...i, status: 'REJECTED' as any } : i) }));
             },
 
-            sendCollabMessage: (threadId, text) => {
-                const { currentUser } = get();
-                if (!currentUser) return;
-                set((s) => ({
-                    collabThreads: s.collabThreads.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, { id: `msg-${Date.now()}`, senderId: currentUser.id, text, createdAt: new Date().toISOString() }] } : t)
-                }));
+            sendCollabMessage: async (threadId: string, text: string) => {
+                await get().sendChatMessage(threadId, text);
             },
 
             updateCollabStatus: (id, status) => {
                 set((s) => ({ collabPosts: s.collabPosts.map((p) => p.id === id ? { ...p, status } : p) }));
+            },
+
+            // ── Unified Chat Actions Implementation ─────────────────────
+            fetchChatThreads: async () => {
+                try {
+                    const res: any = await api.chats.list();
+                    set({ chatThreads: res.data });
+                } catch (error: any) {
+                    console.error('Failed to fetch chat threads:', error);
+                }
+            },
+
+            fetchThreadMessages: async (threadId) => {
+                try {
+                    const res: any = await api.chats.get(threadId);
+                    set((s) => ({
+                        activeThread: res.data,
+                        chatThreads: s.chatThreads.map(t => t.id === threadId ? res.data : t)
+                    }));
+                } catch (error: any) {
+                    get().addToast({ message: 'Erro ao carregar mensagens', type: 'error' });
+                }
+            },
+
+            sendChatMessage: async (threadId, content, attachment) => {
+                try {
+                    const res: any = await api.chats.sendMessage(threadId, { 
+                        content, 
+                        attachmentUrl: attachment?.url, 
+                        attachmentName: attachment?.name 
+                    });
+                    
+                    // Optimistic or just re-fetch thread messages
+                    await get().fetchThreadMessages(threadId);
+                } catch (error: any) {
+                    get().addToast({ message: 'Erro ao enviar mensagem', type: 'error' });
+                }
             },
 
             clearAllNotifications: () => set({ notifications: [] }),
@@ -1003,11 +1015,12 @@ export const useStore = create<BeetrStore>()(
                 proposals: s.proposals,
                 posts: s.posts,
                 savedListings: s.savedListings,
-                marketplaceChats: s.marketplaceChats,
                 myListings: s.myListings,
                 collabPosts: s.collabPosts,
                 notifications: s.notifications,
+                chatThreads: s.chatThreads,
                 likedPosts: Array.from(s.likedPosts),
+                followings: s.followings,
             }),
             merge: (persisted: any, current) => ({
                 ...current,

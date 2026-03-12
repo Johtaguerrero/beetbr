@@ -66,7 +66,7 @@ export default function ListingDetail() {
     const router = useRouter();
     const id = params.id as string;
 
-    const { listings, savedListings, toggleSaveListing, startMarketplaceChat, isAuthenticated } = useStore();
+    const { listings, savedListings, toggleSaveListing, startMarketplaceInquiry } = useStore();
     const [reported, setReported] = useState(false);
     const [chatLoading, setChatLoading] = useState(false);
 
@@ -77,10 +77,11 @@ export default function ListingDetail() {
     const handleStartChat = async () => {
         if (!listing) return;
         setChatLoading(true);
-        await new Promise((r) => setTimeout(r, 600));
-        const chatId = startMarketplaceChat(listing.id, listing.title, listing.sellerId, listing.sellerName);
+        const threadId = await startMarketplaceInquiry(listing.id);
         setChatLoading(false);
-        router.push(`/marketplace/chat/${chatId}`);
+        if (threadId) {
+            router.push(`/marketplace/chat/${threadId}`);
+        }
     };
 
     const handleReport = () => {

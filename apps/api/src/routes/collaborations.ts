@@ -157,6 +157,28 @@ collaborationsRouter.post('/:id/interest', authenticate, async (req: AuthRequest
         },
     });
 
+    // Create Unified Chat Thread
+    await prisma.chatThread.create({
+        data: {
+            type: 'COLLAB',
+            collabId: collab.id,
+            participants: {
+                connect: [
+                    { id: collab.author.userId },
+                    { id: req.user!.userId }
+                ]
+            },
+            lastMessage: '🤝 Novo interesse em collab',
+            messages: {
+                create: {
+                    senderId: req.user!.userId,
+                    content: validated.data.message || `Tenho interesse em participar da sua collab: ${collab.title}`,
+                    isSystem: false
+                }
+            }
+        }
+    });
+
     // Create Notification for the author
     await prisma.notification.create({
         data: {
