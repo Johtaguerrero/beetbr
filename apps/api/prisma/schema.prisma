@@ -50,6 +50,7 @@ enum PostType {
   AUDIO
   IMAGE
   MARKETPLACE
+  COLLAB
 }
 
 enum ProposalType {
@@ -219,6 +220,8 @@ model Post {
   thumbUrl  String?
   listingId String?
   listing   Listing? @relation(fields: [listingId], references: [id])
+  collabId  String?
+  collab    CollabPost? @relation(fields: [collabId], references: [id])
   duration  Int?     // seconds
   hashtags  String[]
   plays     Int      @default(0)
@@ -477,12 +480,25 @@ enum CollabStatus {
 }
 
 enum CollabRole {
-  FEAT
+  BEATMAKER
   PRODUCER
-  MIX_MASTER
+  MC
+  SINGER
   SONGWRITER
-  MUSICIAN
+  DJ
+  INSTRUMENTALIST
+  VIDEO_EDITOR
+  VIDEOMAKER
+  DESIGNER
+  FEAT
+  MIX_MASTER
   OTHER
+}
+
+enum CollabMode {
+  ONLINE
+  PRESENCIAL
+  HIBRIDO
 }
 
 enum CompensationType {
@@ -500,17 +516,34 @@ model CollabPost {
   description  String           @db.Text
   type         CollabRole
   genres       String[]
+  subgenres    String[]
   location     String?
+  city         String?
+  state        String?
   remote       Boolean          @default(false)
+  mode         CollabMode       @default(ONLINE)
   compensation CompensationType
+  compensationValue Decimal?     @db.Decimal(12, 2)
   status       CollabStatus     @default(ACTIVE)
   views        Int              @default(0)
+  interestCount Int             @default(0)
   targetArtistId String?
   targetArtist   ArtistProfile? @relation("TargetArtistCollabs", fields: [targetArtistId], references: [id])
+  
+  deadline     String?          // Ex: Urgente, 7 dias...
+  coverUrl     String?
+  audioUrl     String?
+  videoUrl     String?
+  links        String[]         // Referências externas
+  
+  publishedInFeed  Boolean      @default(true)
+  publishedInStory Boolean      @default(false)
+  
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
   interests    CollabInterest[]
+  posts        Post[]
 
   @@index([authorId])
   @@index([targetArtistId])

@@ -139,11 +139,18 @@ export const MARKETPLACE_CATEGORIES = [
 export type MarketplaceCategory = 'beats' | 'mixagem' | 'composicao' | 'videoclipe' | 'design' | 'assessoria' | 'equipamentos' | 'SERVICE' | string;
 
 export const COLLAB_TYPE_CONFIG: Record<string, { label: string; chip: string; color: string; icon: string }> = {
+    BEATMAKER: { label: 'Beatmaker', chip: 'Beatmakers', color: '#00FF66', icon: '🥁' },
     PRODUCER: { label: 'Produtor', chip: 'Produtores', color: '#059669', icon: '🎛️' },
+    MC: { label: 'MC', chip: 'MCs', color: '#FFD400', icon: '🎤' },
+    SINGER: { label: 'Cantor(a)', chip: 'Cantores', color: '#FF0055', icon: '🎙️' },
+    SONGWRITER: { label: 'Compositor', chip: 'Compositores', color: '#DB2777', icon: '✍️' },
+    DJ: { label: 'DJ', chip: 'DJs', color: '#8257e5', icon: '💿' },
+    INSTRUMENTALIST: { label: 'Instrumentista', chip: 'Instrumentistas', color: '#8B5CF6', icon: '🎸' },
+    VIDEO_EDITOR: { label: 'Editor de vídeo', chip: 'Editores', color: '#FF0055', icon: '🎬' },
+    VIDEOMAKER: { label: 'Videomaker', chip: 'Videomakers', color: '#0057FF', icon: '🎥' },
+    DESIGNER: { label: 'Designer / capa', chip: 'Designers', color: '#ec4899', icon: '🎨' },
     FEAT: { label: 'Feat', chip: 'Feat', color: '#00FF66', icon: '🤝' },
     MIX_MASTER: { label: 'Mix & Master', chip: 'Mix & Master', color: '#D97706', icon: '🎧' },
-    MUSICIAN: { label: 'Músico', chip: 'Músicos', color: '#8B5CF6', icon: '🎸' },
-    SONGWRITER: { label: 'Compositor', chip: 'Compositores', color: '#DB2777', icon: '✍️' },
     OTHER: { label: 'Outro', chip: 'Outros', color: '#64748B', icon: '💼' },
 };
 
@@ -239,7 +246,8 @@ interface BeetrStore {
     sendMarketMessage: (chatId: string, text: string) => void;
     updateListingStatus: (listingId: string, status: ListingStatus) => void;
 
-    fetchCollabPosts: () => Promise<void>;
+    fetchCollabPosts: (params?: object) => Promise<void>;
+    fetchMyCollabs: () => Promise<void>;
     createCollabPost: (data: CreateCollabPostInput) => Promise<string>;
     expressInterest: (collabId: string, message: string) => Promise<void>;
     acceptInterest: (interestId: string) => void;
@@ -253,6 +261,8 @@ interface BeetrStore {
     markNotificationAsRead: (id: string) => void;
     clearAllNotifications: () => void;
 
+    fetchReceivedInterests: () => Promise<void>;
+    updateInterestStatus: (id: string, status: 'ACCEPTED' | 'REJECTED') => Promise<void>;
     toggleFollow: (userId: string) => Promise<void>;
     isFollowing: (userId: string) => boolean;
 }
@@ -855,9 +865,19 @@ export const useStore = create<BeetrStore>()(
                 set((s) => ({ listings: s.listings.map((l) => l.id === listingId ? { ...l, status } : l) }));
             },
 
-            fetchCollabPosts: async () => {
+            fetchCollabPosts: async (params) => {
                 try {
-                    const res: any = await api.collaborations.list();
+                    const res: any = await api.collaborations.list(params);
+                    set({ collabPosts: res.data });
+                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+            },
+
+            fetchMyCollabs: async () => {
+                const { artistProfile } = get();
+                if (!artistProfile) return;
+                try {
+                    const res: any = await api.collaborations.list({ authorId: artistProfile.id });
+                    // Optionally set a separate state or just reuse collabPosts
                     set({ collabPosts: res.data });
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
             },
@@ -878,6 +898,23 @@ export const useStore = create<BeetrStore>()(
                 try {
                     await api.collaborations.expressInterest(collabId, { message });
                     get().addToast({ message: 'Interesse enviado!', type: 'success' });
+                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+            },
+
+            fetchReceivedInterests: async () => {
+                try {
+                    const res: any = await api.collaborations.getInterests();
+                    set({ collabInterests: res.data });
+                } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+            },
+
+            updateInterestStatus: async (id, status) => {
+                try {
+                    await api.collaborations.updateInterestStatus(id, status);
+                    set((s) => ({
+                        collabInterests: s.collabInterests.map((i) => i.id === id ? { ...i, status: status as any } : i)
+                    }));
+                    get().addToast({ message: `Status atualizado para ${status === 'ACCEPTED' ? 'Aceito' : 'Recusado'}`, type: 'success' });
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
             },
 

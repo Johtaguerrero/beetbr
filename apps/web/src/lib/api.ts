@@ -202,9 +202,11 @@ class ApiClient {
 
     // ── Collaborations ──────────────────────────────────────────
     collaborations = {
-        list: () => this.get('/collaborations'),
+        list: (params?: object) => this.get(`/collaborations${params ? '?' + new URLSearchParams(params as any).toString() : ''}`),
         create: (data: object) => this.post('/collaborations', data),
         expressInterest: (collabId: string, data: { message: string }) => this.post(`/collaborations/${collabId}/interest`, data),
+        getInterests: () => this.get('/collaborations/interests'),
+        updateInterestStatus: (id: string, status: 'ACCEPTED' | 'REJECTED') => this.patch(`/collaborations/interests/${id}`, { status }),
     };
     getMediaUrl(path: string | null | undefined): string | undefined {
         if (!path) return undefined;

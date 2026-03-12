@@ -409,6 +409,23 @@ export interface Listing {
 
 export type CollabPostStatus = 'ACTIVE' | 'PAUSED' | 'CLOSED';
 
+export type CollabMode = 'ONLINE' | 'PRESENCIAL' | 'HIBRIDO';
+
+export type CollabRole =
+    | 'BEATMAKER'
+    | 'PRODUCER'
+    | 'MC'
+    | 'SINGER'
+    | 'SONGWRITER'
+    | 'DJ'
+    | 'INSTRUMENTALIST'
+    | 'VIDEO_EDITOR'
+    | 'VIDEOMAKER'
+    | 'DESIGNER'
+    | 'FEAT'
+    | 'MIX_MASTER'
+    | 'OTHER';
+
 export interface CollabPost {
     id: string;
     authorId: string;
@@ -420,20 +437,28 @@ export interface CollabPost {
     authorState?: string;
     title: string;
     description: string;
-    type: 'FEAT' | 'PRODUCER' | 'MIX_MASTER' | 'SONGWRITER' | 'MUSICIAN' | 'OTHER' | string;
+    type: CollabRole;
     genres: string[];
+    subgenres: string[];
     location?: string;
     city?: string;
     state?: string;
     remote: boolean;
+    mode: CollabMode;
     compensation: 'PAID' | 'REV_SHARE' | 'FREE' | 'NEGOTIABLE';
+    compensationValue?: number;
     status: CollabPostStatus;
     views: number;
     interestCount: number;
     chatCount: number;
     coverUrl?: string;
+    audioUrl?: string;
+    videoUrl?: string;
+    links: string[];
     targetArtistId?: string;
     targetArtist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl'>;
+    publishedInFeed: boolean;
+    publishedInStory: boolean;
     deadline?: string;
     createdAt: string;
 }
