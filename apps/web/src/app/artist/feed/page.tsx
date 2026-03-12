@@ -7,7 +7,7 @@ import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis, FollowButton } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3 } from 'lucide-react';
 
 const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
     { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
@@ -421,62 +421,71 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
             <div style={{ height: 1, background: `linear-gradient(90deg, ${tc.color}70, transparent)` }} />
 
             {/* ── HEADER ── */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 12px', borderBottom: '1px solid var(--color-nav-border)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Link href={`/artist/profile/${post.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                        <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '17px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1, letterSpacing: '-0.01em' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '14px 18px 12px', borderBottom: '1px solid var(--color-nav-border)', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', minWidth: 0 }}>
+                    <Link href={`/artist/profile/${post.artistId}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', minWidth: 0 }}>
+                        <div style={{ flexShrink: 0 }}>
+                            <Avatar name={post.artist?.stageName || 'Artist'} imageUrl={post.artist?.avatarUrl} size="md" />
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                                <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '15px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1.2, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {post.artist?.stageName || 'Artist'}
                                 </span>
-                                <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
+                                <div style={{ flexShrink: 0 }}>
+                                    <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
+                                </div>
                             </div>
-                            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--color-muted)', textTransform: 'uppercase', marginTop: 4, display: 'block' }}>
+                            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--color-muted)', textTransform: 'uppercase', marginTop: 2, display: 'block' }}>
                                 {timeAgo()} AGO
                             </span>
                         </div>
                     </Link>
                     
                     {!isOwn && (
-                        <FollowButton artistId={post.artistId} size="sm" showIcon={false} className="h-7" />
+                        <div style={{ flexShrink: 0 }}>
+                            <FollowButton artistId={post.artistId} size="sm" showIcon={false} className="h-6 text-[9px] px-2" />
+                        </div>
                     )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0, maxWidth: '45%' }}>
                     {/* Boost badge */}
                     {isBoosted && (
                         <span style={{
-                            display: 'flex', alignItems: 'center', gap: 3,
-                            fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em',
-                            padding: '3px 8px', borderRadius: '2px',
-                            border: '1px solid rgba(255,165,0,0.4)', background: 'rgba(255,165,0,0.1)', color: '#FFA500',
-                            animation: 'pulse 2s ease-in-out infinite',
+                            display: 'flex', alignItems: 'center', gap: 2,
+                            fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 800, letterSpacing: '0.05em',
+                            padding: '2px 6px', borderRadius: '2px',
+                            border: '1px solid rgba(255,165,0,0.3)', background: 'rgba(255,165,0,0.08)', color: '#FFA500',
+                            whiteSpace: 'nowrap'
                         }}>
-                            <Flame size={10} /> {boostRemaining}H
+                            <Flame size={8} /> {boostRemaining}H
                         </span>
                     )}
                     {/* Pinned badge */}
                     {isPinned && (
                         <span style={{
-                            display: 'flex', alignItems: 'center', gap: 3,
-                            fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700,
-                            padding: '3px 8px', borderRadius: '2px',
-                            border: '1px solid rgba(0,255,136,0.3)', background: 'rgba(0,255,136,0.08)', color: 'var(--color-accent)',
+                            display: 'flex', alignItems: 'center', gap: 2,
+                            fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 800,
+                            padding: '2px 6px', borderRadius: '2px',
+                            border: '1px solid rgba(0,255,136,0.25)', background: 'rgba(0,255,136,0.05)', color: 'var(--color-accent)',
+                            whiteSpace: 'nowrap'
                         }}>
-                            <Pin size={10} /> FIXADO
+                            <Pin size={8} /> FIX
                         </span>
                     )}
                     {/* type badge */}
                     <span style={{
-                        fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em',
-                        padding: '4px 10px', borderRadius: '2px',
-                        border: `1px solid ${tc.color}50`, background: `${tc.color}12`, color: tc.color,
-                    }}>{tc.label}</span>
+                        fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 800, letterSpacing: '0.1em',
+                        padding: '2px 6px', borderRadius: '2px',
+                        border: `1px solid ${tc.color}40`, background: `${tc.color}08`, color: tc.color,
+                        whiteSpace: 'nowrap'
+                    }}>{tc.label.toUpperCase()}</span>
+                    
                     {/* 3-dot menu */}
-                    <div style={{ position: 'relative' }}>
-                        <button onClick={() => setShowMenu(!showMenu)} style={{ color: 'var(--color-muted)', padding: '4px', lineHeight: 1, border: 'none', background: 'none', cursor: 'pointer' }}>
-                            <MoreHorizontal size={18} strokeWidth={1.75} />
+                    <div style={{ position: 'relative', marginLeft: 2 }}>
+                        <button onClick={() => setShowMenu(!showMenu)} style={{ color: 'var(--color-muted)', padding: '2px', lineHeight: 1, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <MoreVertical size={16} strokeWidth={2} />
                         </button>
                         {showMenu && isOwn && (
                             <motion.div

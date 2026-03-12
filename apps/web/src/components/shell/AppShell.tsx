@@ -333,7 +333,14 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                     <div className="flex-1 space-y-1 overflow-y-auto pr-1 custom-scrollbar">
                         <p className="px-2 text-[10px] font-black uppercase tracking-widest text-beet-muted mb-4 opacity-50">Navegação Principal</p>
                         {nav.map((item: any, i) => {
-                            if (item.divider || item.collabTabs) return null;
+                            if (item.divider) return null;
+                            if (item.collabTabs) {
+                                return (
+                                    <div key="collab-divider" className="my-4 border-t border-white/5 pt-4">
+                                        <p className="px-2 text-[10px] font-black uppercase tracking-widest text-beet-muted mb-2 opacity-30">Colaborações</p>
+                                    </div>
+                                );
+                            }
                             if (item.id === 'post-menu') return null;
 
                             let href = item.href;
@@ -349,11 +356,12 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                             );
                         })}
                         
-                        {/* Colabs Specific */}
-                        <Link href="/collabs" onClick={onClose} className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/5 no-underline group">
-                             <span className="text-beet-muted group-hover:text-neon transition-colors"><Handshake size={IC} /></span>
-                             <span className="font-bold text-white uppercase tracking-wider text-xs font-display group-hover:text-neon transition-colors">COLABS</span>
-                        </Link>
+                        {!isIndustry && (
+                            <Link href="/collabs" onClick={onClose} className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/5 no-underline group">
+                                <span className="text-beet-muted group-hover:text-neon transition-colors"><Handshake size={IC} /></span>
+                                <span className="font-bold text-white uppercase tracking-wider text-xs font-display group-hover:text-neon transition-colors">COLABS</span>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Footer / Logout */}
