@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Music, 
@@ -76,7 +76,7 @@ const deadlines = [
   { value: 'sem pressa', label: 'Sem pressa' },
 ];
 
-export default function NewCollabPage() {
+function NewCollabPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetArtistId = searchParams.get('targetArtistId');
@@ -420,7 +420,7 @@ export default function NewCollabPage() {
                     </div>
                   </div>
                   <label className="cursor-pointer bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors">
-                    <Upload size={20} className="text-white" />
+                    <Upload size={16} className="text-white" />
                     <input type="file" accept="audio/*" className="hidden" onChange={(e) => handleFileUpload(e, 'audio')} />
                   </label>
                 </div>
@@ -600,5 +600,17 @@ export default function NewCollabPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function NewCollabPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="w-12 h-12 border-4 border-beet-green/10 border-t-beet-green rounded-full animate-spin" />
+      </div>
+    }>
+      <NewCollabPageContent />
+    </Suspense>
   );
 }
