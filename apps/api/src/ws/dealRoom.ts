@@ -89,17 +89,25 @@ export function initWebSocket(server: http.Server) {
                     const { message, attachmentUrl, attachmentName } = parsed.payload as WsChatPayload;
                     if (!message && !attachmentUrl) break;
 
+                    const chat = await prisma.chatThread.findUnique({ where: { proposalId } });
+                    if (!chat) break;
+
                     const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
 
-                    const saved = await prisma.proposalMessage.create({
+                    const saved = await prisma.chatMessage.create({
                         data: {
-                            proposalId,
-                            senderUserId: userId,
-                            message,
+                            threadId: chat.id,
+                            senderId: userId,
+                            content: message || '',
                             attachmentUrl,
                             attachmentName,
-                            systemMessage: false,
+                            isSystem: false,
                         },
+                    });
+
+                    await prisma.chatThread.update({
+                        where: { id: chat.id },
+                        data: { lastMessage: message ? (message.length > 40 ? message.substring(0, 37) + '...' : message) : '📎 Anexo' }
                     });
 
                     // Auto-set status to NEGOTIATING on first message from either side

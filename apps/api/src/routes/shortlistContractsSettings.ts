@@ -89,19 +89,28 @@ contractsRouter.post('/:proposalId/upload', requireProposalParticipant, async (r
     });
 
     // System message in chat
-    const user = await prisma.user.findUnique({
-        where: { id: req.user!.userId },
-        include: { artistProfile: true, industryProfile: true },
-    });
-    const name = user?.artistProfile?.stageName || user?.industryProfile?.companyName || 'Usuário';
-    await prisma.proposalMessage.create({
-        data: {
-            proposalId: req.params.proposalId,
-            senderUserId: req.user!.userId,
-            systemMessage: true,
-            message: `📄 ${name} fez upload da Versão ${nextVersion} do contrato.`,
-        },
-    });
+    const chat = await prisma.chatThread.findUnique({ where: { proposalId: req.params.proposalId } });
+    if (chat) {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user!.userId },
+            include: { artistProfile: { select: { stageName: true } }, industryProfile: { select: { companyName: true } } },
+        });
+        const name = user?.artistProfile?.stageName || user?.industryProfile?.companyName || 'Usuário';
+        
+        await prisma.chatMessage.create({
+            data: {
+                threadId: chat.id,
+                senderId: req.user!.userId,
+                isSystem: true,
+                content: `📄 ${name} fez upload da Versão ${nextVersion} do contrato.`,
+            },
+        });
+
+        await prisma.chatThread.update({
+            where: { id: chat.id },
+            data: { lastMessage: `📄 Contrato V${nextVersion}` }
+        });
+    }
 
     return res.status(201).json({ success: true, data: version });
 });

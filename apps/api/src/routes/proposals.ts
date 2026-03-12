@@ -112,7 +112,7 @@ proposalsRouter.get('/', async (req: AuthRequest, res: Response) => {
             include: {
                 artist: { select: { stageName: true, avatarUrl: true } },
                 industry: { select: { companyName: true, logoUrl: true } },
-                _count: { select: { messages: true } },
+                chat: { select: { _count: { select: { messages: true } } } },
             },
             orderBy: { updatedAt: 'desc' },
             skip: (page - 1) * perPage,
@@ -121,9 +121,14 @@ proposalsRouter.get('/', async (req: AuthRequest, res: Response) => {
         prisma.proposal.count({ where: whereClause }),
     ]);
 
+    const formattedProposals = proposals.map((p: any) => ({
+        ...p,
+        messageCount: p.chat?._count?.messages || 0
+    }));
+
     return res.json({
         success: true,
-        data: proposals,
+        data: formattedProposals,
         meta: { page, perPage, total, totalPages: Math.ceil(total / perPage) },
     });
 });
@@ -137,21 +142,31 @@ proposalsRouter.get('/:proposalId', requireProposalParticipant, async (req: Auth
         include: {
             artist: { select: { stageName: true, avatarUrl: true, city: true, genres: true } },
             industry: { select: { companyName: true, logoUrl: true, type: true } },
-            messages: {
-                orderBy: { createdAt: 'asc' },
-                include: { sender: { select: { role: true, artistProfile: { select: { stageName: true } }, industryProfile: { select: { companyName: true } } } } },
-            },
-            contract: { include: { versions: { orderBy: { version: 'desc' } } } },
-            chat: { select: { id: true } }
+            chat: { 
+                include: { 
+                    messages: {
+                        orderBy: { createdAt: 'asc' },
+                        include: { sender: { select: { id: true, role: true, artistProfile: { select: { stageName: true } }, industryProfile: { select: { companyName: true } } } } },
+                    }
+                }
+            }
         },
     });
 
+    if (!proposal) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Proposta não encontrada' } });
+
     // Mark as viewed if artist viewing for first time
-    if (req.user!.role === 'ARTIST' && proposal?.status === 'SENT') {
+    if (req.user!.role === 'ARTIST' && proposal.status === 'SENT') {
         await prisma.proposal.update({ where: { id: proposal.id }, data: { status: 'VIEWED' } });
     }
 
-    return res.json({ success: true, data: proposal });
+    // Map chat messages to the top-level 'messages' field for frontend compatibility
+    const formattedProposal = {
+        ...proposal,
+        messages: proposal.chat?.messages || []
+    };
+
+    return res.json({ success: true, data: formattedProposal });
 });
 
 /**

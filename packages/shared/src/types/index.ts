@@ -286,27 +286,43 @@ export interface Proposal {
     responseDeadline?: string;
     status: ProposalStatus;
     contractFileUrl?: string; // initial contract attachment
-    messages: ProposalMessage[];
+    chat?: ChatThread;
+    messages: ChatMessage[];
     contractVersions: ContractFileVersion[];
     internalNotes?: string;
     createdAt: string;
     updatedAt: string;
 }
 
-/** Chat message inside a Deal Room */
-export interface ProposalMessage {
+/** Unified Chat Thread */
+export interface ChatThread {
     id: string;
-    proposalId: string;
-    senderUserId: string;
-    senderId: string; // UI legacy alias
-    senderName: string;
-    senderRole: UserRole;
-    message?: string;
+    type: 'PROPOSAL' | 'COLLAB' | 'MARKETPLACE' | 'DIRECT';
+    status: string;
+    proposalId?: string;
+    collabId?: string;
+    listingId?: string;
+    lastMessage?: string;
+    createdAt: string;
+    updatedAt: string;
+    participants?: User[];
+    messages?: ChatMessage[];
+}
+
+/** Unified Chat Message */
+export interface ChatMessage {
+    id: string;
+    threadId: string;
+    senderId: string;
+    content: string;
     attachmentUrl?: string;
     attachmentName?: string;
-    systemMessage: boolean;
-    isSystem?: boolean; // UI legacy alias
+    isSystem: boolean;
     createdAt: string;
+    sender?: Partial<User> & { 
+        artistProfile?: Pick<ArtistProfile, 'stageName'>;
+        industryProfile?: Pick<IndustryProfile, 'companyName'>;
+    };
 }
 
 /** Final contract linked to a Proposal */
