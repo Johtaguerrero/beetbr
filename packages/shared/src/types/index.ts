@@ -175,8 +175,9 @@ export interface Post {
     id: string;
     artistId: string;
     artist?: Pick<ArtistProfile, 'stageName' | 'avatarUrl' | 'scoreBeet'>;
-    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE' | 'MARKETPLACE';
+    type: 'TRACK' | 'VIDEO' | 'LYRIC' | 'AUDIO' | 'IMAGE' | 'MARKETPLACE' | 'COLLAB';
     listingId?: string;
+    collabId?: string;
 
     // ── Lifecycle & Visibility ───────────────────────────
     status: PostStatus;

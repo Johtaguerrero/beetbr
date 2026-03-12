@@ -210,7 +210,7 @@ interface BeetrStore {
     togglePostLike: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
-    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; mediaUrl?: string; publishTarget?: PublishTarget; listingId?: string }) => Promise<string>;
+    createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; mediaUrl?: string; publishTarget?: PublishTarget; listingId?: string; collabId?: string }) => Promise<string>;
     createStory: (file: File) => Promise<void>;
     addPostComment: (postId: string, text: string) => void;
 
@@ -500,7 +500,7 @@ export const useStore = create<BeetrStore>()(
                         const res = await api.upload(file);
                         mediaUrl = res.url;
                     }
-                    const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id, listingId: data.listingId });
+                    const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id, listingId: data.listingId, collabId: data.collabId });
 
                     const BOOST_MS = 48 * 60 * 60 * 1000;
                     const now = new Date();
