@@ -16,10 +16,10 @@ export const apiLimiter = createLimiter(
     'Muitas requisições. Tente novamente em 15 minutos.'
 );
 
-/** Auth endpoints: 10 attempts/15min */
+/** Auth endpoints: 30 attempts/15min */
 export const authLimiter = createLimiter(
     15 * 60 * 1000,
-    10,
+    30,
     'Muitas tentativas de login. Tente novamente em 15 minutos.'
 );
 
