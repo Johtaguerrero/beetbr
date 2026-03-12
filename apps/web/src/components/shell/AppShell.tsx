@@ -65,26 +65,8 @@ function CollabTabGroup({ pathname, sidebarExpanded }: { pathname: string; sideb
 
     return (
         <div className="px-2 py-1.5">
-            {/* Header */}
-            {sidebarExpanded && (
-                <div className="flex items-center gap-2 px-1 mb-2">
-                    <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(0,255,136,0.4), transparent)' }} />
-                    <span style={{
-                        fontFamily: 'Syne, sans-serif',
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        letterSpacing: '0.15em',
-                        color: 'var(--color-accent)',
-                    }}>COLABS</span>
-                    <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.4))' }} />
-                </div>
-            )}
-
             {/* Tab cards — stacked vertically */}
-            <div className="space-y-px overflow-hidden" style={{
-                border: sidebarExpanded ? '1px solid var(--color-nav-border)' : 'none',
-                borderRadius: '2px',
-            }}>
+            <div className="space-y-px overflow-hidden">
                 {COLLAB_TABS.map((tab, i) => {
                     const active = pathname === tab.href || pathname.startsWith(tab.href);
                     return (
@@ -313,9 +295,6 @@ function Sidebar({
                 borderRight: '1px solid var(--color-nav-border)',
             }}
         >
-            {/* Accent top line */}
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.6), transparent)' }} />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-32 w-40 -translate-y-1/2 rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(0,255,136,0.07) 0%, transparent 70%)' }} />
 
             {/* Logo & Bell */}
             <div className={`flex items-center ${sidebarExpanded ? 'justify-between px-4' : 'flex-col justify-center gap-4'} py-5`}>
@@ -664,7 +643,7 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
 
             <Sidebar postMenuOpen={postMenuOpen} setPostMenuOpen={setPostMenuOpen} />
             
-            <main className="flex-1 overflow-hidden pt-15 lg:pt-0">
+            <main className="flex-1 overflow-hidden pt-16 lg:pt-0">
                 <motion.div
                     className={noPadding ? 'h-full' : 'h-full'}
                     initial={{ opacity: 0, y: 6 }}

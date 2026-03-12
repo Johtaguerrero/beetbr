@@ -826,12 +826,11 @@ export default function FeedPage() {
                 {/* ─── MAIN COLUMN ─── */}
                 <div style={{ width: '100%', maxWidth: 640, padding: '0 0 8px' }}>
 
-                    {/* Mobile header */}
                     <div className="md:hidden" style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         padding: '16px 16px 12px',
                         borderBottom: '1px solid var(--color-nav-border)',
-                        position: 'sticky', top: 0, zIndex: 30,
+                        position: 'sticky', top: '64px', zIndex: 30,
                         background: 'var(--color-nav-bg)',
                         backdropFilter: 'blur(12px)',
                     }}>

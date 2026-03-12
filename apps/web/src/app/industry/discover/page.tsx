@@ -330,7 +330,7 @@ export default function Discover() {
             {/* Main Discovery Area */}
             <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 flex flex-col">
                 {/* Header Context Bar */}
-                <div className="sticky top-0 z-20 bg-beet-black/80 backdrop-blur-xl border-b border-white/5">
+                <div className="sticky top-16 lg:top-0 z-20 bg-beet-black/80 backdrop-blur-xl border-b border-white/5">
                     <div className="px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
                             <div className="flex items-center gap-2 mb-1">

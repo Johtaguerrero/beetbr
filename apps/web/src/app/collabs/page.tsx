@@ -91,7 +91,7 @@ function CollabExplorerContent() {
     <div className="flex-1 flex flex-col min-h-screen pb-24" style={{ background: 'var(--color-bg)' }}>
       {/* Dynamic Header with glassmorphism */}
       <header 
-        className={`sticky top-0 z-40 transition-all duration-300 border-b ${
+        className={`sticky top-16 lg:top-0 z-30 transition-all duration-300 border-b ${
           isScrolled ? 'bg-beet-bg/80 backdrop-blur-xl py-4 border-white/5' : 'bg-transparent py-10 border-transparent'
         } px-6`}
       >
@@ -134,31 +134,34 @@ function CollabExplorerContent() {
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 flex-1 lg:flex-none">
-              <button
-                onClick={() => setFilterType('all')}
-                className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
-                  filterType === 'all' 
-                    ? 'bg-beet-green border-beet-green text-black shadow-neon' 
-                    : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
-                }`}
-              >
-                TODOS
-              </button>
-              {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+          <div className="flex items-center gap-4 w-full lg:w-auto min-w-0">
+            <div className="relative flex-1 lg:flex-none min-w-0 group">
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-beet-black/40 to-transparent pointer-events-none z-10" />
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 pr-12">
                 <button
-                  key={key}
-                  onClick={() => setFilterType(key)}
+                  onClick={() => setFilterType('all')}
                   className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
-                    filterType === key 
+                    filterType === 'all' 
                       ? 'bg-beet-green border-beet-green text-black shadow-neon' 
                       : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
                   }`}
                 >
-                  {cfg.label.toUpperCase()}
+                  TODOS
                 </button>
-              ))}
+                {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilterType(key)}
+                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border shrink-0 ${
+                      filterType === key 
+                        ? 'bg-beet-green border-beet-green text-black shadow-neon' 
+                        : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {cfg.label.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button 
