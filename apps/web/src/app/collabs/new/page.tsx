@@ -18,7 +18,8 @@ import {
   Clock,
   DollarSign,
   Share2,
-  Tags
+  Tags,
+  Zap
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { api } from '@/lib/api';
@@ -472,84 +473,87 @@ export default function NewCollabPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-beet-dark min-h-screen">
+    <div className="flex-1 overflow-y-auto min-h-screen" style={{ background: 'var(--color-bg)' }}>
       <main className="max-w-2xl mx-auto w-full px-4 py-8 flex-1">
         {/* Progress Bar */}
         <div className="mb-10">
           <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-beet-green text-black flex items-center justify-center font-bold">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-beet-green text-black flex items-center justify-center font-black shadow-neon">
                 {currentStep}
               </div>
               <div>
-                <span className="text-xs text-beet-muted block">Passo {currentStep} de {steps.length}</span>
-                <span className="text-white font-medium">{steps.find(s => s.id === currentStep)?.title}</span>
+                <span className="text-[10px] text-beet-muted block font-black uppercase tracking-widest mb-0.5">PASSO {currentStep} DE {steps.length}</span>
+                <span className="text-white font-black text-lg tracking-tight">{steps.find(s => s.id === currentStep)?.title.toUpperCase()}</span>
               </div>
             </div>
             <button 
               onClick={() => router.back()}
-              className="text-beet-muted hover:text-white transition-colors"
+              className="text-beet-muted hover:text-white transition-colors text-xs font-black uppercase tracking-widest"
             >
               Cancelar
             </button>
           </div>
           
-          <div className="flex gap-1 h-1">
+          <div className="flex gap-1.5 h-1.5 px-1">
             {steps.map(s => (
               <div 
                 key={s.id}
-                className={`flex-1 rounded-full transition-all duration-300 ${
-                  s.id <= currentStep ? 'bg-beet-green' : 'bg-white/10'
+                className={`flex-1 rounded-full transition-all duration-500 ${
+                  s.id <= currentStep ? 'bg-beet-green shadow-[0_0_10px_rgba(0,255,136,0.3)]' : 'bg-white/5'
                 }`}
               />
             ))}
           </div>
         </div>
 
-        <div className="bg-beet-dark-lighter border border-white/10 rounded-3xl p-8 min-h-[500px] flex flex-col">
+        <div 
+          className="border border-white/5 rounded-[40px] p-8 md:p-12 min-h-[500px] flex flex-col shadow-2xl backdrop-blur-sm"
+          style={{ background: 'var(--color-card)' }}
+        >
           <div className="flex-1">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 {renderStep()}
               </motion.div>
             </AnimatePresence>
           </div>
 
-          <div className="flex justify-between items-center mt-12 pt-8 border-t border-white/10">
+          <div className="flex justify-between items-center mt-12 pt-10 border-t border-white/5">
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-bold text-sm ${
                 currentStep === 1 ? 'opacity-0' : 'text-beet-muted hover:text-white hover:bg-white/5'
               }`}
             >
               <ChevronLeft size={20} />
-              Voltar
+              VOLTAR
             </button>
 
             {currentStep === steps.length ? (
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="bg-beet-green text-black px-10 py-3 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100"
+                className="btn-accent px-10 py-4 shadow-neon disabled:opacity-50 disabled:scale-100"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
-                  <>Publicar Collab <Check size={20} /></>
+                  <>PUBLICAR COLLAB <Check size={20} /></>
                 )}
               </button>
             ) : (
               <button
                 onClick={nextStep}
                 disabled={(currentStep === 1 && !formData.type) || (currentStep === 2 && formData.genres.length === 0)}
-                className="bg-white text-black px-10 py-3 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100"
+                className="bg-white text-black px-12 py-4 rounded-2xl font-black text-sm tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-30 disabled:scale-100 uppercase"
               >
                 Continuar
                 <ChevronRight size={20} />
@@ -560,14 +564,24 @@ export default function NewCollabPage() {
       </main>
 
       {/* Uploading Overlay */}
-      {Object.values(uploading).some(Boolean) && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-          <div className="bg-beet-dark-lighter border border-white/10 p-8 rounded-3xl flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-beet-green/30 border-t-beet-green rounded-full animate-spin" />
-            <p className="text-white font-medium">Subindo mídia...</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {Object.values(uploading).some(Boolean) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-6"
+          >
+            <div className="bg-beet-dark border border-white/10 p-10 rounded-[40px] flex flex-col items-center gap-6 shadow-2xl" style={{ background: 'var(--color-bg)' }}>
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-beet-green/10 border-t-beet-green rounded-full animate-spin" />
+                <Zap className="absolute inset-0 m-auto text-beet-green animate-pulse" size={24} />
+              </div>
+              <p className="text-white font-black tracking-widest text-xs uppercase animate-pulse">Subindo mídia para as nuvens...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

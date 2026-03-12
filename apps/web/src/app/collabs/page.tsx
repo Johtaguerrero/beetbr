@@ -8,6 +8,7 @@ import {
   RefreshCw,
   MessageSquare,
   Zap,
+  Handshake,
   Check,
   X,
   ExternalLink
@@ -26,45 +27,33 @@ const collabModes = [
 
 function CollabExplorerContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') as 'explorar' | 'minhas' | 'interesses' | null;
-  
   const { 
     collabPosts, 
-    collabInterests,
     fetchCollabPosts, 
-    fetchMyCollabs,
-    fetchReceivedInterests,
-    updateInterestStatus,
-    expressInterest,
-    addToast
+    addToast,
+    expressInterest
   } = useStore();
   
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'explorar' | 'minhas' | 'interesses'>(tabFromUrl || 'explorar');
   const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [showInterestModal, setShowInterestModal] = useState<string | null>(null);
   const [interestMessage, setInterestMessage] = useState('');
   const [sendingInterest, setSendingInterest] = useState(false);
-
-  useEffect(() => {
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [tabFromUrl]);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     loadContent();
-  }, [activeTab]);
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const loadContent = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'explorar') await fetchCollabPosts();
-      else if (activeTab === 'minhas') await fetchMyCollabs();
-      else if (activeTab === 'interesses') await fetchReceivedInterests();
+      await fetchCollabPosts();
     } finally {
       setLoading(false);
     }
@@ -98,228 +87,187 @@ function CollabExplorerContent() {
     }
   };
 
-  const handleStatusUpdate = async (id: string, status: 'ACCEPTED' | 'REJECTED') => {
-    try {
-      await updateInterestStatus(id, status);
-    } catch (error) {
-    }
-  };
-
   return (
-    <div className="flex-1 flex flex-col bg-beet-dark min-h-screen pb-20">
-      <main className="flex-1 overflow-y-auto">
-        {/* Header Section */}
-        <div className="bg-gradient-to-b from-beet-dark-lighter to-transparent px-6 py-10">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
-                {activeTab === 'explorar' ? 'Explorar Collabs' : activeTab === 'minhas' ? 'Minhas Collabs' : 'Interesses Recebidos'} 
-                <Zap className="text-beet-green" fill="#00FF88" size={28} />
-              </h1>
-              <p className="text-beet-muted max-w-lg">
-                {activeTab === 'explorar' 
-                  ? 'Descubra novas parcerias e cresça com a comunidade.' 
-                  : activeTab === 'minhas' 
-                  ? 'Gerencie suas oportunidades publicadas e impulsione sua rede.' 
-                  : 'Veja quem quer criar algo com você.'}
+    <div className="flex-1 flex flex-col min-h-screen pb-24" style={{ background: 'var(--color-bg)' }}>
+      {/* Dynamic Header with glassmorphism */}
+      <header 
+        className={`sticky top-0 z-40 transition-all duration-300 border-b ${
+          isScrolled ? 'bg-beet-bg/80 backdrop-blur-xl py-4 border-white/5' : 'bg-transparent py-10 border-transparent'
+        } px-6`}
+      >
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-2 flex items-center justify-center md:justify-start gap-4">
+              COLLAB <span className="text-beet-green">HUB</span>
+              <Handshake className="text-beet-green animate-pulse" size={32} />
+            </h1>
+            {!isScrolled && (
+              <p className="text-beet-muted max-w-lg text-sm md:text-base">
+                Conecte-se com outros artistas e crie algo lendário hoje.
               </p>
+            )}
+          </div>
+          
+          <button 
+            onClick={() => router.push('/collabs/new')}
+            className="btn-accent"
+          >
+            <Plus size={18} />
+            CRIAR COLLAB
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 mt-8">
+        {/* Search & Filter Bar - Premium Glass Box */}
+        <div 
+          className="mb-10 p-4 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-md flex flex-col lg:flex-row items-center gap-6"
+        >
+          <div className="flex-1 w-full relative group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-beet-muted group-focus-within:text-beet-green transition-colors" size={20} />
+            <input 
+              type="text"
+              placeholder="O que você está procurando?"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-4 text-sm text-white focus:outline-none focus:border-beet-green/50 focus:bg-white/10 transition-all placeholder:text-beet-muted/50"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full lg:w-auto">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 flex-1 lg:flex-none">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
+                  filterType === 'all' 
+                    ? 'bg-beet-green border-beet-green text-black shadow-neon' 
+                    : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
+                }`}
+              >
+                TODOS
+              </button>
+              {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterType(key)}
+                  className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
+                    filterType === key 
+                      ? 'bg-beet-green border-beet-green text-black shadow-neon' 
+                      : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  {cfg.label.toUpperCase()}
+                </button>
+              ))}
             </div>
-            
+
             <button 
-              onClick={() => router.push('/collabs/new')}
-              className="bg-beet-green text-black px-6 py-3 rounded-full font-black text-sm flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-beet-green/20"
+              onClick={loadContent}
+              className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-beet-muted hover:text-white transition-all border border-white/5 active:scale-95"
+              title="Atualizar"
             >
-              <Plus size={20} />
-              CRIAR COLLAB
+              <RefreshCw size={18} className={loading ? 'animate-spin text-beet-green' : ''} />
             </button>
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6">
-          {/* Tabs Bar */}
-          <div className="flex gap-2 mb-8 bg-white/5 p-1 rounded-2xl w-fit">
-            <button 
-              onClick={() => setActiveTab('explorar')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                activeTab === 'explorar' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
-              }`}
+        {/* Dynamic Grid */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              Explorar
-            </button>
-            <button 
-              onClick={() => setActiveTab('minhas')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                activeTab === 'minhas' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
-              }`}
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="bg-white/5 border border-white/5 aspect-[4/5] rounded-[24px] animate-pulse" />
+              ))}
+            </motion.div>
+          ) : filteredCollabs.length > 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"
             >
-              Meus Anúncios
-            </button>
-            <button 
-              onClick={() => setActiveTab('interesses')}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                activeTab === 'interesses' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
-              }`}
-            >
-              Interesses
-            </button>
-          </div>
-
-          {activeTab !== 'interesses' ? (
-            <>
-              {/* Filters Bar */}
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <div className="flex-1 w-full max-w-md relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                    <input 
-                      type="text"
-                      placeholder="Buscar por título, gênero, instrumento..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-beet-green transition-all"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                      <button
-                        onClick={() => setFilterType('all')}
-                        className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
-                          filterType === 'all' 
-                            ? 'bg-beet-green border-beet-green text-black shadow-[0_0_15px_rgba(0,255,136,0.3)]' 
-                            : 'bg-white/5 border-white/10 text-beet-muted hover:text-white hover:border-white/30'
-                        }`}
-                      >
-                        TODOS
-                      </button>
-                      {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
-                        <button
-                          key={key}
-                          onClick={() => setFilterType(key)}
-                          className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
-                            filterType === key 
-                              ? 'bg-beet-green border-beet-green text-black shadow-[0_0_15px_rgba(0,255,136,0.3)]' 
-                              : 'bg-white/5 border-white/10 text-beet-muted hover:text-white hover:border-white/30'
-                          }`}
-                        >
-                          {cfg.label.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button 
-                      onClick={loadContent}
-                      className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-beet-muted hover:text-white transition-colors border border-white/10"
-                      title="Atualizar"
-                    >
-                      <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    </button>
-                  </div>
-                </div>
-
-              {/* Grid */}
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                  {[1, 2, 3].map(i => <div key={i} className="bg-beet-dark-lighter h-80 rounded-[32px]" />)}
-                </div>
-              ) : filteredCollabs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-                  {filteredCollabs.map((collab: any) => (
-                    <CollabCard 
-                      key={collab.id} 
-                      collab={collab} 
-                      onInterest={activeTab === 'explorar' ? (id) => setShowInterestModal(id) : undefined}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState text={activeTab === 'explorar' ? "Nenhuma collab disponível no momento." : "Você ainda não publicou nenhuma collab."} />
-              )}
-            </>
+              {filteredCollabs.map((collab: any) => (
+                <CollabCard 
+                  key={collab.id} 
+                  collab={collab} 
+                  onInterest={(id) => setShowInterestModal(id)}
+                />
+              ))}
+            </motion.div>
           ) : (
-            /* Interests List */
-            <div className="space-y-4 mb-20">
-              {loading ? (
-                Array(3).fill(0).map((_, i) => <div key={i} className="bg-beet-dark-lighter h-24 rounded-2xl animate-pulse" />)
-              ) : collabInterests.length > 0 ? (
-                collabInterests.map((interest: any) => (
-                  <div 
-                    key={interest.id}
-                    className="bg-beet-dark-lighter border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-white/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <img 
-                        src={api.getMediaUrl(interest.user.avatarUrl) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366'}
-                        className="w-12 h-12 rounded-full border border-white/10"
-                      />
-                      <div>
-                        <h4 className="font-bold text-white flex items-center gap-2">
-                          {interest.user.stageName}
-                          <span className="px-2 py-0.5 bg-white/5 text-beet-muted text-[10px] rounded uppercase">
-                            {interest.user.genres?.[0] || 'Artista'}
-                          </span>
-                        </h4>
-                        <p className="text-xs text-beet-muted mt-1">Interessado em: <span className="text-white/60">{interest.collab.title}</span></p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white/5 p-4 rounded-xl flex-1 max-w-md">
-                      <p className="text-sm text-beet-muted italic">"{interest.message}"</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {interest.status === 'PENDING' ? (
-                        <>
-                          <button 
-                            onClick={() => handleStatusUpdate(interest.id, 'REJECTED')}
-                            className="p-3 bg-beet-red/10 text-beet-red rounded-xl hover:bg-beet-red/20 transition-all"
-                          >
-                            <X size={20} />
-                          </button>
-                          <button 
-                            onClick={() => handleStatusUpdate(interest.id, 'ACCEPTED')}
-                            className="px-6 py-2 bg-beet-green text-black rounded-xl font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
-                          >
-                            <Check size={20} />
-                            ACEITAR
-                          </button>
-                        </>
-                      ) : (
-                        <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase ${
-                          interest.status === 'ACCEPTED' ? 'bg-beet-green/10 text-beet-green' : 'bg-beet-red/10 text-beet-red'
-                        }`}>
-                          {interest.status === 'ACCEPTED' ? 'Aceito' : 'Recusado'}
-                        </span>
-                      )}
-                      <button className="p-3 bg-white/5 text-beet-muted rounded-xl hover:text-white transition-colors">
-                        <ExternalLink size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <EmptyState text="Nenhum interesse recebido até o momento." icon={<MessageSquare size={40} />} />
-              )}
-            </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <EmptyState text="Nenhuma collab disponível nessa categoria." />
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </main>
 
-      {/* Interest Modal */}
+      {/* Interest Modal - Premium Aesthetic */}
       <AnimatePresence>
         {showInterestModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowInterestModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-beet-dark-lighter border border-white/10 w-full max-w-md rounded-[32px] p-8 space-y-6 shadow-2xl">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-white">Tenho Interesse! 🚀</h3>
-                <p className="text-beet-muted text-sm">Escolha como você deseja se conectar com o artista.</p>
+          <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowInterestModal(null)} 
+              className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ y: '100%' }} 
+              animate={{ y: 0 }} 
+              exit={{ y: '100%' }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative bg-beet-dark border-t md:border border-white/10 w-full max-w-lg rounded-t-[40px] md:rounded-[40px] p-8 md:p-10 space-y-8 shadow-2xl overflow-hidden"
+              style={{ background: 'var(--color-bg)' }}
+            >
+              {/* Decorative background element */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-beet-green/5 blur-3xl pointer-events-none" />
+              
+              <div className="space-y-3 relative">
+                <div className="w-12 h-1 text-white/10 bg-white/10 rounded-full mx-auto mb-6 md:hidden" />
+                <h3 className="text-3xl font-black text-white tracking-tight">ENVIAR INTERESSE <span className="text-beet-green">🚀</span></h3>
+                <p className="text-beet-muted text-sm leading-relaxed">Conecte-se com o artista para iniciar uma colaboração épica.</p>
               </div>
-              <textarea placeholder="Adicione uma mensagem personalizada..." value={interestMessage} onChange={(e) => setInterestMessage(e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-beet-green resize-none" />
-              <div className="grid grid-cols-1 gap-3 pt-2">
-                <button onClick={() => handleInterestRequest('chat')} disabled={sendingInterest} className="bg-beet-green text-black py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"><MessageSquare size={18} /> ABRIR CHAT DIRETO</button>
-                <button onClick={() => handleInterestRequest('quick')} disabled={sendingInterest} className="bg-white/10 text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-white/20 transition-all">ENVIAR INTERESSE RÁPIDO</button>
+
+              <div className="relative">
+                <textarea 
+                  placeholder="Escreva uma mensagem matadora..." 
+                  value={interestMessage} 
+                  onChange={(e) => setInterestMessage(e.target.value)} 
+                  rows={4} 
+                  className="w-full bg-white/5 border border-white/5 rounded-3xl p-6 text-white text-base focus:outline-none focus:border-beet-green/50 focus:bg-white/10 transition-all resize-none shadow-inner" 
+                />
               </div>
-              <button onClick={() => setShowInterestModal(null)} className="w-full text-center text-white/20 text-xs font-medium uppercase tracking-widest pt-2">Voltar</button>
+
+              <div className="grid grid-cols-1 gap-4 pt-2">
+                <button 
+                  onClick={() => handleInterestRequest('chat')} 
+                  disabled={sendingInterest} 
+                  className="btn-accent w-full py-5 text-sm"
+                >
+                  <MessageSquare size={18} /> 
+                  INICIAR CONVERSA
+                </button>
+                <button 
+                  onClick={() => handleInterestRequest('quick')} 
+                  disabled={sendingInterest} 
+                  className="w-full bg-white/5 text-white py-5 rounded-xl font-bold text-sm tracking-widest hover:bg-white/10 transition-all border border-white/5 uppercase"
+                >
+                  INTERESSE RÁPIDO
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowInterestModal(null)} 
+                className="w-full text-center text-beet-muted/40 text-[10px] font-black uppercase tracking-[0.2em] pt-4 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
             </motion.div>
           </div>
         )}
