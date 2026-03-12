@@ -199,13 +199,18 @@ authRouter.post('/google', async (req: Request, res: Response) => {
                     artistProfile: user.role === 'ARTIST' ? {
                         upsert: {
                             create: { stageName: name || 'Artista', avatarUrl: picture, genres: [], city: '', state: 'SP' },
-                            update: { avatarUrl: picture } // Mantém o stageName original se já existir, mas atualiza a foto
+                            update: { 
+                                // Apenas atualiza a foto se o usuário ainda não tiver uma (ou se for a padrão do Google)
+                                avatarUrl: user.artistProfile?.avatarUrl ? undefined : picture 
+                            }
                         }
                     } : undefined,
                     industryProfile: user.role === 'INDUSTRY' ? {
                         upsert: {
                             create: { companyName: name || 'Empresa', logoUrl: picture, type: 'OTHER', niches: [], city: '', state: 'SP' },
-                            update: { logoUrl: picture }
+                            update: { 
+                                logoUrl: user.industryProfile?.logoUrl ? undefined : picture 
+                            }
                         }
                     } : undefined,
                 },

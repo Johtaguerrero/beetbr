@@ -3,11 +3,19 @@ FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy the monorepo
+# Copy root package files and workspace packages
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies (using --prefer-offline for speed/reliability)
+RUN npm install --include=dev --prefer-offline --no-audit
+
+# Copy the rest of the monorepo
 COPY . .
 
-# Install dependencies and build
-RUN npm install --include=dev
+# Build packages and app
 RUN npm run build -w packages/shared
 RUN npm run build -w apps/web
 
