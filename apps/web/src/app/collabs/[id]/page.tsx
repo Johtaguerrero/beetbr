@@ -162,7 +162,7 @@ export default function CollabDetailPage() {
                             <div className="space-y-3">
                                 {isAuthor ? (
                                     <Link
-                                        href="/artist/collabs"
+                                        href="/collabs"
                                         className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-tight flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
                                     >
                                         Gerenciar Anúncio

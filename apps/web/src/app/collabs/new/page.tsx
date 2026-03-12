@@ -2,310 +2,525 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    ArrowLeft,
-    ChevronRight,
-    ChevronLeft,
-    Check,
-    Zap,
-    Globe,
-    MapPin,
-    Calendar,
-    Image as ImageIcon,
-    Rocket
+import { 
+  Music, 
+  Upload, 
+  ChevronRight, 
+  ChevronLeft, 
+  Check, 
+  PlusCircle, 
+  Trash2, 
+  AlertCircle,
+  FileAudio,
+  ImageIcon,
+  Globe,
+  MapPin,
+  Clock,
+  DollarSign,
+  Share2
 } from 'lucide-react';
-import { useStore, COLLAB_TYPE_CONFIG, CollabType, CollabMode } from '@/lib/store';
+import { useStore } from '@/lib/store';
+import { api } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const STEPS = [
-    { id: 'type', label: 'Tipo' },
-    { id: 'details', label: 'Detalhes' },
-    { id: 'settings', label: 'Ajustes' },
+const steps = [
+  { id: 1, title: 'Tipo de Collab', icon: Music },
+  { id: 2, title: 'Título', icon: PlusCircle },
+  { id: 3, title: 'Descrição', icon: PlusCircle },
+  { id: 4, title: 'Informações', icon: MapPin },
+  { id: 5, title: 'Acordo', icon: DollarSign },
+  { id: 6, title: 'Uploads', icon: Upload },
+  { id: 7, title: 'Visibilidade', icon: Share2 }
+];
+
+const collabTypes = [
+  { value: 'BEATMAKER', label: 'Beatmaker' },
+  { value: 'PRODUCER', label: 'Produtor' },
+  { value: 'MC', label: 'MC' },
+  { value: 'SINGER', label: 'Cantor(a)' },
+  { value: 'SONGWRITER', label: 'Compositor(a)' },
+  { value: 'DJ', label: 'DJ' },
+  { value: 'INSTRUMENTALIST', label: 'Instrumentista' },
+  { value: 'VIDEO_EDITOR', label: 'Editor de vídeo' },
+  { value: 'VIDEOMAKER', label: 'Videomaker' },
+  { value: 'DESIGNER', label: 'Designer / capa' },
+  { value: 'OTHER', label: 'Outro' },
+];
+
+const collabModes = [
+  { value: 'ONLINE', label: 'Online' },
+  { value: 'PRESENCIAL', label: 'Presencial' },
+  { value: 'HIBRIDO', label: 'Híbrido' },
+];
+
+const compensationTypes = [
+  { value: 'FREE', label: 'Collab gratuita' },
+  { value: 'REV_SHARE', label: 'Collab com divisão de receita' },
+  { value: 'PAID', label: 'Collab com cachê' },
+  { value: 'NEGOTIABLE', label: 'A combinar' },
+];
+
+const deadlines = [
+  { value: 'urgente', label: 'Urgente' },
+  { value: '7 dias', label: '7 dias' },
+  { value: '15 dias', label: '15 dias' },
+  { value: 'sem pressa', label: 'Sem pressa' },
 ];
 
 export default function NewCollabPage() {
-    const router = useRouter();
-    const { createCollabPost, artistProfile } = useStore();
-    const [step, setStep] = useState(0);
+  const router = useRouter();
+  const { createCollabPost, artistProfile, addToast } = useStore();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
 
-    const [formData, setFormData] = useState({
-        type: 'LOOKING_FOR_BEATMAKER' as CollabType,
-        title: '',
-        description: '',
-        genres: [] as string[],
-        mode: 'online' as CollabMode,
-        city: artistProfile?.city || '',
-        state: artistProfile?.state || '',
-        deadline: '',
-        autoAccept: false,
-        allowIndustry: true,
-        targetArtistId: null as string | null,
-        targetArtistName: '',
-    });
+  const [formData, setFormData] = useState({
+    type: '',
+    title: '',
+    description: '',
+    genres: [] as string[],
+    subgenres: [] as string[],
+    city: artistProfile?.city || '',
+    state: artistProfile?.state || '',
+    mode: 'ONLINE',
+    deadline: '7 dias',
+    compensation: 'FREE',
+    compensationValue: 0,
+    coverUrl: '',
+    audioUrl: '',
+    videoUrl: '',
+    links: [] as string[],
+    publishedInFeed: true,
+    publishedInStory: false
+  });
 
-    const [genreInput, setGenreInput] = useState('');
+  const [newLink, setNewLink] = useState('');
 
-    const nextStep = () => setStep(s => Math.min(s + 1, STEPS.length - 1));
-    const prevStep = () => setStep(s => Math.max(s - 1, 0));
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'audio' | 'video') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const handleCreate = async () => {
-        const { targetArtistName, ...submitData } = formData;
-        const id = await createCollabPost({ ...submitData, status: 'ACTIVE' } as any);
-        if (id) router.push(`/collabs/${id}`);
-    };
+    setUploading(prev => ({ ...prev, [type]: true }));
+    try {
+      const { url } = await api.upload(file);
+      if (type === 'cover') setFormData(prev => ({ ...prev, coverUrl: url }));
+      if (type === 'audio') setFormData(prev => ({ ...prev, audioUrl: url }));
+      if (type === 'video') setFormData(prev => ({ ...prev, videoUrl: url }));
+      addToast({ message: 'Upload concluído!', type: 'success' });
+    } catch (error) {
+      addToast({ message: 'Erro ao subir arquivo', type: 'error' });
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
 
-    const addGenre = () => {
-        if (genreInput && !formData.genres.includes(genreInput)) {
-            setFormData({ ...formData, genres: [...formData.genres, genreInput] });
-            setGenreInput('');
-        }
-    };
+  const handleAddLink = () => {
+    if (!newLink) return;
+    setFormData(prev => ({ ...prev, links: [...prev.links, newLink] }));
+    setNewLink('');
+  };
 
-    return (
-        <div className="min-h-screen pb-20" style={{ background: 'var(--color-bg)' }}>
-            {/* Header */}
-            <div className="px-6 py-8 border-b flex items-center justify-between backdrop-blur-xl sticky top-0 z-40" style={{ background: 'var(--color-nav-bg)', borderColor: 'var(--color-nav-border)' }}>
-                <div className="flex items-center gap-4">
-                    <button onClick={() => router.back()} className="p-2 rounded-full transition-colors" style={{ background: 'var(--color-glass-btn)' }}>
-                        <ArrowLeft size={24} />
-                    </button>
-                    <div>
-                        <h1 className="page-header-sm text-xl lg:text-3xl">ANUNCIAR <span style={{ color: 'var(--color-accent)' }}>COLABORAÇÃO</span></h1>
-                        <p className="meta-text" style={{ marginTop: 2 }}>PASSO {step + 1} DE {STEPS.length}</p>
+  const removeLink = (index: number) => {
+    setFormData(prev => ({ ...prev, links: prev.links.filter((_, i) => i !== index) }));
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.type || !formData.title || !formData.description) {
+      addToast({ message: 'Preencha os campos obrigatórios', type: 'error' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createCollabPost(formData as any);
+      addToast({ message: 'Collab publicada!', type: 'success' });
+      router.push('/collabs');
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length));
+  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-white mb-6">O que você está procurando?</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {collabTypes.map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => {
+                    setFormData({ ...formData, type: type.value });
+                    nextStep();
+                  }}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    formData.type === type.value
+                      ? 'border-beet-green bg-beet-green/10 text-white'
+                      : 'border-white/10 bg-white/5 text-beet-muted hover:border-white/30'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Título da Collab</h2>
+            <p className="text-beet-muted text-sm">Dê um título atrativo para sua oportunidade.</p>
+            <input
+              type="text"
+              placeholder="Ex: Procuro beatmaker para EP trap dark"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-beet-green"
+            />
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Descrição</h2>
+            <p className="text-beet-muted text-sm">Explique o projeto e o que você espera dessa collab.</p>
+            <textarea
+              rows={6}
+              placeholder="Conte mais sobre o som, suas referências e quem você busca..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-beet-green resize-none"
+            />
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Informações principais</h2>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm text-beet-muted">Cidade</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-beet-muted">Estado (UF)</label>
+                <input
+                  type="text"
+                  maxLength={2}
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white uppercase"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-beet-muted">Prazo</label>
+              <div className="grid grid-cols-2 gap-2">
+                {deadlines.map(d => (
+                  <button
+                    key={d.value}
+                    onClick={() => setFormData({ ...formData, deadline: d.value })}
+                    className={`p-3 rounded-lg border flex items-center gap-2 transition-all ${
+                      formData.deadline === d.value
+                        ? 'border-beet-green bg-beet-green/10 text-white'
+                        : 'border-white/10 bg-white/5 text-beet-muted'
+                    }`}
+                  >
+                    <Clock size={16} />
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-beet-muted">Formato</label>
+              <div className="flex gap-2">
+                {collabModes.map(m => (
+                  <button
+                    key={m.value}
+                    onClick={() => setFormData({ ...formData, mode: m.value })}
+                    className={`flex-1 p-3 rounded-lg border transition-all ${
+                      formData.mode === m.value
+                        ? 'border-beet-green bg-beet-green/10 text-white'
+                        : 'border-white/10 bg-white/5 text-beet-muted'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Tipo de acordo</h2>
+            <p className="text-beet-muted text-sm">Como você pretende conduzir essa parceria?</p>
+            
+            <div className="space-y-3">
+              {compensationTypes.map(c => (
+                <button
+                  key={c.value}
+                  onClick={() => setFormData({ ...formData, compensation: c.value })}
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                    formData.compensation === c.value
+                      ? 'border-beet-green bg-beet-green/10 text-white'
+                      : 'border-white/10 bg-white/5 text-beet-muted'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {formData.compensation === 'PAID' && (
+              <div className="space-y-2">
+                <label className="text-sm text-beet-muted">Valor do cachê (R$)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-beet-muted" size={20} />
+                  <input
+                    type="number"
+                    value={formData.compensationValue}
+                    onChange={(e) => setFormData({ ...formData, compensationValue: Number(e.target.value) })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 pl-12 text-white focus:outline-none focus:border-beet-green"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Uploads da Collab</h2>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-beet-green/20 flex items-center justify-center text-beet-green">
+                      <ImageIcon size={20} />
                     </div>
+                    <div>
+                      <h4 className="text-white font-medium">Capa da Collab</h4>
+                      <p className="text-xs text-beet-muted">Formato 1:1 recomendado (1080x1080)</p>
+                    </div>
+                  </div>
+                  <label className="cursor-pointer bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors">
+                    <Upload size={20} className="text-white" />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'cover')} />
+                  </label>
                 </div>
-                <div className="flex gap-1.5">
-                    {STEPS.map((_, i) => (
-                        <div key={i} className={`h-1.5 w-8 rounded-full transition-all duration-500`} style={{ background: i === step ? 'var(--color-accent)' : i < step ? 'var(--color-accent-dim)' : 'var(--color-nav-border)', boxShadow: i === step ? '0 0 10px var(--color-accent-glow)' : 'none' }} />
-                    ))}
+                {formData.coverUrl && (
+                  <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10">
+                    <img src={formData.coverUrl} className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => setFormData({ ...formData, coverUrl: '' })}
+                      className="absolute top-1 right-1 p-1 bg-black/60 rounded-md text-beet-red"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-beet-blue/20 flex items-center justify-center text-beet-blue">
+                      <FileAudio size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium">Áudio Demo</h4>
+                      <p className="text-xs text-beet-muted">Trecho do projeto ou idéia (MP3/WAV)</p>
+                    </div>
+                  </div>
+                  <label className="cursor-pointer bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors">
+                    <Upload size={20} className="text-white" />
+                    <input type="file" accept="audio/*" className="hidden" onChange={(e) => handleFileUpload(e, 'audio')} />
+                  </label>
                 </div>
+                {formData.audioUrl && (
+                  <div className="flex items-center gap-3 bg-white/10 p-2 rounded-lg">
+                    <FileAudio size={16} className="text-beet-muted" />
+                    <span className="text-xs text-beet-muted truncate flex-1">Áudio carregado</span>
+                    <button onClick={() => setFormData({ ...formData, audioUrl: '' })} className="text-beet-red">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 7:
+        return (
+          <div className="space-y-8">
+            <h2 className="text-xl font-bold text-white">Onde publicar?</h2>
+            
+            <div className="space-y-4">
+              <button
+                onClick={() => setFormData({ ...formData, publishedInFeed: true, publishedInStory: false })}
+                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                  formData.publishedInFeed && !formData.publishedInStory
+                    ? 'border-beet-green bg-beet-green/10'
+                    : 'border-white/10 bg-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-white font-bold">Publicar no Feed</span>
+                  {formData.publishedInFeed && !formData.publishedInStory && <Check size={20} className="text-beet-green" />}
+                </div>
+                <p className="text-sm text-beet-muted">Gera uma postagem automática no feed de notícias.</p>
+              </button>
+
+              <button
+                onClick={() => setFormData({ ...formData, publishedInFeed: true, publishedInStory: true })}
+                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                  formData.publishedInFeed && formData.publishedInStory
+                    ? 'border-beet-green bg-beet-green/10'
+                    : 'border-white/10 bg-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-white font-bold">Feed + Stories</span>
+                  {formData.publishedInFeed && formData.publishedInStory && <Check size={20} className="text-beet-green" />}
+                </div>
+                <p className="text-sm text-beet-muted">Recomendado! Maior visibilidade e velocidade de resposta.</p>
+              </button>
             </div>
 
-            <div className="max-w-2xl mx-auto px-6 py-12">
-                <AnimatePresence mode="wait">
-                    {step === 0 && (
-                        <motion.div
-                            key="step0"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-8"
-                        >
-                            <div className="space-y-4">
-                                <h2 className="page-header-sm" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)' }}>O QUE VOCÊ ESTÁ <span style={{ color: 'var(--color-accent)' }}>BUSCANDO?</span></h2>
-                                <p className="page-subtitle">Selecione o tipo de colaboração que deseja iniciar.</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                {Object.entries(COLLAB_TYPE_CONFIG).map(([key, config]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setFormData({ ...formData, type: key as CollabType })}
-                                        className={`flex flex-col items-start gap-4 p-5 beet-card transition-all text-left ${formData.type === key
-                                            ? 'active'
-                                            : ''
-                                            }`}
-                                    >
-                                        <span className="text-3xl">{config.icon}</span>
-                                        <span className={`text-sm font-bold ${formData.type === key ? 'text-black' : 'text-white'}`} style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                                            {config.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={nextStep}
-                                className="w-full btn-accent shadow-[0_4px_20px_rgba(0,255,102,0.2)]"
-                            >
-                                CONTINUAR <ChevronRight size={20} />
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {step === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-8"
-                        >
-                            <div className="space-y-4">
-                                <h2 className="page-header-sm" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)' }}>CONTE MAIS <span style={{ color: 'var(--color-accent)' }}>DETALHES</span></h2>
-                                <p className="page-subtitle">Dê um título atrativo e explique seu objetivo.</p>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>TÍTULO DO ANÚNCIO</label>
-                                    <input
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        placeholder='Ex: PROCuro MC para Feat em EP de Dril...'
-                                        className="beet-input"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>DESCRIÇÃO DETALHADA</label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        rows={6}
-                                        placeholder="Explique o que você precisa, referências musicais, prazos, etc..."
-                                        className="beet-input resize-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>GÊNEROS RELACIONADOS</label>
-                                    <div className="flex gap-2 mb-2">
-                                        <input
-                                            type="text"
-                                            value={genreInput}
-                                            onChange={(e) => setGenreInput(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && addGenre()}
-                                            placeholder="ADICIONE GÊNEROS..."
-                                            className="beet-input"
-                                        />
-                                        <button onClick={addGenre} className="btn-outline px-6">ADD</button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {formData.genres.map(genre => (
-                                            <span key={genre} className="beet-pill active">
-                                                {genre} <button onClick={() => setFormData({ ...formData, genres: formData.genres.filter(g => g !== genre) })}>×</button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={prevStep}
-                                    className="flex-1 btn-outline flex items-center justify-center gap-2"
-                                >
-                                    <ChevronLeft size={20} /> VOLTAR
-                                </button>
-                                <button
-                                    onClick={nextStep}
-                                    disabled={!formData.title || !formData.description}
-                                    className="flex-[2] btn-accent shadow-[0_4px_20px_rgba(0,255,102,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    CONTINUAR <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {step === 2 && (
-                        <motion.div
-                            key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-8"
-                        >
-                            <div className="space-y-4">
-                                <h2 className="page-header-sm" style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)' }}>LOGÍSTICA E <span style={{ color: 'var(--color-accent)' }}>VISIBILIDADE</span></h2>
-                                <p className="page-subtitle">Como e onde essa colaboração vai acontecer.</p>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>FORMATO</label>
-                                        <select
-                                            value={formData.mode}
-                                            onChange={(e) => setFormData({ ...formData, mode: e.target.value as CollabMode })}
-                                            className="beet-input appearance-none"
-                                        >
-                                            <option value="online">ONLINE</option>
-                                            <option value="presencial">PRESENCIAL</option>
-                                            <option value="hibrido">HÍBRIDO</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>PRAZO (OPCIONAL)</label>
-                                        <input
-                                            type="date"
-                                            value={formData.deadline}
-                                            onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                                            className="beet-input color-scheme-dark"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="beet-card p-4 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="card-title" style={{ fontSize: '16px' }}>AUTO-ACEITAR PORTFÓLIOS</p>
-                                            <p className="meta-text" style={{ marginTop: 2 }}>Inicia chat direto ao receber interesse.</p>
-                                        </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" checked={formData.autoAccept} onChange={(e) => setFormData({ ...formData, autoAccept: e.target.checked })} className="sr-only peer" />
-                                            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-beet-green"></div>
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="card-title" style={{ fontSize: '16px' }}>PERMITIR EMPRESAS/SELOS</p>
-                                            <p className="meta-text" style={{ marginTop: 2 }}>Sua colab aparecerá para perfis Industry.</p>
-                                        </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" checked={formData.allowIndustry} onChange={(e) => setFormData({ ...formData, allowIndustry: e.target.checked })} className="sr-only peer" />
-                                            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-beet-green"></div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="section-label ml-1" style={{ marginBottom: 8, display: 'block' }}>ARTISTA ALVO (OPCIONAL)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={formData.targetArtistName}
-                                            onChange={(e) => setFormData({ ...formData, targetArtistName: e.target.value })}
-                                            placeholder="Buscar artista específico..."
-                                            className="beet-input"
-                                        />
-                                        {formData.targetArtistName && !formData.targetArtistId && (
-                                            <div className="absolute top-full left-0 right-0 mt-2 beet-card p-2 z-50 max-h-48 overflow-y-auto">
-                                                {/* Aqui integraria um dropdown de busca real, por enquanto apenas simulamos ou usamos o ID se colado */}
-                                                <p className="meta-text p-2">Pressione ENTER para buscar...</p>
-                                            </div>
-                                        )}
-                                        {formData.targetArtistId && (
-                                            <div className="mt-2 flex items-center justify-between beet-pill active">
-                                                <span>Selecionado: {formData.targetArtistName}</span>
-                                                <button onClick={() => setFormData({ ...formData, targetArtistId: null, targetArtistName: '' })}>×</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="meta-text">Se deixado em branco, o anúncio será público para todos os artistas.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4 pt-12">
-                                <button
-                                    onClick={prevStep}
-                                    className="flex-1 btn-outline"
-                                >
-                                    VOLTAR
-                                </button>
-                                <button
-                                    onClick={handleCreate}
-                                    className="flex-[2] btn-accent flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,102,0.3)] hover:scale-[1.02] active:scale-95"
-                                >
-                                    PUBLICAR ANÚNCIO <Rocket size={22} />
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            <div className="p-4 rounded-xl bg-beet-green/5 border border-beet-green/20 flex gap-4">
+              <AlertCircle size={24} className="text-beet-green shrink-0" />
+              <p className="text-xs text-beet-green/80">
+                Ao publicar no feed, sua collab ficará em destaque por 48h para todos os artistas da rede.
+              </p>
             </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-beet-dark min-h-screen">
+      <main className="max-w-2xl mx-auto w-full px-4 py-8 flex-1">
+        {/* Progress Bar */}
+        <div className="mb-10">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-beet-green text-black flex items-center justify-center font-bold">
+                {currentStep}
+              </div>
+              <div>
+                <span className="text-xs text-beet-muted block">Passo {currentStep} de {steps.length}</span>
+                <span className="text-white font-medium">{steps.find(s => s.id === currentStep)?.title}</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => router.back()}
+              className="text-beet-muted hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+          
+          <div className="flex gap-1 h-1">
+            {steps.map(s => (
+              <div 
+                key={s.id}
+                className={`flex-1 rounded-full transition-all duration-300 ${
+                  s.id <= currentStep ? 'bg-beet-green' : 'bg-white/10'
+                }`}
+              />
+            ))}
+          </div>
         </div>
-    );
+
+        <div className="bg-beet-dark-lighter border border-white/10 rounded-3xl p-8 min-h-[500px] flex flex-col">
+          <div className="flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex justify-between items-center mt-12 pt-8 border-t border-white/10">
+            <button
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${
+                currentStep === 1 ? 'opacity-0' : 'text-beet-muted hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <ChevronLeft size={20} />
+              Voltar
+            </button>
+
+            {currentStep === steps.length ? (
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="bg-beet-green text-black px-10 py-3 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                ) : (
+                  <>Publicar Collab <Check size={20} /></>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={nextStep}
+                disabled={currentStep === 1 && !formData.type}
+                className="bg-white text-black px-10 py-3 rounded-xl font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:scale-100"
+              >
+                Continuar
+                <ChevronRight size={20} />
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Uploading Overlay */}
+      {Object.values(uploading).some(Boolean) && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+          <div className="bg-beet-dark-lighter border border-white/10 p-8 rounded-3xl flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-beet-green/30 border-t-beet-green rounded-full animate-spin" />
+            <p className="text-white font-medium">Subindo mídia...</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

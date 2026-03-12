@@ -64,7 +64,7 @@ function CollabTabGroup({ pathname, sidebarExpanded }: { pathname: string; sideb
         {
             label: 'MINHAS',
             sub: 'Arquivos',
-            href: '/artist/collabs',
+            href: '/collabs?tab=minhas',
             icon: <FolderOpen size={sidebarExpanded ? 18 : 22} strokeWidth={1.75} />,
         },
     ];

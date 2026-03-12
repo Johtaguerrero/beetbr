@@ -1,420 +1,339 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    ArrowLeft, Search, Plus, MapPin, Clock, Users,
-    CheckCircle2, MoreVertical, Heart, Share2, Zap,
-    Filter, Radio, X
+import React, { useEffect, useState, Suspense } from 'react';
+import { 
+  Search, 
+  Plus, 
+  Music, 
+  RefreshCw,
+  MessageSquare,
+  Zap,
+  Check,
+  X,
+  ExternalLink
 } from 'lucide-react';
-import Link from 'next/link';
-import { useStore, COLLAB_TYPE_CONFIG, CollabPost, CollabType } from '@/lib/store';
-import { ScoreBeetBadge, Avatar } from '@/components/ui';
+import { useStore, COLLAB_TYPE_CONFIG } from '@/lib/store';
+import CollabCard from '@/components/CollabCard';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { api } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const COLLAB_FILTERS = [
-    { id: 'all', label: 'TODOS', mono: 'ALL' },
-    { id: 'FEAT', label: 'FEAT', mono: 'FT' },
-    { id: 'PRODUCER', label: 'PRODUTORES', mono: 'PRD' },
-    { id: 'MIX_MASTER', label: 'MIX/MASTER', mono: 'MIX' },
-    { id: 'SONGWRITER', label: 'COMPOSITORES', mono: 'SNG' },
-    { id: 'MUSICIAN', label: 'MÚSICOS', mono: 'MUS' },
-    { id: 'OTHER', label: 'OUTROS', mono: 'OTH' },
+const collabModes = [
+  { value: 'ONLINE', label: 'Online' },
+  { value: 'PRESENCIAL', label: 'Presencial' },
+  { value: 'HIBRIDO', label: 'Híbrido' },
 ];
 
-export default function CollabsPage() {
-    const { collabPosts, currentUser } = useStore();
-    const [activeFilter, setActiveFilter] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchFocused, setSearchFocused] = useState(false);
+function CollabExplorerContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as 'explorar' | 'minhas' | 'interesses' | null;
+  
+  const { 
+    collabPosts, 
+    collabInterests,
+    fetchCollabPosts, 
+    fetchMyCollabs,
+    fetchReceivedInterests,
+    updateInterestStatus,
+    expressInterest,
+    addToast
+  } = useStore();
+  
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'explorar' | 'minhas' | 'interesses'>(tabFromUrl || 'explorar');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [showInterestModal, setShowInterestModal] = useState<string | null>(null);
+  const [interestMessage, setInterestMessage] = useState('');
+  const [sendingInterest, setSendingInterest] = useState(false);
 
-    const filteredCollabs = collabPosts.filter((collab: CollabPost) => {
-        const matchesFilter = activeFilter === 'all' || collab.type === activeFilter;
-        const matchesSearch =
-            collab.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            collab.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            collab.authorName.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch && collab.status === 'ACTIVE';
-    });
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
-    return (
-        <div className="min-h-screen pb-24 lg:pb-8" style={{ background: 'var(--color-bg)' }}>
+  useEffect(() => {
+    loadContent();
+  }, [activeTab]);
 
-            {/* ═══ HEADER ═══ */}
-            <div className="sticky top-0 z-30 px-4 pt-4 pb-3" style={{
-                background: 'var(--color-nav-bg)',
-                backdropFilter: 'blur(24px)',
-                borderBottom: '1px solid var(--color-nav-border)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
-            }}>
-                {/* Top accent */}
-                <div className="absolute top-0 left-0 right-0 h-px" style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.5), transparent)',
-                }} />
+  const loadContent = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === 'explorar') await fetchCollabPosts();
+      else if (activeTab === 'minhas') await fetchMyCollabs();
+      else if (activeTab === 'interesses') await fetchReceivedInterests();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                {/* Title row */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={currentUser?.role === 'INDUSTRY' ? '/industry/dashboard' : '/artist/feed'}
-                            className="flex h-8 w-8 items-center justify-center transition-all"
-                            style={{
-                                border: '1px solid var(--color-nav-border)',
-                                borderRadius: '2px',
-                                color: 'var(--color-muted)',
-                            }}
-                        >
-                            <ArrowLeft size={16} strokeWidth={2} />
-                        </Link>
+  const filteredCollabs = collabPosts.filter(c => {
+    const matchType = filterType === 'all' || c.type === filterType;
+    const matchSearch = !searchQuery || 
+                       c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                       c.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchType && matchSearch;
+  });
 
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-black text-white" style={{ fontFamily: 'Syne, sans-serif', letterSpacing: '-0.02em' }}>
-                                    COLABORAÇÕES
-                                </h1>
-                                {/* Live indicator */}
-                                <div className="flex items-center gap-1 px-2 py-0.5" style={{
-                                    border: '1px solid rgba(0,255,136,0.3)',
-                                    borderRadius: '2px',
-                                    background: 'rgba(0,255,136,0.08)',
-                                }}>
-                                    <div className="h-1.5 w-1.5 rounded-full bg-beet-green animate-pulse" style={{ boxShadow: '0 0 6px #00FF88' }} />
-                                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', color: 'var(--color-accent)', letterSpacing: '0.1em' }}>LIVE</span>
-                                </div>
-                            </div>
-                            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'var(--color-muted)', letterSpacing: '0.08em' }}>
-                                {filteredCollabs.length} ANÚNCIOS ATIVOS
-                            </p>
-                        </div>
-                    </div>
+  const handleInterestRequest = async (type: 'quick' | 'chat') => {
+    if (!showInterestModal) return;
+    
+    setSendingInterest(true);
+    try {
+      await expressInterest(showInterestModal, interestMessage || 'Tenho interesse na sua collab!');
+      if (type === 'chat') {
+        addToast({ message: 'Chat iniciado!', type: 'success' });
+        router.push('/messages'); 
+      } else {
+        addToast({ message: 'Interesse enviado!', type: 'success' });
+      }
+      setShowInterestModal(null);
+      setInterestMessage('');
+    } catch (error) {
+    } finally {
+      setSendingInterest(false);
+    }
+  };
 
-                    {/* New collab CTA */}
-                    <Link href="/collabs/new" className="btn-glow flex items-center gap-2" style={{ padding: '9px 16px', fontSize: '10px' }}>
-                        <Plus size={14} strokeWidth={2.5} />
-                        NOVA COLLAB
-                    </Link>
-                </div>
+  const handleStatusUpdate = async (id: string, status: 'ACCEPTED' | 'REJECTED') => {
+    try {
+      await updateInterestStatus(id, status);
+    } catch (error) {
+    }
+  };
 
-                {/* Search */}
-                <div className="relative mb-3">
-                    <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                        style={{ color: searchFocused ? 'var(--color-accent)' : 'var(--color-muted)' }}
-                        strokeWidth={2}
-                    />
-                    <input
-                        type="text"
-                        placeholder="> buscar por collab, artista ou gênero..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setSearchFocused(false)}
-                        className="beet-input pl-9 pr-10 py-2.5 text-sm"
-                        style={{ clipPath: 'none', borderRadius: '2px' }}
-                    />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                            style={{ color: 'var(--color-muted)' }}
-                        >
-                            <X size={14} strokeWidth={2} />
-                        </button>
-                    )}
-                </div>
-
-                {/* Filter pills */}
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    {COLLAB_FILTERS.map(filter => {
-                        const active = activeFilter === filter.id;
-                        return (
-                            <motion.button
-                                key={filter.id}
-                                onClick={() => setActiveFilter(filter.id)}
-                                whileTap={{ scale: 0.94 }}
-                                className="flex items-center gap-1.5 whitespace-nowrap transition-all flex-shrink-0"
-                                style={{
-                                    fontFamily: 'Space Mono, monospace',
-                                    fontSize: '9px',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.1em',
-                                    padding: '6px 12px',
-                                    borderRadius: '2px',
-                                    border: active ? '1px solid var(--color-accent)' : '1px solid var(--color-nav-border)',
-                                    background: active ? 'var(--color-accent)' : 'var(--color-glass-btn)',
-                                    color: active ? '#000' : 'var(--color-muted)',
-                                    boxShadow: active ? '2px 2px 0 rgba(0,255,136,0.4), 0 0 12px rgba(0,255,136,0.2)' : 'none',
-                                    transform: active ? 'translate(-1px,-1px)' : 'none',
-                                }}
-                            >
-                                {filter.label}
-                            </motion.button>
-                        );
-                    })}
-                </div>
+  return (
+    <div className="flex-1 flex flex-col bg-beet-dark min-h-screen pb-20">
+      <main className="flex-1 overflow-y-auto">
+        {/* Header Section */}
+        <div className="bg-gradient-to-b from-beet-dark-lighter to-transparent px-6 py-10">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black text-white mb-2 flex items-center gap-3">
+                {activeTab === 'explorar' ? 'Explorar Collabs' : activeTab === 'minhas' ? 'Minhas Collabs' : 'Interesses Recebidos'} 
+                <Zap className="text-beet-green" fill="#00FF88" size={28} />
+              </h1>
+              <p className="text-beet-muted max-w-lg">
+                {activeTab === 'explorar' 
+                  ? 'Descubra novas parcerias e cresça com a comunidade.' 
+                  : activeTab === 'minhas' 
+                  ? 'Gerencie suas oportunidades publicadas e impulsione sua rede.' 
+                  : 'Veja quem quer criar algo com você.'}
+              </p>
             </div>
-
-            {/* ═══ CONTENT ═══ */}
-            <div className="px-4 py-6 max-w-5xl mx-auto">
-                {filteredCollabs.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredCollabs.map((collab, index) => (
-                            <CollabCard key={collab.id} collab={collab} index={index} />
-                        ))}
-                    </div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center py-24 text-center"
-                    >
-                        <div className="mb-4 flex h-16 w-16 items-center justify-center" style={{
-                            border: '1px solid rgba(0,255,136,0.2)',
-                            borderRadius: '2px',
-                            background: 'rgba(0,255,136,0.04)',
-                        }}>
-                            <Users size={28} strokeWidth={1.5} style={{ color: 'rgba(0,255,136,0.5)' }} />
-                        </div>
-                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '11px', color: 'var(--color-muted)', letterSpacing: '0.1em' }}>
-                            NENHUM ANÚNCIO ENCONTRADO
-                        </p>
-                        <button
-                            onClick={() => { setActiveFilter('all'); setSearchQuery(''); }}
-                            className="mt-4 btn-ghost"
-                            style={{ fontSize: '9px' }}
-                        >
-                            LIMPAR FILTROS
-                        </button>
-                    </motion.div>
-                )}
-            </div>
+            
+            <button 
+              onClick={() => router.push('/collabs/new')}
+              className="bg-beet-green text-black px-6 py-3 rounded-full font-black text-sm flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-beet-green/20"
+            >
+              <Plus size={20} />
+              CRIAR COLLAB
+            </button>
+          </div>
         </div>
-    );
+
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Tabs Bar */}
+          <div className="flex gap-2 mb-8 bg-white/5 p-1 rounded-2xl w-fit">
+            <button 
+              onClick={() => setActiveTab('explorar')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'explorar' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
+              }`}
+            >
+              Explorar
+            </button>
+            <button 
+              onClick={() => setActiveTab('minhas')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'minhas' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
+              }`}
+            >
+              Meus Anúncios
+            </button>
+            <button 
+              onClick={() => setActiveTab('interesses')}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'interesses' ? 'bg-white text-black' : 'text-beet-muted hover:text-white'
+              }`}
+            >
+              Interesses
+            </button>
+          </div>
+
+          {activeTab !== 'interesses' ? (
+            <>
+              {/* Filters Bar */}
+              <div className="flex flex-wrap items-center gap-4 mb-8 bg-beet-dark-lighter p-4 rounded-2xl border border-white/5">
+                <div className="flex-1 min-w-[200px] relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                  <input 
+                    type="text"
+                    placeholder="Buscar por título, gênero, instrumento..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white/5 border-none rounded-xl py-3 pl-12 pr-4 text-sm text-white focus:ring-1 focus:ring-beet-green"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <select 
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="bg-white/5 border-none rounded-xl py-3 px-4 text-sm text-white focus:ring-1 focus:ring-beet-green"
+                  >
+                    <option value="all">Todos os tipos</option>
+                    {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
+                  </select>
+
+                  <button 
+                    onClick={loadContent}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-beet-muted hover:text-white transition-colors"
+                  >
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid */}
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                  {[1, 2, 3].map(i => <div key={i} className="bg-beet-dark-lighter h-80 rounded-[32px]" />)}
+                </div>
+              ) : filteredCollabs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+                  {filteredCollabs.map((collab: any) => (
+                    <CollabCard 
+                      key={collab.id} 
+                      collab={collab} 
+                      onInterest={activeTab === 'explorar' ? (id) => setShowInterestModal(id) : undefined}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState text={activeTab === 'explorar' ? "Nenhuma collab disponível no momento." : "Você ainda não publicou nenhuma collab."} />
+              )}
+            </>
+          ) : (
+            /* Interests List */
+            <div className="space-y-4 mb-20">
+              {loading ? (
+                Array(3).fill(0).map((_, i) => <div key={i} className="bg-beet-dark-lighter h-24 rounded-2xl animate-pulse" />)
+              ) : collabInterests.length > 0 ? (
+                collabInterests.map((interest: any) => (
+                  <div 
+                    key={interest.id}
+                    className="bg-beet-dark-lighter border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-white/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src={api.getMediaUrl(interest.user.avatarUrl) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366'}
+                        className="w-12 h-12 rounded-full border border-white/10"
+                      />
+                      <div>
+                        <h4 className="font-bold text-white flex items-center gap-2">
+                          {interest.user.stageName}
+                          <span className="px-2 py-0.5 bg-white/5 text-beet-muted text-[10px] rounded uppercase">
+                            {interest.user.genres?.[0] || 'Artista'}
+                          </span>
+                        </h4>
+                        <p className="text-xs text-beet-muted mt-1">Interessado em: <span className="text-white/60">{interest.collab.title}</span></p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-xl flex-1 max-w-md">
+                      <p className="text-sm text-beet-muted italic">"{interest.message}"</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {interest.status === 'PENDING' ? (
+                        <>
+                          <button 
+                            onClick={() => handleStatusUpdate(interest.id, 'REJECTED')}
+                            className="p-3 bg-beet-red/10 text-beet-red rounded-xl hover:bg-beet-red/20 transition-all"
+                          >
+                            <X size={20} />
+                          </button>
+                          <button 
+                            onClick={() => handleStatusUpdate(interest.id, 'ACCEPTED')}
+                            className="px-6 py-2 bg-beet-green text-black rounded-xl font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+                          >
+                            <Check size={20} />
+                            ACEITAR
+                          </button>
+                        </>
+                      ) : (
+                        <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase ${
+                          interest.status === 'ACCEPTED' ? 'bg-beet-green/10 text-beet-green' : 'bg-beet-red/10 text-beet-red'
+                        }`}>
+                          {interest.status === 'ACCEPTED' ? 'Aceito' : 'Recusado'}
+                        </span>
+                      )}
+                      <button className="p-3 bg-white/5 text-beet-muted rounded-xl hover:text-white transition-colors">
+                        <ExternalLink size={20} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState text="Nenhum interesse recebido até o momento." icon={<MessageSquare size={40} />} />
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Interest Modal */}
+      <AnimatePresence>
+        {showInterestModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowInterestModal(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-beet-dark-lighter border border-white/10 w-full max-w-md rounded-[32px] p-8 space-y-6 shadow-2xl">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white">Tenho Interesse! 🚀</h3>
+                <p className="text-beet-muted text-sm">Escolha como você deseja se conectar com o artista.</p>
+              </div>
+              <textarea placeholder="Adicione uma mensagem personalizada..." value={interestMessage} onChange={(e) => setInterestMessage(e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-beet-green resize-none" />
+              <div className="grid grid-cols-1 gap-3 pt-2">
+                <button onClick={() => handleInterestRequest('chat')} disabled={sendingInterest} className="bg-beet-green text-black py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"><MessageSquare size={18} /> ABRIR CHAT DIRETO</button>
+                <button onClick={() => handleInterestRequest('quick')} disabled={sendingInterest} className="bg-white/10 text-white py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-white/20 transition-all">ENVIAR INTERESSE RÁPIDO</button>
+              </div>
+              <button onClick={() => setShowInterestModal(null)} className="w-full text-center text-white/20 text-xs font-medium uppercase tracking-widest pt-2">Voltar</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
-// ═══ COLLAB CARD ═══
-function CollabCard({ collab, index }: { collab: CollabPost; index: number }) {
-    const config = COLLAB_TYPE_CONFIG[collab.type];
-    const { expressInterest, currentUser } = useStore();
-    const isAuthor = currentUser?.id === collab.authorId;
-    const [liked, setLiked] = useState(false);
+function EmptyState({ text, icon }: { text: string; icon?: React.ReactNode }) {
+  return (
+    <div className="py-20 text-center space-y-4">
+      <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto text-white/20">
+        {icon || <Music size={40} />}
+      </div>
+      <h3 className="text-xl font-bold text-white max-w-xs mx-auto">{text}</h3>
+    </div>
+  );
+}
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.25 }}
-            whileHover={{ y: -2 }}
-            className="group relative overflow-hidden"
-            style={{
-                background: 'var(--color-card)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderLeft: `2px solid ${config.color}`,
-                borderRadius: '2px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-                transition: 'border-color 0.2s, box-shadow 0.2s',
-            }}
-            onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = `${config.color}60`;
-                (e.currentTarget as HTMLElement).style.boxShadow = `3px 3px 0 ${config.color}40, 0 8px 32px rgba(0,0,0,0.7)`;
-            }}
-            onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.6)';
-                (e.currentTarget as HTMLElement).style.borderLeftColor = config.color;
-            }}
-        >
-            {/* Corner accent glow */}
-            <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none" style={{
-                background: `radial-gradient(circle at top right, ${config.color}18, transparent 65%)`,
-            }} />
-
-            {/* Top accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-px" style={{
-                background: `linear-gradient(90deg, ${config.color}60, transparent)`,
-            }} />
-
-            <div className="p-5 flex flex-col h-full relative">
-
-                {/* ── Author row ── */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <Avatar name={collab.authorName} imageUrl={collab.authorAvatarUrl} size="sm" />
-                        <div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="font-bold text-sm text-white leading-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                    {collab.authorName}
-                                </span>
-                                {collab.authorVerified && (
-                                    <CheckCircle2 size={11} style={{ color: '#00E5FF' }} />
-                                )}
-                                <ScoreBeetBadge score={collab.authorScore || 0} size="sm" />
-                            </div>
-                            <div className="flex items-center gap-1 mt-0.5" style={{
-                                fontFamily: 'Space Mono, monospace',
-                                fontSize: '9px',
-                                color: 'var(--color-muted)',
-                                letterSpacing: '0.06em',
-                            }}>
-                                <MapPin size={8} strokeWidth={2} />
-                                {collab.authorCity}, {collab.authorState}
-                            </div>
-                        </div>
-                    </div>
-
-                    <button className="transition-colors p-1.5" style={{ color: 'rgba(255,255,255,0.2)', borderRadius: '2px' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.2)')}
-                    >
-                        <MoreVertical size={16} strokeWidth={1.75} />
-                    </button>
-                </div>
-
-                {/* ── Type badge ── */}
-                <div className="mb-3">
-                    <span className="inline-flex items-center gap-1.5" style={{
-                        fontFamily: 'Space Mono, monospace',
-                        fontSize: '8px',
-                        fontWeight: 700,
-                        letterSpacing: '0.14em',
-                        padding: '3px 8px',
-                        borderRadius: '2px',
-                        background: `${config.color}18`,
-                        border: `1px solid ${config.color}40`,
-                        color: config.color,
-                    }}>
-                        <Zap size={9} strokeWidth={2.5} />
-                        LOOKING FOR {config.label.toUpperCase()}
-                    </span>
-                </div>
-
-                {/* ── Title + description ── */}
-                <div className="flex-grow mb-4">
-                    <h3 className="text-base font-black text-white mb-1.5 leading-tight group-hover:text-beet-green transition-colors" style={{ fontFamily: 'Syne, sans-serif' }}>
-                        {collab.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        {collab.description}
-                    </p>
-                </div>
-
-                {/* ── Genres ── */}
-                {collab.genres?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                        {collab.genres.slice(0, 3).map(genre => (
-                            <span key={genre} style={{
-                                fontFamily: 'Space Mono, monospace',
-                                fontSize: '8px',
-                                fontWeight: 700,
-                                letterSpacing: '0.08em',
-                                padding: '2px 8px',
-                                borderRadius: '2px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'rgba(255,255,255,0.35)',
-                                background: 'rgba(255,255,255,0.03)',
-                            }}>
-                                #{genre.toUpperCase()}
-                            </span>
-                        ))}
-                    </div>
-                )}
-
-                {/* ── Footer ── */}
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center gap-1" style={{
-                        fontFamily: 'Space Mono, monospace',
-                        fontSize: '9px',
-                        color: 'var(--color-muted)',
-                        letterSpacing: '0.04em',
-                    }}>
-                        <Clock size={10} strokeWidth={2} />
-                        HÁ 2H
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {/* Like */}
-                        <motion.button
-                            whileTap={{ scale: 0.85 }}
-                            onClick={() => setLiked(!liked)}
-                            className="flex h-7 w-7 items-center justify-center transition-all"
-                            style={{
-                                borderRadius: '2px',
-                                border: liked ? '1px solid rgba(255,0,85,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                                background: liked ? 'rgba(255,0,85,0.1)' : 'transparent',
-                                color: liked ? '#FF0055' : 'rgba(255,255,255,0.30)',
-                                boxShadow: liked ? '0 0 10px rgba(255,0,85,0.2)' : 'none',
-                            }}
-                        >
-                            <Heart size={13} strokeWidth={2} fill={liked ? '#FF0055' : 'none'} />
-                        </motion.button>
-
-                        {/* Share */}
-                        <motion.button
-                            whileTap={{ scale: 0.85 }}
-                            className="flex h-7 w-7 items-center justify-center transition-all"
-                            style={{
-                                borderRadius: '2px',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'transparent',
-                                color: 'rgba(255,255,255,0.30)',
-                            }}
-                        >
-                            <Share2 size={13} strokeWidth={2} />
-                        </motion.button>
-
-                        {/* CTA */}
-                        {isAuthor ? (
-                            <Link href="/artist/collabs">
-                                <motion.span
-                                    whileHover={{ x: -1, y: -1 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    className="inline-flex items-center gap-1.5 transition-all"
-                                    style={{
-                                        fontFamily: 'Space Mono, monospace',
-                                        fontSize: '9px',
-                                        fontWeight: 700,
-                                        letterSpacing: '0.1em',
-                                        padding: '6px 12px',
-                                        borderRadius: '2px',
-                                        border: '1px solid rgba(255,255,255,0.15)',
-                                        color: 'var(--color-gray)',
-                                        background: 'rgba(255,255,255,0.04)',
-                                    }}
-                                >
-                                    GERENCIAR
-                                </motion.span>
-                            </Link>
-                        ) : (
-                            <motion.button
-                                whileHover={{ x: -2, y: -2 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => expressInterest(collab.id, '')}
-                                className="inline-flex items-center gap-1.5 transition-all"
-                                style={{
-                                    fontFamily: 'Syne, sans-serif',
-                                    fontSize: '9px',
-                                    fontWeight: 800,
-                                    letterSpacing: '0.1em',
-                                    padding: '7px 14px',
-                                    borderRadius: '2px',
-                                    border: `1px solid ${config.color}`,
-                                    background: `${config.color}18`,
-                                    color: config.color,
-                                    boxShadow: `2px 2px 0 ${config.color}40`,
-                                    clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                <Zap size={11} strokeWidth={2.5} />
-                                TENHO INTERESSE
-                            </motion.button>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Invisible link overlay */}
-            <Link href={`/collabs/${collab.id}`} className="absolute inset-x-0 top-0 h-[calc(100%-68px)] z-10" />
-        </motion.div>
-    );
+export default function CollabExplorerPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center bg-beet-dark min-h-screen">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-beet-green/20 border-t-beet-green animate-spin" />
+          <p className="text-beet-muted font-black text-xs tracking-widest">CARREGANDO HUB...</p>
+        </div>
+      </div>
+    }>
+      <CollabExplorerContent />
+    </Suspense>
+  );
 }
