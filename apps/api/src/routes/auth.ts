@@ -190,13 +190,20 @@ authRouter.post('/google', async (req: Request, res: Response) => {
             });
         } else {
             // Sincroniza dados do Google (nome/foto) sempre que logar
-            const updateData: any = { googleId, emailVerifiedAt: user.emailVerifiedAt || new Date() };
+            // E permite trocar o papel (role) se estiver entrando por uma área diferente
+            const targetRole = (role === 'ARTIST' || role === 'INDUSTRY') ? (role as 'ARTIST' | 'INDUSTRY') : (user.role as 'ARTIST' | 'INDUSTRY');
+            
+            const updateData: any = { 
+                googleId, 
+                emailVerifiedAt: user.emailVerifiedAt || new Date(),
+                role: targetRole
+            };
             
             user = await prisma.user.update({
                 where: { id: user.id },
                 data: {
                     ...updateData,
-                    artistProfile: user.role === 'ARTIST' ? {
+                    artistProfile: targetRole === 'ARTIST' ? {
                         upsert: {
                             create: { stageName: name || 'Artista', avatarUrl: picture, genres: [], city: '', state: 'SP' },
                             update: { 
@@ -205,7 +212,7 @@ authRouter.post('/google', async (req: Request, res: Response) => {
                             }
                         }
                     } : undefined,
-                    industryProfile: user.role === 'INDUSTRY' ? {
+                    industryProfile: targetRole === 'INDUSTRY' ? {
                         upsert: {
                             create: { companyName: name || 'Empresa', logoUrl: picture, type: 'OTHER', niches: [], city: '', state: 'SP' },
                             update: { 
