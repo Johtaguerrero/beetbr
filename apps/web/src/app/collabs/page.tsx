@@ -89,88 +89,74 @@ function CollabExplorerContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen pb-24" style={{ background: 'var(--color-bg)' }}>
-      {/* Dynamic Header with glassmorphism */}
-      <header 
-        className={`sticky top-16 lg:top-0 z-30 transition-all duration-300 border-b ${
-          isScrolled ? 'bg-beet-bg/80 backdrop-blur-xl py-4 border-white/5' : 'bg-transparent py-10 border-transparent'
-        } px-6`}
-      >
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-2 flex items-center justify-center md:justify-start gap-4">
-              COLLAB <span className="text-beet-green">HUB</span>
-              <Handshake className="text-beet-green animate-pulse" size={32} />
-            </h1>
-            {!isScrolled && (
-              <p className="text-beet-muted max-w-lg text-sm md:text-base">
-                Conecte-se com outros artistas e crie algo lendário hoje.
-              </p>
-            )}
-          </div>
+      <div className="mx-auto max-w-5xl px-4 py-6 pb-28 lg:px-6 lg:pb-6 space-y-8 w-full">
+        {/* Hero Card — Mirroring Marketplace */}
+        <div style={{
+          background: 'var(--color-nav-bg)',
+          border: '1px solid var(--color-nav-border)',
+          borderTop: '2px solid var(--color-accent)',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          position: 'relative',
+          padding: '32px 24px 28px',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 80% 50%, rgba(0,255,102,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
           
-          <button 
-            onClick={() => router.push('/collabs/new')}
-            className="btn-accent"
-          >
-            <Plus size={18} />
-            CRIAR COLLAB
-          </button>
-        </div>
-      </header>
-
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 mt-8">
-        {/* Search & Filter Bar - Premium Glass Box */}
-        <div 
-          className="mb-10 p-4 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-md flex flex-col lg:flex-row items-center gap-6"
-        >
-          <div className="flex-1 w-full relative group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-beet-muted group-focus-within:text-beet-green transition-colors" size={20} />
-            <input 
-              type="text"
-              placeholder="O que você está procurando?"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-4 text-sm text-white focus:outline-none focus:border-beet-green/50 focus:bg-white/10 transition-all placeholder:text-beet-muted/50"
-            />
-          </div>
-
-          <div className="flex items-center gap-4 w-full lg:w-auto min-w-0">
-            <div className="relative flex-1 lg:flex-none min-w-0 group">
-              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-beet-black/40 to-transparent pointer-events-none z-10" />
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 pr-12">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border ${
-                    filterType === 'all' 
-                      ? 'bg-beet-green border-beet-green text-black shadow-neon' 
-                      : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
-                  }`}
-                >
-                  TODOS
-                </button>
-                {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => setFilterType(key)}
-                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all whitespace-nowrap border shrink-0 ${
-                      filterType === key 
-                        ? 'bg-beet-green border-beet-green text-black shadow-neon' 
-                        : 'bg-white/5 border-white/5 text-beet-muted hover:text-white hover:border-white/20'
-                    }`}
-                  >
-                    {cfg.label.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+            <div>
+              <p className="section-label" style={{ marginBottom: 10 }}>OPORTUNIDADES CRIATIVAS</p>
+              <h1 className="page-header text-[var(--color-primary-text,white)]" style={{ marginBottom: 8, fontSize: '42px' }}>
+                COLLAB<span style={{ color: 'var(--color-accent)' }}>HUB</span>
+              </h1>
+              <p className="page-subtitle text-[var(--color-primary-text,white)] opacity-80">
+                Conecte-se com outros artistas e crie algo lendário hoje
+              </p>
             </div>
 
             <button 
-              onClick={loadContent}
-              className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-beet-muted hover:text-white transition-all border border-white/5 active:scale-95"
-              title="Atualizar"
+              onClick={() => router.push('/collabs/new')}
+              className="btn-accent px-8 py-3 flex items-center gap-2 shadow-[0_0_20px_rgba(0,255,102,0.3)]"
+              style={{ fontSize: '14px', fontWeight: 900, letterSpacing: '0.05em' }}
             >
-              <RefreshCw size={18} className={loading ? 'animate-spin text-beet-green' : ''} />
+              <Plus size={18} strokeWidth={3} /> CRIAR COLLAB
             </button>
+          </div>
+
+          {/* Search — Mirroring Marketplace */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              className="beet-input flex-1 min-w-0"
+              placeholder="O que você está procurando? (beats, feat, mix...)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button 
+              onClick={loadContent}
+              className="btn-accent px-6 flex-shrink-0" 
+              style={{ fontSize: '14px', letterSpacing: '0.1em' }}
+            >
+              {loading ? <RefreshCw size={18} className="animate-spin" /> : 'BUSCAR'}
+            </button>
+          </div>
+        </div>
+
+        {/* Categories — Mirroring Marketplace */}
+        <div className="bg-white/5 p-4 rounded-sm border border-white/5">
+          <p className="section-label mb-4 opacity-60 uppercase">EXPLORAR CATEGORIAS</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterType('all')}
+              className={`beet-pill cursor-pointer ${filterType === 'all' ? 'active' : ''}`}>
+              🌐 TODOS
+            </button>
+            {Object.entries(COLLAB_TYPE_CONFIG).map(([key, cfg]) => (
+              <button key={key} 
+                className={`beet-pill cursor-pointer ${filterType === key ? 'active' : ''}`}
+                onClick={() => setFilterType(key)}>
+                {cfg.icon || '🤝'} {cfg.label.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -181,17 +167,17 @@ function CollabExplorerContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white/5 border border-white/5 aspect-[4/5] rounded-[24px] animate-pulse" />
+                <div key={i} className="bg-white/5 border border-white/5 aspect-[4/5] rounded-sm animate-pulse" />
               ))}
             </motion.div>
           ) : filteredCollabs.length > 0 ? (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20"
             >
               {filteredCollabs.map((collab: any) => (
                 <CollabCard 
@@ -203,11 +189,14 @@ function CollabExplorerContent() {
             </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <EmptyState text="Nenhuma collab disponível nessa categoria." />
+              <div className="empty-state py-20 border border-dashed border-white/10 rounded-sm">
+                <p className="text-4xl mb-4">🤝</p>
+                <p className="text-[var(--color-primary-text,white)] font-bold uppercase tracking-wider">Nenhuma collab encontrada</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
 
       {/* Interest Modal - Premium Aesthetic */}
       <AnimatePresence>
