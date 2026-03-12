@@ -826,29 +826,7 @@ export default function FeedPage() {
                 {/* ─── MAIN COLUMN ─── */}
                 <div style={{ width: '100%', maxWidth: 640, padding: '0 0 8px' }}>
 
-                    <div className="md:hidden" style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '16px 16px 12px',
-                        borderBottom: '1px solid var(--color-nav-border)',
-                        position: 'sticky', top: '64px', zIndex: 30,
-                        background: 'var(--color-nav-bg)',
-                        backdropFilter: 'blur(12px)',
-                    }}>
-                        <span className="animate-beat-glitch" style={{ fontFamily: 'Syne, sans-serif', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--color-primary-text, white)', textTransform: 'uppercase' }}>
-                            <span style={{ color: 'var(--color-accent)' }}>BEAT</span>BR
-                        </span>
-                        {/* small inline button for desktop ref visibility */}
-                        <Link href="/artist/post/new" style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                            background: 'rgba(0,255,136,0.12)', color: 'var(--color-accent)',
-                            padding: '8px 14px', borderRadius: '2px', border: '1px solid rgba(0,255,136,0.3)',
-                            textDecoration: 'none',
-                        }}>
-                            <PenLine size={12} strokeWidth={2.5} />
-                            NOVO
-                        </Link>
-                    </div>
+
 
                     {/* ── STORIES BAR ── */}
                     <div style={{

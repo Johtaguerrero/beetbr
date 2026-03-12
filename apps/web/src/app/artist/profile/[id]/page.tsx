@@ -38,7 +38,7 @@ export default function ArtistProfilePage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [bannerError, setBannerError] = useState(false);
     const [activeTab, setActiveTab] = useState<'portfolio' | 'metrics' | 'about'>('portfolio');
-    const [portfolioSubTab, setPortfolioSubTab] = useState<'tracks' | 'videos' | 'lyrics' | 'photos' | 'pdf'>('tracks');
+    const [portfolioSubTab, setPortfolioSubTab] = useState<'tracks' | 'videos' | 'lyrics' | 'photos' | 'pdf'>('videos');
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
@@ -130,7 +130,7 @@ export default function ArtistProfilePage() {
             <div className="relative mb-20 md:mb-24 px-4 pt-4">
                 {/* Banner cinematográfico 3:1 */}
                 <div
-                    className={`relative w-full aspect-[3/1] rounded-3xl bg-beet-dark overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5 ${isSelf ? 'cursor-pointer' : ''}`}
+                    className={`relative w-full aspect-video md:aspect-[3/1] rounded-3xl bg-beet-dark overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5 ${isSelf ? 'cursor-pointer' : ''}`}
                     onClick={() => isSelf && coverInputRef.current?.click()}
                 >
                     {artist.coverUrl && !bannerError ? (
@@ -158,12 +158,7 @@ export default function ArtistProfilePage() {
                         </div>
                     )}
 
-                    {/* Botão de Edição Flutuante (Desktop) */}
-                    {isSelf && (
-                        <button onClick={(e) => { e.stopPropagation(); setIsEditModalOpen(true); }} className="absolute right-6 top-6 rounded-xl bg-black/60 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-beet-accent hover:text-beet-black transition-all backdrop-blur-md border border-white/10 z-20 shadow-xl">
-                            ✏️ Editar perfil
-                        </button>
-                    )}
+
                 </div>
 
                 {/* Avatar sobreposto centralizado/alinhado */}
@@ -210,7 +205,7 @@ export default function ArtistProfilePage() {
                                 {artist.availabilityStatus || 'Disponível'}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg bg-beet-blue/10 text-beet-blue border border-beet-blue/20">
-                                {artist.status || 'Indie'}
+                                {artist.status || (artist.roles && artist.roles[0]) || (artist.genres && artist.genres[0]) || 'Perfil'}
                             </span>
                         </div>
 
@@ -221,14 +216,26 @@ export default function ArtistProfilePage() {
                                 </span>
                             ))}
                         </div>
+
+                        {artist.bio && (
+                            <p className="text-sm text-white/70 line-clamp-3 mb-2 max-w-2xl mx-auto md:mx-0 leading-relaxed italic">
+                                "{artist.bio}"
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-3 min-w-[240px]">
                         {/* Ações principais (Visão Empresa ou Dono) */}
                         <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => isIndustry && toggleFollow(artist.id)} className={`btn-${followed ? 'outline' : 'accent'} py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2`}>
-                                {followed ? '👤 Seguindo' : isSelf ? 'Publicar Update' : '👤 Seguir Artista'}
+                            <button onClick={() => !isSelf && toggleFollow(artist.id)} className={`btn-${followed ? 'outline' : 'accent'} py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2`}>
+                                {followed ? '👤 Seguindo' : isSelf ? '🏠 Meu Perfil' : '👤 Seguir Artista'}
                             </button>
+
+                            {isSelf && (
+                                <button onClick={() => setIsEditModalOpen(true)} className="btn-outline py-3 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 col-span-2 border-white/20 text-white">
+                                    ✏️ Editar Perfil
+                                </button>
+                            )}
 
                             {isIndustry && (
                                 <>
@@ -243,7 +250,7 @@ export default function ArtistProfilePage() {
 
                             {artist.portfolioPdfUrl && (
                                 <a href={api.getMediaUrl(artist.portfolioPdfUrl)} target="_blank" className="h-12 bg-beet-card border border-white/10 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-beet-dark transition-all col-span-2">
-                                    📥 Baixar Portfólio PDF
+                                    📥 PDF portifolio baixar
                                 </a>
                             )}
                         </div>
@@ -279,7 +286,7 @@ export default function ArtistProfilePage() {
                 {/* 3. TABS PRINCIPAIS */}
                 <div className="mb-8 flex gap-2 rounded-2xl bg-beet-black p-1.5 border border-white/5 shadow-2xl">
                     {[{ id: 'portfolio', label: 'Portfólio', icon: '🎨' }, { id: 'metrics', label: 'Análise Beeat', icon: '📊' }, { id: 'about', label: 'Sobre', icon: '👤' }].map(tab => (
-                        <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex flex-1 items-center justify-center gap-3 rounded-xl py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-beet-card text-beet-accent shadow-xl border border-white/10' : 'text-beet-muted hover:text-white'}`}>
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex flex-1 items-center justify-center gap-3 rounded-xl py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-beet-card text-beet-accent shadow-xl border border-white/10' : 'text-white/60 hover:text-white'}`}>
                             <span className="text-lg">{tab.icon}</span> {tab.label}
                         </button>
                     ))}
@@ -384,16 +391,16 @@ export default function ArtistProfilePage() {
                         {/* Sub-tabs de portfólio */}
                         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                             {[
-                                { id: 'tracks', label: 'Músicas', icon: '🎵' },
                                 { id: 'videos', label: 'Vídeos', icon: '🎬' },
-                                { id: 'lyrics', label: 'Letras', icon: '📝' },
                                 { id: 'photos', label: 'Fotos', icon: '🖼️' },
-                                { id: 'pdf', label: 'PDF Profissional', icon: '📄' }
+                                { id: 'tracks', label: 'Músicas', icon: '🎵' },
+                                { id: 'lyrics', label: 'Letras', icon: '📝' },
+                                { id: 'pdf', label: 'PDF Portfólio', icon: '📄' }
                             ].map(sub => (
                                 <button
                                     key={sub.id}
                                     onClick={() => setPortfolioSubTab(sub.id as any)}
-                                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${portfolioSubTab === sub.id ? 'bg-beet-accent text-beet-black border-beet-accent shadow-[0_0_15px_rgba(0,255,102,0.3)]' : 'bg-beet-dark text-beet-muted border-white/5 hover:border-white/20'}`}
+                                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${portfolioSubTab === sub.id ? 'bg-beet-accent text-beet-black border-beet-accent shadow-[0_0_15px_rgba(0,255,102,0.3)]' : 'bg-beet-dark text-white/60 border-white/5 hover:border-white/20'}`}
                                 >
                                     {sub.icon} {sub.label}
                                 </button>
