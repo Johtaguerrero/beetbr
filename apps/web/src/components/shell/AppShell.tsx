@@ -11,7 +11,7 @@ import {
     BarChart2, Users, Briefcase, Music, Star, Package,
     Sparkles, MessageSquare, Lock, Radio, Mic2, Heart,
     Share2, Play, Send, Check, AlertCircle, Info, Sun, Moon,
-    ChevronLeft, SquarePen, Handshake
+    ChevronLeft, SquarePen, Handshake, MoreVertical
 } from 'lucide-react';
 import { useStore, type Notification } from '@/lib/store';
 import { ScoreBeetBadge, Avatar, Spinner } from '@/components/ui';
@@ -39,7 +39,7 @@ const ARTIST_NAV = [
     { collabTabs: true },
     { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
     { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
-    { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} /> },
+    { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} />, dynamicProfile: true },
 ];
 
 const INDUSTRY_NAV = [
@@ -49,7 +49,7 @@ const INDUSTRY_NAV = [
     { label: 'Shortlist', href: '/industry/deals?tab=shortlist', icon: <Star size={IC} strokeWidth={2} /> },
     { label: 'Propostas', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
     { label: 'Mensagens', href: '/industry/messages', icon: <MessageSquare size={IC} strokeWidth={2} /> },
-    { label: 'Perfil da Empresa', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} /> },
+    { label: 'Perfil da Empresa', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} />, dynamicProfile: true },
 ];
 
 // ── Collab Tab Group (artist sidebar) ────────────────────────
@@ -262,7 +262,115 @@ function PostMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     );
 }
 
-// ── Sidebar (desktop) ─────────────────────────────────────────
+// ── Mobile Menu Popup ─────────────────────────────────────────
+function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const { currentUser, artistProfile, industryProfile, logout } = useStore();
+    const router = useRouter();
+    const isIndustry = currentUser?.role === 'INDUSTRY';
+    const nav = isIndustry ? INDUSTRY_NAV : ARTIST_NAV;
+    const displayName = artistProfile?.stageName || industryProfile?.companyName || currentUser?.email || 'Usuário';
+
+    if (!open) return null;
+
+    const handleLogout = () => {
+        logout();
+        clearAuthCookies();
+        router.push('/');
+        onClose();
+    };
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex justify-end"
+                onClick={onClose}
+            >
+                {/* Backdrop overlay */}
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+                <motion.div
+                    initial={{ x: '100%' }}
+                    animate={{ x: 0 }}
+                    exit={{ x: '100%' }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="relative h-full w-[280px] flex flex-col p-6 shadow-2xl"
+                    style={{ 
+                        background: 'var(--color-bg)',
+                        borderLeft: '1px solid var(--color-nav-border)'
+                    }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className="mb-8 flex items-center justify-between">
+                        <span className="font-display text-xl font-black tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
+                            <span className="text-neon">BEAT</span><span className="text-white">BR</span>
+                        </span>
+                        <button onClick={onClose} className="p-2 text-beet-muted hover:text-white transition-colors">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    {/* User Profile Info */}
+                    <Link 
+                        href={isIndustry ? `/industry/profile/${industryProfile?.id || 'me'}` : `/artist/profile/${artistProfile?.id || 'me'}`} 
+                        onClick={onClose} 
+                        className="mb-8 flex items-center gap-4 p-4 rounded-xl no-underline" 
+                        style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }}
+                    >
+                        <Avatar name={displayName} imageUrl={isIndustry ? industryProfile?.logoUrl : artistProfile?.avatarUrl} size="md" />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-white mb-0.5">{displayName}</p>
+                            <p className="text-[10px] text-beet-muted uppercase tracking-widest font-black">
+                                {isIndustry ? 'Indústria' : 'Artista'} {artistProfile && <span className="text-neon ml-2">SCORE {Math.round(artistProfile.scoreBeet)}</span>}
+                            </p>
+                        </div>
+                    </Link>
+
+                    {/* Nav Links */}
+                    <div className="flex-1 space-y-1 overflow-y-auto pr-1 custom-scrollbar">
+                        <p className="px-2 text-[10px] font-black uppercase tracking-widest text-beet-muted mb-4 opacity-50">Navegação Principal</p>
+                        {nav.map((item: any, i) => {
+                            if (item.divider || item.collabTabs) return null;
+                            if (item.id === 'post-menu') return null;
+
+                            let href = item.href;
+                            if (item.dynamicProfile) {
+                                href = isIndustry ? `/industry/profile/${industryProfile?.id || 'me'}` : `/artist/profile/${artistProfile?.id || 'me'}`;
+                            }
+
+                            return (
+                                <Link key={item.label + i} href={href} onClick={onClose} className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/5 no-underline group">
+                                    <span className="text-beet-muted group-hover:text-neon transition-colors">{item.icon}</span>
+                                    <span className="font-bold text-white uppercase tracking-wider text-xs font-display group-hover:text-neon transition-colors">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                        
+                        {/* Colabs Specific */}
+                        <Link href="/collabs" onClick={onClose} className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-white/5 no-underline group">
+                             <span className="text-beet-muted group-hover:text-neon transition-colors"><Handshake size={IC} /></span>
+                             <span className="font-bold text-white uppercase tracking-wider text-xs font-display group-hover:text-neon transition-colors">COLABS</span>
+                        </Link>
+                    </div>
+
+                    {/* Footer / Logout */}
+                    <div className="mt-auto pt-6 border-t border-[var(--color-nav-border)]">
+                        <button
+                            onClick={handleLogout}
+                            className="flex w-full items-center gap-4 rounded-xl p-4 text-xs font-bold text-beet-muted hover:text-beet-red hover:bg-white/5 transition-all"
+                        >
+                            <LogOut size={20} />
+                            <span>SAIR DA CONTA</span>
+                        </button>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
 function Sidebar({ 
     postMenuOpen, 
     setPostMenuOpen 
@@ -390,8 +498,13 @@ function Sidebar({
                     }
 
                     const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+                    let href = item.href;
+                    if (item.dynamicProfile) {
+                        href = isIndustry ? `/industry/profile/${industryProfile?.id || 'me'}` : `/artist/profile/${artistProfile?.id || 'me'}`;
+                    }
+
                     return (
-                        <Link key={item.href + item.label} href={item.href} title={!sidebarExpanded ? item.label : undefined}>
+                        <Link key={item.label + i} href={href} title={!sidebarExpanded ? item.label : undefined}>
                             <motion.span
                                 whileHover={{ x: sidebarExpanded ? 3 : 0, scale: sidebarExpanded ? 1 : 1.05 }}
                                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -416,16 +529,16 @@ function Sidebar({
             {/* User footer */}
             <div className="p-3 mt-auto space-y-2" style={{ borderTop: '1px solid var(--color-nav-border)' }}>
                 {sidebarExpanded ? (
-                    <Link href={isIndustry ? '/industry/profile/me' : '/artist/profile/me'} className="flex items-center gap-2 rounded-xl p-2.5 transition-all cursor-pointer glint no-underline" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }}>
+                    <Link href={isIndustry ? `/industry/profile/${industryProfile?.id || 'me'}` : `/artist/profile/${artistProfile?.id || 'me'}`} className="flex items-center gap-2 rounded-xl p-2.5 transition-all cursor-pointer glint no-underline" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }}>
                         <Avatar name={displayName} imageUrl={isIndustry ? industryProfile?.logoUrl : artistProfile?.avatarUrl} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-bold text-white">{displayName}</p>
+                            <p className="truncate text-xs font-bold text-white leading-tight">{displayName}</p>
                             {!isIndustry && artistProfile && <ScoreBeetBadge score={artistProfile.scoreBeet || 0} />}
                             {isIndustry && <p className="text-[10px]" style={{ color: 'var(--color-blue)' }}>{industryProfile?.type}</p>}
                         </div>
                     </Link>
                 ) : (
-                    <Link href={isIndustry ? '/industry/profile/me' : '/artist/profile/me'} className="flex justify-center rounded-xl p-2 mb-2 transition-all cursor-pointer glint no-underline" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }} title={displayName}>
+                    <Link href={isIndustry ? `/industry/profile/${industryProfile?.id || 'me'}` : `/artist/profile/${artistProfile?.id || 'me'}`} className="flex justify-center rounded-xl p-2 mb-2 transition-all cursor-pointer glint no-underline" style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }} title={displayName}>
                         <Avatar name={displayName} imageUrl={isIndustry ? industryProfile?.logoUrl : artistProfile?.avatarUrl} size="sm" emoji={isIndustry ? '🏢' : '🎵'} isIndustry={isIndustry} />
                     </Link>
                 )}
@@ -462,7 +575,7 @@ function TabBar({
     setPostMenuOpen: (o: boolean) => void 
 }) {
     const pathname = usePathname();
-    const { currentUser } = useStore();
+    const { currentUser, artistProfile } = useStore();
     const isIndustry = currentUser?.role === 'INDUSTRY';
 
     const tabs = isIndustry
@@ -478,7 +591,7 @@ function TabBar({
             { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
             { label: 'Post', href: '/artist/post/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Handshake size={TC} strokeWidth={1.75} /> },
-            { label: 'Perfil', href: '/artist/profile/me', icon: <User size={TC} strokeWidth={1.75} /> },
+            { label: 'Perfil', href: `/artist/profile/${artistProfile?.id || 'me'}`, icon: <User size={TC} strokeWidth={1.75} /> },
         ];
 
     return (
@@ -562,6 +675,7 @@ interface AppShellProps {
 export function AppShell({ children, noPadding = false }: AppShellProps) {
     const { currentUser, isAuthenticated, notifications, theme, toggleTheme, showNotifications, toggleNotifications } = useStore();
     const [postMenuOpen, setPostMenuOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const isIndustry = currentUser?.role === 'INDUSTRY';
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -632,8 +746,22 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
                             </span>
                         )}
                     </button>
+                    <button
+                        onClick={() => setMobileMenuOpen(true)}
+                        className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-all"
+                        style={{
+                            background: 'var(--color-glass-btn)',
+                            border: '1px solid var(--color-nav-border)',
+                            color: 'var(--color-muted)',
+                        }}
+                    >
+                        <MoreVertical size={18} strokeWidth={2.5} />
+                    </button>
                 </div>
             </header>
+
+            {/* Mobile Menu Overlay */}
+            <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
             <AnimatePresence>
                 {showNotifications && (

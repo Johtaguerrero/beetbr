@@ -45,7 +45,6 @@ function InlineComposer() {
     const [postType, setPostType] = useState<string>('IMAGE');
     const [publishTarget, setPublishTarget] = useState<PublishTarget>('FEED');
     const [publishing, setPublishing] = useState(false);
-    const fileRef = useRef<HTMLInputElement>(null);
 
     const selectedType = POST_TYPES.find(t => t.key === postType) || POST_TYPES[0];
 
@@ -63,7 +62,6 @@ function InlineComposer() {
     const clearFile = () => {
         setFile(null);
         setFilePreview(null);
-        if (fileRef.current) fileRef.current.value = '';
     };
 
     const handlePublish = async () => {
@@ -85,139 +83,125 @@ function InlineComposer() {
             borderLeft: `3px solid ${selectedType.color}`,
             borderRadius: '2px',
         }}>
-            {/* Collapsed: just a clickable bar */}
             {!expanded ? (
                 <button onClick={() => setExpanded(true)} style={{
                     display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                     background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
                 }}>
                     <div style={{
-                        width: 36, height: 36, borderRadius: '50%',
+                        width: 38, height: 38, borderRadius: '50%',
                         background: 'var(--color-accent-dim)', display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
                     }}>
-                        <PenLine size={16} style={{ color: 'var(--color-accent)' }} />
+                        <PenLine size={18} style={{ color: 'var(--color-accent)' }} />
                     </div>
                     <span style={{
                         fontFamily: 'Space Grotesk, sans-serif', fontSize: '15px',
                         color: 'var(--color-muted)', flex: 1,
                     }}>O que você quer compartilhar?</span>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        {POST_TYPES.map(t => (
-                            <t.icon key={t.key} size={16} style={{ color: t.color, opacity: 0.5 }} />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        {POST_TYPES.slice(0, 3).map(t => (
+                            <t.icon key={t.key} size={18} style={{ color: t.color, opacity: 0.6 }} />
                         ))}
                     </div>
                 </button>
             ) : (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
-                    {/* Type tabs */}
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                    <textarea
+                        value={text} onChange={e => setText(e.target.value)}
+                        placeholder="O que está acontecendo no estúdio?"
+                        style={{
+                            width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--color-nav-border)',
+                            borderRadius: '4px', padding: '12px', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: 16,
+                            resize: 'none', marginBottom: 12, outline: 'none'
+                        }}
+                    />
+
+                    {filePreview && (
+                        <div style={{ position: 'relative', marginBottom: 12 }}>
+                            {postType === 'VIDEO' ? (
+                                <video src={filePreview} style={{ width: '100%', maxHeight: 200, borderRadius: 4, objectFit: 'cover' }} />
+                            ) : (
+                                <img src={filePreview} style={{ width: '100%', maxHeight: 200, borderRadius: 4, objectFit: 'cover' }} />
+                            )}
+                            <button onClick={clearFile} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', padding: 4, color: 'white', cursor: 'pointer' }}><X size={16} /></button>
+                        </div>
+                    )}
+                    
+                    {!filePreview && file && postType === 'TRACK' && (
+                         <div style={{ padding: 12, background: 'var(--color-glass-btn)', borderRadius: '4px', border: '1px solid var(--color-nav-border)', marginBottom: 12 }}>
+                            <p style={{ fontSize: 12, color: 'white', marginBottom: 4 }}>🎵 {file.name}</p>
+                            <button onClick={clearFile} style={{ color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 10 }}>REMOVER</button>
+                         </div>
+                    )}
+
+                    {/* Type selector */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
                         {POST_TYPES.map(t => (
-                            <button key={t.key} onClick={() => { setPostType(t.key); clearFile(); }}
+                            <label
+                                key={t.key}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: 5,
-                                    padding: '6px 12px', borderRadius: '2px', border: '1px solid',
-                                    borderColor: postType === t.key ? t.color : 'var(--color-nav-border)',
-                                    background: postType === t.key ? `${t.color}15` : 'transparent',
+                                    flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                    padding: '10px', borderRadius: '2px', border: '1px solid var(--color-nav-border)',
+                                    background: postType === t.key ? `${t.color}20` : 'var(--color-glass-btn)',
                                     color: postType === t.key ? t.color : 'var(--color-muted)',
-                                    fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
-                                    letterSpacing: '0.1em', cursor: 'pointer', transition: 'all .15s',
-                                }}>
-                                <t.icon size={12} /> {t.label.toUpperCase()}
+                                    fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700,
+                                    transition: 'all 0.2s',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => setPostType(t.key)}
+                            >
+                                <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    accept={t.accept} 
+                                    onChange={(e) => {
+                                        setPostType(t.key);
+                                        handleFile(e);
+                                    }} 
+                                />
+                                <t.icon size={14} />
+                                <span className="hidden sm:inline">{t.label.toUpperCase()}</span>
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* Publish target */}
+                    <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', marginBottom: 8, letterSpacing: '0.12em' }}>ONDE PUBLICAR?</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 20 }}>
+                        {PUBLISH_TARGETS.map(target => (
+                            <button
+                                key={target.key}
+                                onClick={() => setPublishTarget(target.key)}
+                                style={{
+                                    display: 'flex', flexDirection: 'column', gap: 4, padding: '10px', borderRadius: '2px',
+                                    border: '1px solid var(--color-nav-border)',
+                                    background: publishTarget === target.key ? 'var(--color-accent-dim)' : 'rgba(255,255,255,0.02)',
+                                    color: publishTarget === target.key ? 'var(--color-accent)' : 'var(--color-muted)',
+                                    textAlign: 'left', transition: 'all 0.2s',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span style={{ fontSize: 16 }}>{target.icon}</span>
+                                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '11px', fontWeight: 800 }}>{target.label.toUpperCase()}</span>
+                                </div>
+                                <span style={{ fontSize: '9px', opacity: 0.6 }}>{target.desc}</span>
                             </button>
                         ))}
                     </div>
 
-                    {/* Text area */}
-                    <textarea
-                        value={text} onChange={e => setText(e.target.value)}
-                        placeholder={postType === 'LYRIC' ? 'Cole sua letra ou composição...' : 'O que está rolando?'}
-                        rows={3}
-                        style={{
-                            width: '100%', resize: 'none', border: '1px solid var(--color-nav-border)',
-                            borderRadius: '2px', padding: 12, background: 'var(--color-glass-btn)',
-                            color: 'var(--color-primary-text)', fontFamily: 'Space Grotesk, sans-serif',
-                            fontSize: '14px', outline: 'none',
-                        }}
-                    />
-
-                    {/* File preview */}
-                    {file && (
-                        <div style={{ marginTop: 10, position: 'relative' }}>
-                            {filePreview && file.type.startsWith('image') && (
-                                <img src={filePreview} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--color-nav-border)' }} />
-                            )}
-                            {filePreview && file.type.startsWith('video') && (
-                                <video src={filePreview} controls style={{ width: '100%', maxHeight: 200, borderRadius: '4px' }} />
-                            )}
-                            {file.type.startsWith('audio') && (
-                                <div style={{ padding: 10, background: 'var(--color-glass-btn)', borderRadius: '4px', border: '1px solid var(--color-nav-border)' }}>
-                                    <p style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 6 }}>🎵 {file.name}</p>
-                                    <audio controls src={URL.createObjectURL(file)} style={{ width: '100%', height: 32 }} />
-                                </div>
-                            )}
-                            <button onClick={clearFile} style={{
-                                position: 'absolute', top: 6, right: 6, width: 24, height: 24,
-                                borderRadius: '50%', background: 'rgba(0,0,0,0.7)', border: 'none',
-                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', fontSize: 12,
-                            }}><X size={14} /></button>
-                        </div>
-                    )}
-
-                    {/* Publish target selector */}
-                    <div style={{ marginTop: 12, marginBottom: 12 }}>
-                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.15em', color: 'var(--color-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Publicar em:</p>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {PUBLISH_TARGETS.map(t => (
-                                <button key={t.key} onClick={() => setPublishTarget(t.key)}
-                                    title={t.desc}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: 5,
-                                        padding: '5px 10px', borderRadius: '2px', border: '1px solid',
-                                        borderColor: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-nav-border)',
-                                        background: publishTarget === t.key ? 'rgba(0,255,136,0.1)' : 'transparent',
-                                        color: publishTarget === t.key ? 'var(--color-accent)' : 'var(--color-muted)',
-                                        fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700,
-                                        letterSpacing: '0.08em', cursor: 'pointer', transition: 'all .15s',
-                                    }}>
-                                    <span>{t.icon}</span> {t.label.toUpperCase()}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Actions row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <input type="file" ref={fileRef} className="hidden" accept={selectedType.accept} onChange={handleFile} />
-                            <button onClick={() => fileRef.current?.click()} style={{
-                                display: 'flex', alignItems: 'center', gap: 5,
-                                padding: '6px 12px', borderRadius: '2px', border: '1px solid var(--color-nav-border)',
-                                background: 'var(--color-glass-btn)', color: 'var(--color-muted)',
-                                fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
-                                cursor: 'pointer',
-                            }}>
-                                <Upload size={12} /> {file ? 'TROCAR' : 'ARQUIVO'}
-                            </button>
-                            <button onClick={() => { setText(''); clearFile(); setExpanded(false); }} style={{
-                                padding: '6px 12px', borderRadius: '2px', border: '1px solid var(--color-nav-border)',
-                                background: 'transparent', color: 'var(--color-muted)',
-                                fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700,
-                                cursor: 'pointer',
-                            }}>
-                                CANCELAR
-                            </button>
-                        </div>
-                        <button onClick={handlePublish} disabled={publishing} style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '8px 20px', borderRadius: '2px', border: 'none',
-                            background: 'var(--color-accent)', color: '#000',
-                            fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700,
-                            letterSpacing: '0.1em', cursor: publishing ? 'not-allowed' : 'pointer',
-                            opacity: publishing ? 0.6 : 1,
-                        }}>
-                            <Zap size={12} fill="#000" /> {publishing ? 'PUBLICANDO...' : 'PUBLICAR'}
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button onClick={() => setExpanded(false)} style={{ flex: 1, padding: '14px', border: '1px solid var(--color-nav-border)', background: 'none', color: 'var(--color-muted)', borderRadius: '2px', fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>CANCELAR</button>
+                        <button
+                            onClick={handlePublish}
+                            disabled={publishing}
+                            style={{
+                                flex: 2, padding: '14px', background: 'var(--color-accent)', color: '#000', border: 'none', borderRadius: '2px',
+                                fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', cursor: (publishing || (!text.trim() && !file)) ? 'default' : 'pointer',
+                                opacity: (publishing || (!text.trim() && !file)) ? 0.5 : 1
+                            }}
+                        >
+                            {publishing ? 'PUBLICANDO...' : 'PUBLICAR AGORA'}
                         </button>
                     </div>
                 </motion.div>
@@ -594,47 +578,52 @@ function PostCard({ post, isStoryOpen }: { post: Post; isStoryOpen?: boolean }) 
                 )}
             </div>
 
-            {/* ── ACTIONS ── */}
-            <div style={{ padding: '12px 18px', borderTop: '1px solid var(--color-nav-border)', display: 'flex', alignItems: 'center', gap: 20 }}>
-                {/* Like */}
-                <motion.button whileTap={{ scale: 0.8 }}
-                    onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: liked ? '#FF0055' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
-                >
-                    <Heart size={20} strokeWidth={2} fill={liked ? '#FF0055' : 'none'}
-                        style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none', transition: 'filter .2s' }} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', fontWeight: 700 }}>
-                        {post.likes.toLocaleString('pt-BR')}
-                    </span>
-                </motion.button>
+            <div style={{ 
+                padding: '12px 18px', 
+                borderTop: '1px solid var(--color-nav-border)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    {/* Like */}
+                    <motion.button whileTap={{ scale: 0.8 }}
+                        onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 7, color: liked ? '#FF0055' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
+                    >
+                        <Heart size={20} strokeWidth={2} fill={liked ? '#FF0055' : 'none'}
+                            style={{ filter: liked ? 'drop-shadow(0 0 8px rgba(255,0,85,0.6))' : 'none', transition: 'filter .2s' }} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', fontWeight: 700 }}>
+                            {post.likes.toLocaleString('pt-BR')}
+                        </span>
+                    </motion.button>
 
-                {/* Comment */}
-                <button
-                    onClick={() => setShowComments(!showComments)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 7, color: showComments ? 'var(--color-primary-text)' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-primary-text)')}
-                    onMouseLeave={e => { if (!showComments) e.currentTarget.style.color = 'var(--color-muted)'; }}
-                >
-                    <MessageCircle size={20} strokeWidth={2} />
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', fontWeight: 700 }}>{post.comments}</span>
-                </button>
+                    {/* Comment */}
+                    <button
+                        onClick={() => setShowComments(!showComments)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 7, color: showComments ? 'var(--color-primary-text)' : 'var(--color-muted)', minHeight: 40, border: 'none', background: 'none', cursor: 'pointer' }}
+                    >
+                        <MessageCircle size={20} strokeWidth={2} />
+                        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '12px', fontWeight: 700 }}>{post.comments}</span>
+                    </button>
+                </div>
 
                 {/* Plays + Share */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
-                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'var(--color-muted)', letterSpacing: '0.04em' }}>
                         {post.plays.toLocaleString('pt-BR')} PLAYS
                     </span>
                     <motion.button whileTap={{ scale: 0.85 }}
                         style={{
-                            width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-glass-btn)',
                             color: 'var(--color-muted)', cursor: 'pointer'
                         }}
                         onClick={() => alert("Compartilhado!")}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-accent)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-nav-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-muted)'; }}
                     >
-                        <Share2 size={15} strokeWidth={2} />
+                        <Share2 size={16} strokeWidth={2} />
                     </motion.button>
                 </div>
             </div>
