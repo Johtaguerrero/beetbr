@@ -11,19 +11,21 @@ const TYPE_LABELS: Record<string, string> = {
     MUSIC_VIDEO: 'Clipe', EVENT: 'Evento', OTHER: 'Outro',
 };
 
-function MessageBubble({ msg, myId, artistAvatar, industryLogo }: { msg: Message; myId: string, artistAvatar?: string, industryLogo?: string }) {
+function MessageBubble({ msg, myId, artistId, artistAvatar, industryLogo }: { msg: Message; myId: string, artistId: string, artistAvatar?: string, industryLogo?: string }) {
     const isMine = msg.senderId === myId;
-    const avatarUrl = msg.senderRole === 'ARTIST' ? artistAvatar : industryLogo;
+    const isArtist = msg.senderId === artistId;
+    const avatarUrl = isArtist ? artistAvatar : industryLogo;
+    const senderName = isArtist ? msg.sender?.artistProfile?.stageName : msg.sender?.industryProfile?.companyName;
 
     if (msg.isSystem) return (
-        <div className="my-2 text-center text-xs text-beet-muted">{msg.message}</div>
+        <div className="my-2 text-center text-xs text-beet-muted">{msg.content}</div>
     );
     return (
         <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
             className={`flex gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
-            <Avatar name={msg.senderName} imageUrl={avatarUrl} size="sm" emoji={msg.senderRole === 'ARTIST' ? '🎤' : '🏢'} isIndustry={msg.senderRole === 'INDUSTRY'} />
+            <Avatar name={senderName || ''} imageUrl={avatarUrl} size="sm" emoji={isArtist ? '🎤' : '🏢'} isIndustry={!isArtist} />
             <div className="max-w-[75%]">
-                {!isMine && <p className="mb-0.5 text-[10px] text-beet-muted">{msg.senderName}</p>}
+                {!isMine && <p className="mb-0.5 text-[10px] text-beet-muted">{senderName}</p>}
                 <div className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
                     style={{
                         background: isMine ? 'var(--color-accent-dim)' : 'var(--color-card)',
@@ -32,7 +34,7 @@ function MessageBubble({ msg, myId, artistAvatar, industryLogo }: { msg: Message
                         borderBottomRightRadius: isMine ? '4px' : undefined,
                         borderBottomLeftRadius: !isMine ? '4px' : undefined,
                     }}>
-                    {msg.message}
+                    {msg.content}
                 </div>
                 <p className="mt-0.5 text-[9px] text-beet-muted text-right">
                     {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -247,7 +249,7 @@ export default function DealRoom() {
                                 </div>
                             )}
                             {proposal.messages.map((msg) => (
-                                <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} artistAvatar={proposal.artist?.avatarUrl} industryLogo={proposal.industry?.logoUrl} />
+                                <MessageBubble key={msg.id} msg={msg} myId={currentUser?.id || ''} artistId={proposal.artistId} artistAvatar={proposal.artist?.avatarUrl} industryLogo={proposal.industry?.logoUrl} />
                             ))}
                             <div ref={messagesEndRef} />
                         </div>
