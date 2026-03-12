@@ -105,10 +105,15 @@ export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry
     const fullUrl = api.getMediaUrl(imageUrl);
     const [imgError, setImgError] = useState(false);
 
+    // Reset error state if imageUrl changes (e.g. after update)
+    useEffect(() => {
+        setImgError(false);
+    }, [imageUrl]);
+
     // Get initials for fallback
     const initials = name
-        ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-        : '?';
+        ? name.trim().split(/\s+/).map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : null;
 
     return (
         <div
@@ -124,15 +129,18 @@ export function Avatar({ name, size = 'md', emoji = '🎤', imageUrl, isIndustry
                     src={fullUrl}
                     alt={name}
                     className="h-full w-full object-cover"
-                    onError={() => setImgError(true)}
+                    key={fullUrl} // Force re-render on URL change
+                    onError={() => {
+                        console.warn('Avatar image failed to load:', fullUrl);
+                        setImgError(true);
+                    }}
                 />
             ) : (
-                <span className="font-bold tracking-tight opacity-80" style={{ fontSize: size === 'xl' ? '24px' : size === 'lg' ? '18px' : '12px' }}>
-                    {name ? initials : emoji}
+                <span className="font-bold tracking-tight opacity-80" style={{ fontSize: size === 'xl' ? '24px' : size === 'lg' ? '18px' : '12px', color: 'var(--color-primary-text, white)' }}>
+                    {initials || emoji}
                 </span>
             )}
 
-            {/* Status indicator or glow could go here */}
             {isIndustry && (
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-[var(--color-bg)] bg-beet-blue" style={{ boxShadow: '0 0 8px var(--color-blue)' }} title="Indústria" />
             )}
