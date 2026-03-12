@@ -882,11 +882,27 @@ export const useStore = create<BeetrStore>()(
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
             },
 
-            createCollabPost: async (data) => {
+            createCollabPost: async (data: CreateCollabPostInput) => {
                 try {
                     const res: any = await api.collaborations.create(data);
                     set((s) => ({ collabPosts: [res.data, ...s.collabPosts] }));
-                    get().addToast({ message: 'Colaboração publicada!', type: 'success' });
+                    
+                    // Social Integration (Feed/Story)
+                    try {
+                        if (data.publishedInFeed || data.publishedInStory) {
+                            await get().createPost({
+                                type: 'COLLAB' as any,
+                                text: data.title,
+                                collabId: res.data.id,
+                                mediaUrl: data.coverUrl,
+                                publishTarget: data.publishedInStory && data.publishedInFeed ? 'FEED_AND_STORY' : data.publishedInStory ? 'STORY' : 'FEED'
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Failed to create social announcement for collab:', e);
+                    }
+
+                    get().addToast({ message: 'Colaboração publicada! 🚀', type: 'success' });
                     return res.data.id;
                 } catch (error: any) {
                     get().addToast({ message: error.message, type: 'error' });

@@ -93,9 +93,11 @@ export type IndustryProfileUpdateInput = z.infer<typeof IndustryProfileUpdateSch
 // ============================================================
 
 export const CreatePostSchema = z.object({
-    type: z.enum(['TRACK', 'VIDEO', 'IMAGE', 'LYRIC', 'MARKETPLACE']),
+    type: z.enum(['TRACK', 'VIDEO', 'IMAGE', 'LYRIC', 'MARKETPLACE', 'COLLAB']),
     text: z.string().max(500).optional(),
     hashtags: z.array(z.string()).max(10).default([]),
+    listingId: z.string().uuid().optional(),
+    collabId: z.string().uuid().optional(),
     // mediaUrl and thumbUrl are set server-side after upload
 });
 export type CreatePostInput = z.infer<typeof CreatePostSchema>;
