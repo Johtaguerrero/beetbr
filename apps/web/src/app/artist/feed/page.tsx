@@ -1462,11 +1462,11 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
 
     const onDragEnd = (event: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
         const { offset, velocity } = info;
-        // Vertical swipe for navigation
-        if (offset.y < -100 || velocity.y < -500) handleNext();
-        else if (offset.y > 100 || velocity.y > 500) handlePrev();
-        // Horizontal swipe to close (optional but user mentioned swipe right)
-        else if (offset.x > 150 || velocity.x > 500) onClose();
+        // Vertical swipe for navigation - Lowered thresholds for higher sensitivity
+        if (offset.y < -50 || velocity.y < -200) handleNext();
+        else if (offset.y > 50 || velocity.y > 200) handlePrev();
+        // Horizontal swipe to close
+        else if (offset.x > 100 || velocity.x > 300) onClose();
     };
 
     if (!post) return null;
@@ -1481,9 +1481,9 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
             <motion.div
                 drag="y"
                 dragConstraints={{ top: 0, bottom: 0 }}
-                dragElastic={0.2}
+                dragElastic={0.4}
                 onDragEnd={onDragEnd}
-                className="relative w-full h-full max-w-[500px] bg-black shadow-2xl overflow-hidden"
+                className="relative w-full h-full md:max-w-[480px] bg-black shadow-2xl overflow-hidden md:rounded-2xl"
             >
                 {/* Background Blur for horizontal videos */}
                 <div className="absolute inset-0 z-0">
