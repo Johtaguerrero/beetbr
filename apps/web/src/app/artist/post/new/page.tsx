@@ -179,7 +179,7 @@ export default function CreatePost() {
                                     <div className={`mt-6 rounded-xl px-4 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
                                         file 
                                             ? 'bg-white/10 text-white' 
-                                            : 'bg-beet-accent text-black shadow-neon hover:scale-105 active:scale-95'
+                                            : 'bg-beet-accent text-[#080812] shadow-neon hover:scale-105 active:scale-95'
                                     }`}>
                                         {file ? 'Alterar arquivo' : 'Selecionar arquivo'}
                                     </div>
@@ -215,8 +215,8 @@ export default function CreatePost() {
                                 <button key={h} onClick={() => toggleHashtag(h)}
                                     className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                                         selectedHashtags.includes(h) 
-                                            ? 'bg-beet-accent text-black shadow-neon' 
-                                            : 'bg-white/5 border border-white/5 text-beet-muted hover:border-white/20'
+                                            ? 'bg-beet-accent text-[#080812] shadow-neon' 
+                                            : 'bg-white/5 border border-white/5 text-white hover:border-white/20'
                                     }`}>
                                     #{h}
                                 </button>
