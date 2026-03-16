@@ -220,7 +220,7 @@ function PostMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     if (!open) return null;
 
     const options = [
-        { label: 'Publicar Post', href: '/artist/feed', icon: <SquarePen size={18} />, desc: 'Solte um som, foto ou texto' },
+        { label: 'Publicar Post', href: '/artist/post/new', icon: <SquarePen size={18} />, desc: 'Solte um som, foto ou texto' },
         { label: 'Criar Collab', href: '/collabs/new', icon: <Repeat2 size={18} />, desc: 'Chame alguém pro som' },
         { label: 'Anunciar no Marketplace', href: '/artist/seller/new', icon: <ShoppingBag size={18} />, desc: 'Venda seus serviços' },
     ];

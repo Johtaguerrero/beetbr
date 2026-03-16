@@ -202,7 +202,7 @@ interface BeetrStore {
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
     createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; mediaUrl?: string; publishTarget?: PublishTarget; listingId?: string; collabId?: string }) => Promise<string>;
-    createStory: (file: File) => Promise<void>;
+    createStory: (fileOrUrl: File | string | null | undefined, forcedType?: string) => Promise<void>;
     addPostComment: (postId: string, text: string) => void;
 
     // ── Post Lifecycle Actions ─────────────────────────
@@ -513,7 +513,14 @@ export const useStore = create<BeetrStore>()(
                         const res = await api.upload(file);
                         mediaUrl = res.url;
                     }
-                    const res: any = await api.feed.createPost({ ...data, mediaUrl, artistId: artistProfile.id, listingId: data.listingId, collabId: data.collabId });
+                    
+                    const res: any = await api.feed.createPost({ 
+                        ...data, 
+                        mediaUrl, 
+                        artistId: artistProfile.id, 
+                        listingId: data.listingId, 
+                        collabId: data.collabId 
+                    });
 
                     const BOOST_MS = 48 * 60 * 60 * 1000;
                     const now = new Date();
@@ -530,11 +537,14 @@ export const useStore = create<BeetrStore>()(
                     set((s) => ({ posts: [enrichedPost, ...s.posts] }));
 
                     // If target includes story, also create one. 
-                    // Support creating from the newly uploaded mediaUrl if no file is present
                     if (publishTarget === 'STORY' || publishTarget === 'FEED_AND_STORY') {
                         try { 
-                            await get().createStory(file || mediaUrl); 
-                        } catch { /* story creation is best-effort */ }
+                            // Pass both file and mediaUrl/type to story creator to avoid re-uploading if possible
+                            // or re-guessing the type if it's already known
+                            await get().createStory(file || mediaUrl, data.type as any); 
+                        } catch (e) { 
+                            console.error('Best-effort story creation failed:', e);
+                        }
                     }
 
                     get().addToast({ message: 'Post publicado! 🚀', type: 'success' });
@@ -546,7 +556,7 @@ export const useStore = create<BeetrStore>()(
                 }
             },
 
-            createStory: async (fileOrUrl) => {
+            createStory: async (fileOrUrl: File | string | null | undefined, forcedType?: string) => {
                 const { artistProfile, accessToken } = get();
                 if (!artistProfile) return;
 
@@ -561,9 +571,13 @@ export const useStore = create<BeetrStore>()(
 
                     if (typeof fileOrUrl === 'string') {
                         mediaUrl = fileOrUrl;
-                        // Guess media type from URL extension if possible
-                        if (mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'AUDIO';
-                        else if (mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'VIDEO';
+                        if (forcedType && ['IMAGE', 'VIDEO', 'AUDIO', 'TRACK'].includes(forcedType)) {
+                            mediaType = forcedType === 'TRACK' ? 'AUDIO' : forcedType as any;
+                        } else {
+                            // Guess media type from URL extension if possible
+                            if (mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'AUDIO';
+                            else if (mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'VIDEO';
+                        }
                     } else if (fileOrUrl instanceof File) {
                         const uploadRes = await api.upload(fileOrUrl);
                         mediaUrl = uploadRes.url;
@@ -577,8 +591,11 @@ export const useStore = create<BeetrStore>()(
                         artistId: artistProfile.id,
                         mediaType
                     });
-                    set((s) => ({ stories: [res.data, ...s.stories] }));
-                    get().addToast({ message: 'Story publicado!', type: 'success' });
+                    
+                    if (res && res.data) {
+                        set((s) => ({ stories: [res.data, ...s.stories] }));
+                        get().addToast({ message: 'Story publicado!', type: 'success' });
+                    }
                 } catch (error: any) {
                     console.error('API createStory failed:', error);
                     get().addToast({ message: 'Erro ao publicar story.', type: 'error' });
