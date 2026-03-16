@@ -15,11 +15,11 @@ module.exports = {
                 'beet-red': '#FF0055',   /* hot red/pink */
                 'beet-yellow': '#FFE600',   /* hard yellow */
                 /* Base */
-                'beet-black': '#02020A',
-                'beet-dark': '#07071A',
-                'beet-card': '#0A0A1E',
-                'beet-border': 'rgba(255,255,255,0.08)',
-                'beet-muted': '#44445A',
+                'beet-black': '#080812',
+                'beet-dark': '#101026',
+                'beet-card': 'rgba(20, 20, 35, 0.8)',
+                'beet-border': 'rgba(255,255,255,0.15)',
+                'beet-muted': '#6B6B83',
                 'beet-gray': '#E4E4F0',
                 /* Blue alias */
                 'beet-blue': '#00E5FF',

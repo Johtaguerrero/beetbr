@@ -8,29 +8,29 @@
    BRUTALIST FUTURISTIC — DESIGN TOKENS
 ══════════════════════════════════════════════ */
 :root {
-  /* Core palette — hard & raw */
-  --color-bg: #02020A;
-  --color-dark: #07071A;
-  --color-card: #0A0A1E;
-  --color-glass: rgba(255, 255, 255, 0.03);
-  --color-glass-2: rgba(255, 255, 255, 0.06);
+  /* Core palette — hard & raw but visible */
+  --color-bg: #080812;
+  --color-dark: #101026;
+  --color-card: rgba(20, 20, 35, 0.8);
+  --color-glass: rgba(255, 255, 255, 0.05);
+  --color-glass-2: rgba(255, 255, 255, 0.08);
 
-  /* Borders — sharp lines */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-h: rgba(255, 255, 255, 0.16);
-  --color-border-acc: rgba(0, 255, 136, 0.3);
+  /* Borders — slightly more visible */
+  --color-border: rgba(255, 255, 255, 0.15);
+  --color-border-h: rgba(255, 255, 255, 0.25);
+  --color-border-acc: rgba(0, 255, 136, 0.4);
 
   /* Text */
   --color-primary-text: #FFFFFF;
   --color-gray: #E4E4F0;
-  --color-muted: #44445A;
+  --color-muted: #6B6B83;
 
   /* Shell / Nav */
-  --color-nav-bg: rgba(5, 5, 8, 0.98);
-  --color-nav-border: rgba(255, 255, 255, 0.06);
-  --color-glass-btn: rgba(255, 255, 255, 0.05);
-  --color-glass-btn-hover: rgba(255, 255, 255, 0.1);
-  --color-card: rgba(14, 14, 20, 0.6);
+  --color-nav-bg: rgba(8, 8, 18, 0.98);
+  --color-nav-border: rgba(255, 255, 255, 0.1);
+  --color-glass-btn: rgba(255, 255, 255, 0.08);
+  --color-glass-btn-hover: rgba(255, 255, 255, 0.15);
+  --color-card: rgba(20, 20, 35, 0.8);
 
   /* Primary accent — acid green */
   --color-accent: #00FF88;
