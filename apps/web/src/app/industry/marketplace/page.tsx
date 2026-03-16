@@ -33,7 +33,7 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
                 </button>
             </div>
 
-            <Link href={`/marketplace/listing/${listing.id}`} className="flex flex-col flex-1 px-4 pb-4 gap-3" style={{ textDecoration: 'none' }}>
+            <Link href={`/industry/marketplace/listing/${listing.id}`} className="flex flex-col flex-1 px-4 pb-4 gap-3" style={{ textDecoration: 'none' }}>
                 <div className="aspect-video w-full overflow-hidden rounded-sm bg-black/20 flex items-center justify-center border border-[var(--color-border)]">
                    {listing.images?.[0] ? (
                        <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
@@ -78,7 +78,7 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
                             <p className="price-text" style={{ fontSize: '16px', color: 'var(--color-accent)' }}>SOB CONSULTA</p>
                         )}
                     </div>
-                    <Link href={`/marketplace/listing/${listing.id}`} className="btn-accent px-3 py-1 text-[9px] font-bold">VER ANÚNCIO</Link>
+                    <Link href={`/industry/marketplace/listing/${listing.id}`} className="btn-accent px-3 py-1 text-[9px] font-bold">VER ANÚNCIO</Link>
                 </div>
             </Link>
         </motion.div>
@@ -111,7 +111,7 @@ export default function MarketplaceHome() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (selectedCat || search) router.push(`/marketplace?q=${encodeURIComponent(search)}&c=${selectedCat}`);
+        if (selectedCat || search) router.push(`/industry/marketplace?q=${encodeURIComponent(search)}&c=${selectedCat}`);
     };
 
     return (
@@ -136,16 +136,9 @@ export default function MarketplaceHome() {
                             <p className="page-subtitle text-[var(--color-primary-text,white)] opacity-80">Compre e venda serviços e produtos musicais com artistas verificados</p>
                         </div>
 
-                        <Link href="/artist/marketplace/new">
-                            <motion.button 
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="btn-accent px-8 py-3 flex items-center gap-2 shadow-[0_0_20px_rgba(0,255,102,0.3)]"
-                                style={{ fontSize: '14px', fontWeight: 900, letterSpacing: '0.05em' }}
-                            >
-                                <Plus size={18} strokeWidth={3} /> CRIAR ANÚNCIO
-                            </motion.button>
-                        </Link>
+                        <div className="hidden md:block">
+                            {/* Industry specific CTA could go here */}
+                        </div>
                     </div>
 
                     {/* Search */}
@@ -216,7 +209,7 @@ export default function MarketplaceHome() {
                                             <div className="w-1.5 h-6 bg-accent" />
                                             {section.title.toUpperCase()}
                                         </h2>
-                                        <Link href={`/marketplace`} className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-accent transition-colors">Ver todos →</Link>
+                                        <Link href={`/industry/marketplace`} className="text-[10px] font-bold uppercase tracking-widest text-muted hover:text-accent transition-colors">Ver todos →</Link>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {items.map((l) => (

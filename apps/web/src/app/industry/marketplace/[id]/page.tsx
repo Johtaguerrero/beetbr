@@ -80,7 +80,7 @@ export default function ListingDetail() {
         const threadId = await startMarketplaceInquiry(listing.id);
         setChatLoading(false);
         if (threadId) {
-            router.push(`/marketplace/chat/${threadId}`);
+            router.push(`/industry/chat/${threadId}`);
         }
     };
 
@@ -95,7 +95,7 @@ export default function ListingDetail() {
                 <div className="empty-state">
                     <p className="text-5xl">😕</p>
                     <p className="text-[var(--color-primary-text,white)] font-semibold">Anúncio não encontrado</p>
-                    <Link href="/marketplace" className="btn-outline text-sm">Voltar ao Marketplace</Link>
+                    <Link href="/industry/marketplace" className="btn-outline text-sm">Voltar ao Marketplace</Link>
                 </div>
             </>
         );
@@ -106,9 +106,9 @@ export default function ListingDetail() {
             <div className="mx-auto max-w-4xl px-4 py-6 pb-28 lg:px-6 lg:pb-6">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-1.5 text-xs text-beet-muted mb-5">
-                    <Link href="/marketplace" className="hover:text-[var(--color-primary-text,white)]">Marketplace</Link>
+                    <Link href="/industry/marketplace" className="hover:text-[var(--color-primary-text,white)]">Marketplace</Link>
                     <span>›</span>
-                    <Link href={`/marketplace/c/${listing.category}`} className="hover:text-[var(--color-primary-text,white)]">{cat?.label}</Link>
+                    <Link href={`/industry/marketplace/c/${listing.category}`} className="hover:text-[var(--color-primary-text,white)]">{cat?.label}</Link>
                     <span>›</span>
                     <span className="text-[var(--color-primary-text,white)] line-clamp-1">{listing.title}</span>
                 </div>

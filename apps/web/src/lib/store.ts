@@ -261,6 +261,7 @@ interface BeetrStore {
     isFollowing: (artistId: string) => boolean;
     fetchFollowing: () => Promise<void>;
     fetchFollowingDetailed: () => Promise<void>;
+    fetchArtists: (params?: any) => Promise<void>;
 }
 
 export const useStore = create<BeetrStore>()(
@@ -997,6 +998,15 @@ export const useStore = create<BeetrStore>()(
             },
 
             isFollowing: (artistId) => get().followings.includes(artistId),
+
+            fetchArtists: async (params?: any) => {
+                try {
+                    const res: any = await api.discover.search(params || {});
+                    set({ artists: res.data || [] });
+                } catch (error) {
+                    console.error('Failed to fetch artists:', error);
+                }
+            },
 
             fetchFollowing: async () => {
                 try {

@@ -48,7 +48,7 @@ export default function SavedListings() {
                         {saved.length === 0 ? (
                             <EmptyState icon="⭐" title="Nenhum anúncio salvo"
                                 description="Salve anúncios interessantes para acessar rapidamente"
-                                action={<Link href="/marketplace" className="btn-outline text-sm">Explorar Marketplace →</Link>} />
+                                action={<Link href="/artist/marketplace" className="btn-outline text-sm">Explorar Marketplace →</Link>} />
                         ) : (
                             <div className="space-y-3">
                                 {saved.map((listing, i) => {
@@ -61,7 +61,7 @@ export default function SavedListings() {
                                                 {cat?.icon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <Link href={`/marketplace/listing/${listing.id}`}>
+                                                <Link href={`/artist/marketplace/listing/${listing.id}`}>
                                                     <p className="font-semibold text-[var(--color-primary-text,white)] text-sm hover:text-neon transition-colors line-clamp-1">{listing.title}</p>
                                                 </Link>
                                                 <div className="flex items-center gap-2 mt-0.5">
@@ -75,7 +75,7 @@ export default function SavedListings() {
                                                     {listing.priceType === 'NEGOTIABLE' && '+'}
                                                 </p>
                                                 <div className="flex gap-1 mt-1">
-                                                    <Link href={`/marketplace/listing/${listing.id}`}
+                                                    <Link href={`/artist/marketplace/listing/${listing.id}`}
                                                         className="btn-outline px-2 py-1 text-[10px]">Ver</Link>
                                                     <button onClick={() => toggleSaveListing(listing.id)}
                                                         className="rounded-lg border px-2 py-1 text-[10px] text-beet-red border-beet-red/30 hover:bg-beet-red/10 transition-colors"
@@ -96,7 +96,7 @@ export default function SavedListings() {
                         {myChats.length === 0 ? (
                             <EmptyState icon="💬" title="Nenhuma conversa ainda"
                                 description="Inicie uma conversa ao clicar 'Falar no Chat' em qualquer anúncio"
-                                action={<Link href="/marketplace" className="btn-outline text-sm">Ver anúncios →</Link>} />
+                                action={<Link href="/artist/marketplace" className="btn-outline text-sm">Ver anúncios →</Link>} />
                         ) : (
                             <div className="space-y-3">
                                 {myChats.map((chat, i) => {
@@ -107,7 +107,7 @@ export default function SavedListings() {
                                     return (
                                         <motion.div key={chat.id}
                                             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                                            <Link href={`/marketplace/chat/${chat.id}`}
+                                            <Link href={`/artist/seller/chat/${chat.id}`}
                                                 className="beet-card flex items-center gap-3 p-4 hover:bg-beet-card/80 transition-colors">
                                                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xl"
                                                     style={{ background: 'var(--color-accent-dim)' }}>🛍️</div>

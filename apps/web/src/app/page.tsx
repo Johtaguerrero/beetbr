@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useStore } from '@/lib/store';
 import { Avatar, ScoreBeetBadge } from '@/components/ui';
 import { Play, TrendingUp, Zap, Users, Handshake, Search, ArrowRight, Music2 } from 'lucide-react';
 
@@ -161,6 +163,16 @@ function BackgroundSequence() {
 }
 
 export default function LandingPage() {
+    const { isAuthenticated, currentUser } = useStore();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (isAuthenticated && currentUser) {
+            const dest = currentUser.role === 'ARTIST' ? '/artist/feed' : '/industry/dashboard';
+            router.replace(dest);
+        }
+    }, [isAuthenticated, currentUser, router]);
+
     return (
         <div className="relative min-h-screen overflow-hidden" style={{ background: 'var(--color-bg)' }}>
             <BackgroundSequence />

@@ -34,20 +34,22 @@ const TC = 22; // tab icon size
 // ── Navigation config ─────────────────────────────────────────
 const ARTIST_NAV = [
     { label: 'Feed', href: '/artist/feed', icon: <Zap size={IC} strokeWidth={2} /> },
-    { label: 'Marketplace', href: '/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
+    { label: 'Explorar', href: '/rankings', icon: <Search size={IC} strokeWidth={2} /> },
+    { label: 'Todos os Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
     { label: 'Postar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
     { collabTabs: true },
+    { label: 'Marketplace', href: '/artist/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
     { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
-    { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
     { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} />, dynamicProfile: true },
 ];
 
 const INDUSTRY_NAV = [
     { label: 'Dashboard', href: '/industry/dashboard', icon: <LayoutDashboard size={IC} strokeWidth={2} /> },
-    { label: 'Descobrir Artistas', href: '/industry/discover', icon: <Search size={IC} strokeWidth={2} /> },
+    { label: 'Todos os Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
     { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
-    { label: 'Shortlist', href: '/industry/deals?tab=shortlist', icon: <Star size={IC} strokeWidth={2} /> },
+    { label: 'Descobrir', href: '/industry/discover', icon: <Search size={IC} strokeWidth={2} /> },
     { label: 'Propostas', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
+    { label: 'Shortlist', href: '/industry/deals?tab=shortlist', icon: <Star size={IC} strokeWidth={2} /> },
     { label: 'Mensagens', href: '/industry/messages', icon: <MessageSquare size={IC} strokeWidth={2} /> },
     { label: 'Perfil da Empresa', href: '/industry/profile/me', icon: <User size={IC} strokeWidth={2} />, dynamicProfile: true },
 ];
@@ -220,7 +222,7 @@ function PostMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     const options = [
         { label: 'Publicar Post', href: '/artist/feed', icon: <SquarePen size={18} />, desc: 'Solte um som, foto ou texto' },
         { label: 'Criar Collab', href: '/collabs/new', icon: <Repeat2 size={18} />, desc: 'Chame alguém pro som' },
-        { label: 'Anunciar no Marketplace', href: '/artist/marketplace/new', icon: <ShoppingBag size={18} />, desc: 'Venda seus serviços' },
+        { label: 'Anunciar no Marketplace', href: '/artist/seller/new', icon: <ShoppingBag size={18} />, desc: 'Venda seus serviços' },
     ];
 
     return (
@@ -589,14 +591,14 @@ function TabBar({
     const tabs = isIndustry
         ? [
             { label: 'Dash', href: '/industry/dashboard', icon: <LayoutDashboard size={TC} strokeWidth={1.75} /> },
-            { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
+            { label: 'Market', href: '/industry/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
             { label: 'Post', id: 'post-menu', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Handshake size={TC} strokeWidth={1.75} /> },
             { label: 'Deals', href: '/industry/deals', icon: <Briefcase size={TC} strokeWidth={1.75} /> },
         ]
         : [
             { label: 'Feed', href: '/artist/feed', icon: <Zap size={TC} strokeWidth={1.75} /> },
-            { label: 'Market', href: '/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
+            { label: 'Market', href: '/artist/marketplace', icon: <ShoppingBag size={TC} strokeWidth={1.75} /> },
             { label: 'Post', href: '/artist/post/new', icon: <PlusCircle size={TC} strokeWidth={2.5} />, special: true },
             { label: 'Colabs', href: '/collabs', icon: <Handshake size={TC} strokeWidth={1.75} /> },
             { label: 'Perfil', href: `/artist/profile/${artistProfile?.id || 'me'}`, icon: <User size={TC} strokeWidth={1.75} /> },
@@ -806,19 +808,22 @@ export function useAuthGuard(requiredRole?: 'ARTIST' | 'INDUSTRY') {
     }, []);
 
     useEffect(() => {
-        if (!isHydrated) return; // Wait for Zustand to hydrate
+        if (!isHydrated) return;
 
+        // If not authenticated, redirect to auth
         if (!isAuthenticated) {
             router.replace('/auth');
             return;
         }
-        if (requiredRole && currentUser?.role !== requiredRole) {
-            const dest = currentUser?.role === 'ARTIST' ? '/artist/feed' : '/industry/dashboard';
+
+        // Only redirect if currentUser is definitely loaded AND doesn't match role
+        if (currentUser && requiredRole && currentUser.role !== requiredRole) {
+            const dest = currentUser.role === 'ARTIST' ? '/artist/feed' : '/industry/dashboard';
             router.replace(dest);
         }
     }, [isHydrated, isAuthenticated, currentUser, requiredRole, router]);
 
-    return { user: currentUser, ready: isAuthenticated && isHydrated };
+    return { user: currentUser, ready: isAuthenticated && isHydrated && !!currentUser };
 }
 
 // ── Re-export Lucide icons for use across app ─────────────────

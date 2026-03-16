@@ -27,7 +27,7 @@ function ListingRow({ listing, saved, onSave }: { listing: Listing; saved: boole
 
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                    <Link href={`/marketplace/listing/${listing.id}`}>
+                    <Link href={`/industry/marketplace/listing/${listing.id}`}>
                         <p className="font-semibold text-[var(--color-primary-text,white)] text-sm hover:text-neon transition-colors line-clamp-1">{listing.title}</p>
                     </Link>
                     <button onClick={onSave} className="flex-shrink-0 text-base">{saved ? '⭐' : '☆'}</button>
@@ -56,7 +56,7 @@ function ListingRow({ listing, saved, onSave }: { listing: Listing; saved: boole
                         <p className="text-[10px] text-beet-muted">a combinar</p>
                     </>
                 )}
-                <Link href={`/marketplace/listing/${listing.id}`}
+                <Link href={`/industry/marketplace/listing/${listing.id}`}
                     className="mt-1 inline-block rounded-lg border px-3 py-1 text-[10px] text-beet-muted hover:text-[var(--color-primary-text,white)] hover:border-neon transition-colors"
                     style={{ borderColor: 'var(--color-border)' }}>
                     Ver →
@@ -119,7 +119,7 @@ export default function CategoryPage() {
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center gap-2 text-beet-muted text-xs mb-2">
-                        <Link href="/marketplace" className="hover:text-[var(--color-primary-text,white)]">Marketplace</Link>
+                        <Link href="/industry/marketplace" className="hover:text-[var(--color-primary-text,white)]">Marketplace</Link>
                         <span>›</span>
                         <span className="text-[var(--color-primary-text,white)]">{cat?.label || 'Todos'}</span>
                     </div>
@@ -171,11 +171,11 @@ export default function CategoryPage() {
                         <div className="beet-card p-4">
                             <p className="section-title mb-3">Categorias</p>
                             <div className="space-y-1">
-                                <Link href="/marketplace">
+                                <Link href="/industry/marketplace">
                                     <button className={`sidebar-link w-full ${isAll ? 'active' : ''}`}>🛍️ <span>Todos</span></button>
                                 </Link>
                                 {MARKETPLACE_CATEGORIES.map((c) => (
-                                    <Link key={c.slug} href={`/marketplace/c/${c.slug}`}>
+                                    <Link key={c.slug} href={`/industry/marketplace/c/${c.slug}`}>
                                         <button className={`sidebar-link w-full ${slug === c.slug ? 'active' : ''}`}>
                                             {c.icon} <span className="text-xs">{c.label}</span>
                                         </button>
@@ -201,7 +201,7 @@ export default function CategoryPage() {
                             <div className="empty-state">
                                 <p className="text-5xl">😔</p>
                                 <p className="text-[var(--color-primary-text,white)] font-semibold">Nenhum anúncio encontrado</p>
-                                <Link href="/marketplace" className="btn-outline text-sm">Ver todos →</Link>
+                                <Link href="/industry/marketplace" className="btn-outline text-sm">Ver todos →</Link>
                             </div>
                         ) : (
                             <div className="space-y-3">

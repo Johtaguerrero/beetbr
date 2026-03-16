@@ -76,7 +76,7 @@ export default function NewListingPage() {
             const success = await createListing(formData);
             if (success) {
                 addToast({ message: 'Anúncio criado com sucesso! +5 Score Beeats', type: 'success' });
-                router.push('/marketplace');
+                router.push('/artist/marketplace');
             } else {
                 addToast({ message: 'Erro ao criar anúncio. Verifique os dados.', type: 'error' });
             }

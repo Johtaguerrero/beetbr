@@ -616,7 +616,7 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
 
                 {post.type === 'MARKETPLACE' && post.listingId && (
                     <div className="px-[18px] md:px-0">
-                        <Link href={`/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
+                        <Link href={`/artist/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
                             <div className="beet-card p-4 flex items-center gap-4 transition-all hover:border-[var(--color-accent)] group/market">
                                 <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20 border border-[var(--color-nav-border)]">
                                     {post.mediaUrl ? (
@@ -1567,7 +1567,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                                 </Link>
                                 
                                 {post.type === 'MARKETPLACE' && (
-                                    <Link href={`/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-red text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-red/20">
+                                    <Link href={`/artist/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-red text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-red/20">
                                         <ShoppingBag size={14} /> Ver Anúncio
                                     </Link>
                                 )}

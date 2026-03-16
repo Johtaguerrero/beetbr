@@ -49,7 +49,7 @@ export default function MarketplaceChat() {
             <div className="empty-state">
                 <p className="text-5xl">💬</p>
                 <p className="text-white font-semibold">Conversa não encontrada</p>
-                <Link href="/marketplace" className="btn-outline text-sm">← Voltar ao Marketplace</Link>
+                <Link href="/artist/marketplace" className="btn-outline text-sm">← Voltar ao Marketplace</Link>
             </div>
         );
     }
@@ -64,7 +64,7 @@ export default function MarketplaceChat() {
                     {/* Header */}
                     <div className="flex items-center gap-3 border-b px-4 py-3 flex-shrink-0"
                         style={{ borderColor: 'var(--color-border)' }}>
-                        <Link href="/marketplace" className="text-beet-muted hover:text-white transition-colors">←</Link>
+                        <Link href="/artist/marketplace" className="text-beet-muted hover:text-white transition-colors">←</Link>
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl text-lg"
                             style={{ background: 'var(--color-accent-dim)' }}>🛍️</div>
                         <div className="flex-1 min-w-0">
@@ -72,7 +72,7 @@ export default function MarketplaceChat() {
                             <p className="text-[11px] text-beet-muted">{otherName}</p>
                         </div>
                         {listing && (
-                            <Link href={`/marketplace/listing/${listing.id}`}
+                            <Link href={`/artist/marketplace/listing/${listing.id}`}
                                 className="btn-outline px-3 py-1.5 text-[10px] flex-shrink-0">Ver anúncio</Link>
                         )}
                     </div>
