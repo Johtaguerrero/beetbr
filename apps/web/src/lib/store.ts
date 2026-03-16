@@ -551,7 +551,8 @@ export const useStore = create<BeetrStore>()(
                     return enrichedPost.id;
                 } catch (error: any) {
                     console.error('API createPost failed:', error);
-                    get().addToast({ message: 'Erro ao publicar post. Tente novamente.', type: 'error' });
+                    const errorMsg = error.message || 'Erro ao publicar post. Tente novamente.';
+                    get().addToast({ message: errorMsg, type: 'error' });
                     return '';
                 }
             },

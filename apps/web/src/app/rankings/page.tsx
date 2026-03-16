@@ -33,7 +33,7 @@ export default function Rankings() {
         ranked = ranked.sort((a, b) => b.scoreBeet - a.scoreBeet).slice(0, limit);
         return ranked.map((a) => ({
             ...a,
-            trend: a.metrics.weeklyGrowth > 3 ? 'up' : a.metrics.weeklyGrowth < 0 ? 'down' : 'stable',
+            trend: (a.metrics?.weeklyGrowth || 0) > 3 ? 'up' : (a.metrics?.weeklyGrowth || 0) < 0 ? 'down' : 'stable',
         }));
     };
 
@@ -109,7 +109,7 @@ export default function Rankings() {
                                         <div style={{ textAlign: 'right' }}>
                                             <ScoreBeetBadge score={artist.scoreBeet} size="md" />
                                             <div style={{ marginTop: 4, fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, color: TREND_COLOR[artist.trend] }}>
-                                                {TREND_ICON[artist.trend]} {Math.abs(artist.metrics.weeklyGrowth).toFixed(1)}%
+                                                {TREND_ICON[artist.trend]} {Math.abs(artist.metrics?.weeklyGrowth || 0).toFixed(1)}%
                                             </div>
                                         </div>
                                     </div>
