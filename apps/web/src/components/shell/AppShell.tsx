@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Trophy, PlusCircle, FileText, User, ShoppingBag,
     Repeat2, FolderOpen, Gem, Settings, LayoutDashboard,
@@ -683,24 +683,11 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, noPadding = false }: AppShellProps) {
-    const { currentUser, isAuthenticated, notifications, theme, toggleTheme, showNotifications, toggleNotifications } = useStore();
+    const { currentUser, isAuthenticated, notifications, theme, toggleTheme, showNotifications, toggleNotifications, scrollingDown } = useStore();
     const [postMenuOpen, setPostMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const isIndustry = currentUser?.role === 'INDUSTRY';
     const unreadCount = notifications.filter(n => !n.read).length;
-
-    // ── Scroll Hide Logic ───────────────────────────────────────
-    const { scrollY } = useScroll();
-    const [scrollingDown, setScrollingDown] = useState(false);
-
-    useMotionValueEvent(scrollY, "change", (latest) => {
-        const previous = scrollY.getPrevious() || 0;
-        if (latest > previous && latest > 100) {
-            setScrollingDown(true);
-        } else {
-            setScrollingDown(false);
-        }
-    });
 
     useEffect(() => {
         if (theme === 'light') {

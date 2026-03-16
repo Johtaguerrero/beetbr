@@ -151,6 +151,8 @@ interface BeetrStore {
     toggleSidebar: () => void;
     showNotifications: boolean;
     toggleNotifications: (val?: boolean) => void;
+    scrollingDown: boolean;
+    setScrollingDown: (val: boolean) => void;
 
     currentUser: AuthUser | null;
     artistProfile: ArtistProfile | null;
@@ -272,7 +274,11 @@ export const useStore = create<BeetrStore>()(
             sidebarExpanded: true,
             toggleSidebar: () => set((state) => ({ sidebarExpanded: !state.sidebarExpanded })),
             showNotifications: false,
-            toggleNotifications: (val) => set((state) => ({ showNotifications: val !== undefined ? val : !state.showNotifications })),
+            toggleNotifications: (val) => set((state) => ({ 
+                showNotifications: typeof val === 'boolean' ? val : !state.showNotifications 
+            })),
+            scrollingDown: false,
+            setScrollingDown: (val) => set({ scrollingDown: val }),
             currentUser: null,
             artistProfile: null,
             industryProfile: null,

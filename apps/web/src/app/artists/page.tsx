@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useStore, type ArtistProfile } from '@/lib/store';
 import { 
     EmptyState, 
@@ -41,8 +41,27 @@ const PROF_EXPERIENCE = [
 ];
 
 export default function AllArtistsPage() {
-    const { artists, fetchArtists } = useStore();
+    const { artists, fetchArtists, scrollingDown, setScrollingDown } = useStore();
     const [isLoadingArtists, setIsLoadingArtists] = useState(true);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // ── Scroll Detection ────────────────────────────────────────
+    const { scrollY } = useScroll({ container: scrollContainerRef });
+
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        const previous = scrollY.getPrevious() || 0;
+        if (latest > previous && latest > 50) {
+            if (!scrollingDown) setScrollingDown(true);
+        } else if (latest < previous) {
+            if (scrollingDown) setScrollingDown(false);
+        }
+    });
+
+    // Reset on mount/unmount
+    useEffect(() => {
+        setScrollingDown(false);
+        return () => setScrollingDown(false);
+    }, []);
     
     // View state
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -356,8 +375,20 @@ export default function AllArtistsPage() {
                 {/* ── Main Content Area ───────────────────────────────────── */}
                 <main className="flex-1 flex flex-col min-w-0 bg-beet-black overflow-hidden relative">
                     
-                    {/* Header Bar */}
-                    <div className="p-6 md:p-10 border-b border-white/5 bg-beet-black/40 backdrop-blur-xl z-20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    {/* Header Bar - Retractable on mobile */}
+                    <motion.div 
+                        initial={false}
+                        animate={{ 
+                            height: scrollingDown ? 0 : 'auto',
+                            opacity: scrollingDown ? 0 : 1,
+                            marginBottom: scrollingDown ? 0 : 0,
+                            paddingTop: scrollingDown ? 0 : undefined,
+                            paddingBottom: scrollingDown ? 0 : undefined,
+                            overflow: 'hidden'
+                        }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="p-6 md:p-10 border-b border-white/5 bg-beet-black/40 backdrop-blur-xl z-20 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                    >
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="h-2 w-2 rounded-full bg-beet-accent shadow-[0_0_10px_rgba(0,255,136,0.5)]" />
@@ -407,10 +438,13 @@ export default function AllArtistsPage() {
                                 <Filter size={20} />
                             </button>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Artists Content */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 pb-32">
+                    <div 
+                        ref={scrollContainerRef}
+                        className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 pb-32"
+                    >
                         {isLoadingArtists ? (
                             <div className="flex flex-col items-center justify-center py-20 gap-4">
                                 <Spinner size="lg" />
