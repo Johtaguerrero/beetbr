@@ -1,3 +1,4 @@
+'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -132,7 +133,7 @@ export default function CreatePost() {
                                         </div>
                                     )}
                                     <div className={`mb-2 md:mb-3 transition-transform duration-300 group-hover:scale-110 ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
-                                        <config.icon size={24} md:size={28} strokeWidth={type === t ? 2.5 : 2} />
+                                        <config.icon size={28} strokeWidth={type === t ? 2.5 : 2} className="w-6 h-6 md:w-7 md:h-7" />
                                     </div>
                                     <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest truncate w-full ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
                                         {config.label}
