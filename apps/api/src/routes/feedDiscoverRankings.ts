@@ -97,7 +97,7 @@ feedRouter.post('/stories', authenticate, requireRole('ARTIST'), async (req: Aut
 // ── DISCOVER ──────────────────────────────────────────────────
 export const discoverRouter = Router();
 
-discoverRouter.get('/', authenticate, requireRole('INDUSTRY', 'ADMIN'), async (req: Request, res: Response) => {
+discoverRouter.get('/', authenticate, requireRole('INDUSTRY', 'ADMIN', 'ARTIST'), async (req: Request, res: Response) => {
     const filters = DiscoverFiltersSchema.safeParse(req.query);
     if (!filters.success) {
         return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: filters.error.issues[0].message } });

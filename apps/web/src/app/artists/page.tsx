@@ -28,7 +28,7 @@ import {
     CheckCircle2,
     ArrowUpDown
 } from 'lucide-react';
-import { AppShell } from '@/components/shell/AppShell';
+
 
 const GENRES = ['Trap', 'Rap', 'Funk', 'Pop', 'R&B', 'Gospel', 'Rock', 'MPB', 'Samba', 'Pagode', 'Eletrônica', 'Afrobeat', 'Drill', 'Boom bap'];
 const STATES = ['SP', 'RJ', 'MG', 'BA', 'CE', 'RS', 'PR', 'PE', 'GO', 'DF', 'SC', 'ES', 'AM'];
@@ -178,7 +178,7 @@ export default function AllArtistsPage() {
     ]);
 
     return (
-        <AppShell>
+
             <div className="flex h-[calc(100vh-64px)] lg:h-screen bg-beet-black overflow-hidden relative">
                 
                 {/* ── Sidebar Filters ────────────────────────────────────── */}
@@ -455,6 +455,6 @@ export default function AllArtistsPage() {
                     </div>
                 </main>
             </div>
-        </AppShell>
+
     );
 }
