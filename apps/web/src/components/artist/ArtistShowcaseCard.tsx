@@ -18,7 +18,8 @@ export function ArtistShowcaseCard({ artist }: ArtistShowcaseCardProps) {
     const isIndustry = currentUser?.role === 'INDUSTRY';
 
     // Format numbers
-    const formatNumber = (num: number) => {
+    const formatNumber = (num: number | undefined | null) => {
+        if (num === undefined || num === null) return '0';
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
@@ -101,7 +102,7 @@ export function ArtistShowcaseCard({ artist }: ArtistShowcaseCardProps) {
                         <span className="text-[8px] text-beet-muted font-black uppercase tracking-widest mb-1">Plays</span>
                         <div className="flex items-center gap-1.5 text-white">
                             <Play size={10} className="text-beet-accent" />
-                            <span className="text-xs font-bold">{formatNumber(artist.playsTotal)}</span>
+                            <span className="text-xs font-bold">{formatNumber(artist.metrics?.plays || 0)}</span>
                         </div>
                     </div>
                     <div className="flex flex-col">
