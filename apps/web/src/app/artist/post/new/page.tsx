@@ -305,7 +305,8 @@ export default function CreatePost() {
                     <button 
                         onClick={handlePublish} 
                         disabled={publishing} 
-                        className="group relative w-full flex items-center justify-center gap-3 overflow-hidden rounded-[2rem] bg-beet-accent py-5 text-sm font-black uppercase tracking-[0.2em] text-black shadow-neon transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                        className="group relative w-full flex items-center justify-center gap-3 overflow-hidden rounded-[2rem] py-5 text-sm font-black uppercase tracking-[0.2em] text-black shadow-neon transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                        style={{ background: 'var(--color-accent)' }}
                     >
                         {publishing ? (
                             <><Spinner size="sm" /> Publicando...</>

@@ -965,11 +965,10 @@ export default function FeedPage() {
                             <Link href="/rankings" style={{ fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-accent)', textDecoration: 'none' }}>VER TODOS</Link>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {[
-                                { name: 'MC Vibrante', score: 94, id: 'artist-1', image: 'https://images.unsplash.com/photo-1520859050453-58ee97df39ee?w=100&h=100&fit=crop' },
-                                { name: 'Ana Lima', score: 87, id: 'artist-2', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop' },
-                                { name: 'Dj Coruja', score: 79, id: 'artist-3', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
-                            ].map((a, i) => (
+                            {useStore.getState().artists
+                                .sort((a, b) => (b.scoreBeet || 0) - (a.scoreBeet || 0))
+                                .slice(0, 3)
+                                .map((a, i) => (
                                 <Link href={`/artist/profile/${a.id}`} key={a.id}
                                     style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -985,17 +984,15 @@ export default function FeedPage() {
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                         <div style={{ position: 'relative' }}>
-                                            <Avatar name={a.name} imageUrl={a.image} size="sm" />
+                                            <Avatar name={a.stageName} imageUrl={a.avatarUrl} size="sm" />
                                             <span style={{ position: 'absolute', top: -4, left: -8, fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 700, background: 'var(--color-accent)', color: '#000', padding: '1px 4px', borderRadius: '2px' }}>#{i + 1}</span>
                                         </div>
-                                        <div>
-                                            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14px', fontWeight: 700, color: 'var(--color-primary-text, white)', lineHeight: 1, marginBottom: 3 }}>{a.name}</p>
-                                            <ScoreBeetBadge score={a.score} size="sm" />
+                                        <div style={{ minWidth: 0 }}>
+                                            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14px', fontWeight: 700, color: 'var(--color-primary-text, white)', lineHeight: 1, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.stageName}</p>
+                                            <ScoreBeetBadge score={a.scoreBeet || 0} size="sm" />
                                         </div>
                                     </div>
-                                    <button style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'Space Mono, monospace', fontSize: '8px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-accent)' }}>
-                                        <UserPlus size={11} strokeWidth={2} /> SEGUIR
-                                    </button>
+                                    <FollowButton artistId={a.id} size="sm" className="!h-7 !px-3" />
                                 </Link>
                             ))}
                         </div>
