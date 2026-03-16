@@ -12,7 +12,7 @@ import {
 import { useStore, MARKETPLACE_CATEGORIES } from '@/lib/store';
 import { useAuthGuard, Avatar } from '@/components/shell/AppShell';
 import { api } from '@/lib/api';
-import { Spinner } from '@/components/ui';
+import { Spinner, CustomSelect } from '@/components/ui';
 
 const STEPS = [
     { id: 1, title: 'Categoria', label: 'Escolha o que você está oferecendo' },
@@ -297,16 +297,17 @@ export default function NewListingPage() {
 
                                 <div className="space-y-2">
                                     <label className="section-label flex items-center gap-2"><Shield size={14} /> Tipo de Licença / Uso</label>
-                                    <select 
-                                        className="beet-input w-full bg-[#111]"
+                                    <CustomSelect 
                                         value={formData.licenseType}
-                                        onChange={(e) => setFormData({ ...formData, licenseType: e.target.value })}
-                                    >
-                                        <option value="Comercial">Uso Comercial Full</option>
-                                        <option value="Limitada">Licença Limitada</option>
-                                        <option value="Royalties">Com Royalties</option>
-                                        <option value="Exclusivo">Buyout (Exclusivo)</option>
-                                    </select>
+                                        onChange={(val) => setFormData({ ...formData, licenseType: val })}
+                                        options={[
+                                            { value: 'Comercial', label: 'Uso Comercial Full' },
+                                            { value: 'Limitada', label: 'Licença Limitada' },
+                                            { value: 'Royalties', label: 'Com Royalties' },
+                                            { value: 'Exclusivo', label: 'Buyout (Exclusivo)' }
+                                        ]}
+                                        className="w-full"
+                                    />
                                 </div>
                             </motion.div>
                         )}

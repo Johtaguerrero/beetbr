@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import { useAuthGuard } from '@/components/shell/AppShell';
-import { Spinner, GenrePill, Toggle } from '@/components/ui';
+import { Spinner, GenrePill, Toggle, CustomSelect } from '@/components/ui';
 
 const GENRES = ['Funk', 'Trap', 'R&B', 'Pop', 'Samba', 'Forró', 'MPB', 'Sertanejo', 'Rock', 'Eletrônico', 'Gospel', 'Indie'];
 const STATES = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
@@ -82,11 +82,14 @@ export default function ArtistOnboarding() {
                                     <label className="section-title mb-2 block">Cidade</label>
                                     <input className="beet-input" placeholder="São Paulo" value={city} onChange={(e) => setCity(e.target.value)} />
                                 </div>
-                                <div className="w-24">
+                                <div className="w-28">
                                     <label className="section-title mb-2 block">Estado</label>
-                                    <select className="beet-input" value={state} onChange={(e) => setState(e.target.value)}>
-                                        {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                                    </select>
+                                    <CustomSelect 
+                                        value={state} 
+                                        onChange={setState}
+                                        options={STATES.map(s => ({ value: s, label: s }))}
+                                        className="w-full"
+                                    />
                                 </div>
                             </div>
                             <div>

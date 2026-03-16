@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useStore } from '@/lib/store';
 import { useAuthGuard } from '@/components/shell/AppShell';
-import { Spinner, GenrePill } from '@/components/ui';
+import { Spinner, GenrePill, CustomSelect } from '@/components/ui';
 
 const NICHES = ['Funk', 'Trap', 'R&B', 'Pop', 'Sertanejo', 'Forró', 'Gospel', 'Rock', 'Eletrônico', 'Indie', 'MPB', 'Samba'];
 const STATES = ['SP', 'RJ', 'MG', 'BA', 'CE', 'RS', 'PR', 'PE', 'GO', 'DF'];
@@ -97,11 +97,15 @@ export default function IndustryOnboarding() {
                                     <label className="section-title mb-2 block">Cidade</label>
                                     <input className="beet-input" placeholder="São Paulo" value={city} onChange={(e) => setCity(e.target.value)} />
                                 </div>
-                                <div className="w-24">
+                                <div className="w-28">
                                     <label className="section-title mb-2 block">Estado</label>
-                                    <select className="beet-input" value={state} onChange={(e) => setState(e.target.value)}>
-                                        {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                                    </select>
+                                    <CustomSelect 
+                                        value={state} 
+                                        onChange={setState}
+                                        options={STATES.map(s => ({ value: s, label: s }))}
+                                        accentColor="#0057FF"
+                                        className="w-full"
+                                    />
                                 </div>
                             </div>
                             <button onClick={() => setStep(1)} disabled={!companyName} className="w-full py-3.5 font-bold rounded-full transition-all hover:scale-[1.02] disabled:opacity-50"

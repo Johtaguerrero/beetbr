@@ -7,7 +7,8 @@ import {
     EmptyState, 
     Spinner, 
     Avatar, 
-    ScoreBeetBadge 
+    ScoreBeetBadge,
+    CustomSelect 
 } from '@/components/ui';
 import { ArtistShowcaseCard } from '@/components/artist/ArtistShowcaseCard';
 import { 
@@ -339,16 +340,15 @@ export default function AllArtistsPage() {
                         {/* Experience Select */}
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-beet-muted uppercase tracking-widest">Experiência de Palco</label>
-                            <select 
+                            <CustomSelect 
                                 value={selectedExperience}
-                                onChange={(e) => setSelectedExperience(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-beet-accent appearance-none capitalize"
-                            >
-                                <option value="">Qualquer Nível</option>
-                                {PROF_EXPERIENCE.map(exp => (
-                                    <option key={exp.value} value={exp.value}>{exp.label}</option>
-                                ))}
-                            </select>
+                                onChange={setSelectedExperience}
+                                options={[
+                                    { value: '', label: 'Qualquer Nível' },
+                                    ...PROF_EXPERIENCE.map(exp => ({ value: exp.value, label: exp.label }))
+                                ]}
+                                className="w-full"
+                            />
                         </div>
                     </div>
                 </aside>
@@ -370,19 +370,19 @@ export default function AllArtistsPage() {
                         </div>
 
                         <div className="flex items-center flex-wrap gap-4 self-end md:self-auto">
-                            {/* Sort Dropdown */}
-                            <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-2xl px-4 py-2">
-                                <ArrowUpDown size={14} className="text-beet-accent" />
-                                <select 
+                            <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-2xl px-2">
+                                <ArrowUpDown size={14} className="text-beet-accent ml-2" />
+                                <CustomSelect 
                                     value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="bg-transparent text-[10px] font-black uppercase text-white outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="relevance">Mais Relevantes</option>
-                                    <option value="score">Maior Score</option>
-                                    <option value="followers">Mais Seguidores</option>
-                                    <option value="engagement">Engajamento</option>
-                                </select>
+                                    onChange={(val) => setSortBy(val as any)}
+                                    options={[
+                                        { value: 'relevance', label: 'Mais Relevantes' },
+                                        { value: 'score', label: 'Maior Score' },
+                                        { value: 'followers', label: 'Mais Seguidores' },
+                                        { value: 'engagement', label: 'Engajamento' }
+                                    ]}
+                                    style={{ border: 'none', background: 'transparent' }}
+                                />
                             </div>
 
                             <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">

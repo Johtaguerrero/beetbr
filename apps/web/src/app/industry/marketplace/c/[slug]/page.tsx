@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MARKETPLACE_CATEGORIES, type Listing, type MarketplaceCategory } from '@/lib/store';
-import { ScoreBeetBadge, Skeleton } from '@/components/ui';
+import { ScoreBeetBadge, Skeleton, CustomSelect } from '@/components/ui';
 
 const SORT_OPTIONS = [
     { id: 'relevance', label: 'Relevância' },
@@ -190,9 +190,13 @@ export default function CategoryPage() {
                         {/* Sort + count */}
                         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                             <p className="text-sm text-beet-muted">{filtered.length} anúncio{filtered.length !== 1 ? 's' : ''}</p>
-                            <select className="beet-input py-1.5 text-xs w-auto" value={sort} onChange={(e) => setSort(e.target.value)}>
-                                {SORT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-                            </select>
+                            <CustomSelect 
+                                value={sort} 
+                                onChange={setSort}
+                                options={SORT_OPTIONS.map(o => ({ value: o.id, label: o.label }))}
+                                className="min-w-[140px]"
+                                accentColor="#0057FF"
+                            />
                         </div>
 
                         {loading ? (

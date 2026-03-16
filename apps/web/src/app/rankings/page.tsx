@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, MOCK_ARTISTS } from '@/lib/store';
-import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, FollowButton } from '@/components/ui';
+import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, FollowButton, CustomSelect } from '@/components/ui';
 
 const GENRES = ['', 'Funk', 'Trap', 'R&B', 'Pop', 'Sertanejo', 'Forró', 'Gospel', 'Rock', 'Eletrônico', 'MPB'];
 const STATES = ['', 'SP', 'RJ', 'MG', 'BA', 'CE', 'RS', 'PR', 'PE'];
@@ -52,14 +52,24 @@ export default function Rankings() {
                 {/* Filters */}
                 <div className="mb-6 flex flex-wrap gap-2 items-center">
                     <p className="section-label w-full" style={{ marginBottom: 4 }}>FILTRAR POR</p>
-                    <select className="beet-input py-2 px-3 w-auto cursor-pointer" style={{ flex: '0 0 auto', minWidth: 140 }} value={genre} onChange={(e) => setGenre(e.target.value)}>
-                        <option value="">TODOS OS GÊNEROS</option>
-                        {GENRES.filter(Boolean).map((g) => <option key={g} value={g}>{g.toUpperCase()}</option>)}
-                    </select>
-                    <select className="beet-input py-2 px-3 w-auto cursor-pointer" style={{ flex: '0 0 auto', minWidth: 120 }} value={state} onChange={(e) => setState(e.target.value)}>
-                        <option value="">TODOS ESTADOS</option>
-                        {STATES.filter(Boolean).map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <CustomSelect 
+                        value={genre} 
+                        onChange={setGenre}
+                        options={[
+                            { value: '', label: 'TODOS OS GÊNEROS' },
+                            ...GENRES.filter(Boolean).map(g => ({ value: g, label: g.toUpperCase() }))
+                        ]}
+                        style={{ flex: '1 1 140px' }}
+                    />
+                    <CustomSelect 
+                        value={state} 
+                        onChange={setState}
+                        options={[
+                            { value: '', label: 'TODOS ESTADOS' },
+                            ...STATES.filter(Boolean).map(s => ({ value: s, label: s }))
+                        ]}
+                        style={{ flex: '1 1 120px' }}
+                    />
                     <div className="flex gap-1">
                         {([10, 20, 50] as const).map((l) => (
                             <button key={l} onClick={() => setLimit(l)}

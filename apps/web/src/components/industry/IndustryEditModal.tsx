@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
-import { Modal, Spinner, SectionTitle } from '@/components/ui';
+import { Modal, Spinner, SectionTitle, CustomSelect } from '@/components/ui';
 import {
     Save, Building2, ShieldCheck, Search, Share2,
     ChevronRight, ChevronLeft, Upload, Trash2,
@@ -147,17 +147,27 @@ export function IndustryEditModal({ isOpen, onClose }: IndustryEditModalProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black text-beet-muted uppercase tracking-widest mb-2">Tipo de Empresa</label>
-                            <select name="type" value={formData.type || ''} onChange={handleChange} className="w-full bg-beet-dark/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-beet-blue outline-none appearance-none">
-                                <option value="">Selecione...</option>
-                                {INDUSTRY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
+                            <CustomSelect 
+                                value={formData.type || ''} 
+                                onChange={(val) => setFormData((prev: any) => ({ ...prev, type: val }))}
+                                options={[
+                                    { value: '', label: 'Selecione...' },
+                                    ...INDUSTRY_TYPES.map(t => ({ value: t.value, label: t.label }))
+                                ]}
+                                className="w-full"
+                            />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-beet-muted uppercase tracking-widest mb-2">Nicho Principal</label>
-                            <select name="mainNiche" value={formData.mainNiche || ''} onChange={handleChange} className="w-full bg-beet-dark/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-beet-blue outline-none appearance-none">
-                                <option value="">Selecione...</option>
-                                {MUSIC_NICHES.map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
+                            <CustomSelect 
+                                value={formData.mainNiche || ''} 
+                                onChange={(val) => setFormData((prev: any) => ({ ...prev, mainNiche: val }))}
+                                options={[
+                                    { value: '', label: 'Selecione...' },
+                                    ...MUSIC_NICHES.map(n => ({ value: n, label: n }))
+                                ]}
+                                className="w-full"
+                            />
                         </div>
                     </div>
 

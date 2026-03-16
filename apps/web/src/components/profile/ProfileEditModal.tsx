@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
-import { Modal, Spinner, SectionTitle } from '@/components/ui';
+import { Modal, Spinner, SectionTitle, CustomSelect } from '@/components/ui';
 import { Save, User, Music, MapPin, Briefcase, Share2, FileText, ChevronRight, ChevronLeft, Upload, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { PROFESSIONAL_QUESTIONS_LABELS, QUESTION_VALUE_LABELS } from '@/app/artist/profile/[id]/constants';
@@ -148,13 +148,18 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
                 <div className="space-y-6">
                     <div>
                         <label className="block text-[10px] font-black text-beet-muted uppercase tracking-[0.2em] mb-3">Tipo de Artista</label>
-                        <select name="artistType" value={formData.artistType || ''} onChange={handleChange} className="w-full bg-beet-dark/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-beet-accent outline-none appearance-none">
-                            <option value="SOLO">Solo</option>
-                            <option value="BANDA">Banda / Grupo</option>
-                            <option value="DUO">Duo</option>
-                            <option value="DJ">DJ</option>
-                            <option value="COLETIVO">Coletivo</option>
-                        </select>
+                        <CustomSelect 
+                            value={formData.artistType || ''} 
+                            onChange={(val) => setFormData((prev: any) => ({ ...prev, artistType: val }))}
+                            options={[
+                                { value: 'SOLO', label: 'Solo' },
+                                { value: 'BANDA', label: 'Banda / Grupo' },
+                                { value: 'DUO', label: 'Duo' },
+                                { value: 'DJ', label: 'DJ' },
+                                { value: 'COLETIVO', label: 'Coletivo' }
+                            ]}
+                            className="w-full"
+                        />
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-beet-muted uppercase tracking-[0.2em] mb-2">Gêneros (Vírgula)</label>
@@ -211,19 +216,18 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
                     {Object.keys(PROFESSIONAL_QUESTIONS_LABELS).map(key => (
                         <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
                             <span className="text-xs font-bold text-white pr-4">{PROFESSIONAL_QUESTIONS_LABELS[key]}</span>
-                            <select
+                            <CustomSelect
                                 value={formData.professionalQuestions?.[key] || ''}
-                                onChange={(e) => setFormData((prev: any) => ({
+                                onChange={(val) => setFormData((prev: any) => ({
                                     ...prev,
-                                    professionalQuestions: { ...prev.professionalQuestions, [key]: e.target.value }
+                                    professionalQuestions: { ...prev.professionalQuestions, [key]: val }
                                 }))}
-                                className="bg-beet-black border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-beet-accent font-black uppercase tracking-widest outline-none"
-                            >
-                                <option value="">-</option>
-                                {Object.entries(QUESTION_VALUE_LABELS).map(([val, label]) => (
-                                    <option key={val} value={val}>{label}</option>
-                                ))}
-                            </select>
+                                options={[
+                                    { value: '', label: '-' },
+                                    ...Object.entries(QUESTION_VALUE_LABELS).map(([val, label]) => ({ value: val, label: label as string }))
+                                ]}
+                                className="min-w-[140px]"
+                            />
                         </div>
                     ))}
                 </div>

@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type ProposalType } from '@/lib/store';
-import { Avatar, Spinner, ScoreBeetBadge } from '@/components/ui';
+import { Avatar, Spinner, ScoreBeetBadge, CustomSelect } from '@/components/ui';
 import {
     ChevronLeft, Send, Calendar, Clock, MapPin,
     Globe, ShieldCheck, Info, Briefcase,
@@ -321,16 +321,18 @@ function NewProposalContent() {
                                     <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
                                         <div className="flex items-center gap-3">
                                             <label className="text-[10px] font-black text-beet-muted uppercase tracking-widest">Validade da Proposta:</label>
-                                            <select
-                                                className="bg-white/10 border border-white/5 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white outline-none focus:border-beet-blue transition-all"
+                                            <CustomSelect
                                                 value={deadlineDays}
-                                                onChange={(e) => setDeadlineDays(e.target.value)}
-                                            >
-                                                <option value="3">3 dias</option>
-                                                <option value="7">7 dias (Recomendado)</option>
-                                                <option value="14">14 dias</option>
-                                                <option value="30">30 dias</option>
-                                            </select>
+                                                onChange={setDeadlineDays}
+                                                options={[
+                                                    { value: '3', label: '3 dias' },
+                                                    { value: '7', label: '7 dias (Recomendado)' },
+                                                    { value: '14', label: '14 dias' },
+                                                    { value: '30', label: '30 dias' }
+                                                ]}
+                                                accentColor="#0057FF"
+                                                className="min-w-[150px]"
+                                            />
                                         </div>
 
                                         <button

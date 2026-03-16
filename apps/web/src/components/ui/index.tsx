@@ -1,7 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Flame, Heart, Music, Zap, Star, CheckCircle, Coffee, Rocket, Smile, X } from 'lucide-react';
+import { Flame, Heart, Music, Zap, Star, CheckCircle, Coffee, Rocket, Smile, X, ChevronDown } from 'lucide-react';
 
 // ── Loading Spinner ───────────────────────────────────────────
 export function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
@@ -412,6 +412,105 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+}
+
+// ── Custom Select ─────────────────────────────────────────────
+interface CustomSelectProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: { value: string; label: string }[];
+    placeholder?: string;
+    className?: string;
+    style?: React.CSSProperties;
+    accentColor?: string;
+}
+
+export function CustomSelect({ 
+    value, 
+    onChange, 
+    options, 
+    placeholder, 
+    className = '', 
+    style,
+    accentColor = 'var(--color-accent)'
+}: CustomSelectProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const selectedOption = options.find(o => o.value === value);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    return (
+        <div 
+            ref={containerRef}
+            className={`relative ${className}`}
+            style={{ minWidth: 160, ...style }}
+        >
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="beet-input flex w-full items-center justify-between py-2 px-3 text-left transition-all"
+                style={{ 
+                    borderRadius: '8px',
+                    borderColor: isOpen ? accentColor : 'rgba(255,255,255,0.1)'
+                }}
+            >
+                <span className="truncate text-xs font-bold uppercase tracking-tight">
+                    {selectedOption ? selectedOption.label : placeholder}
+                </span>
+                <ChevronDown 
+                    size={14} 
+                    className={`text-beet-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+                    style={{ color: isOpen ? accentColor : undefined }}
+                />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 4, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        transition={{ duration: 0.1 }}
+                        className="absolute left-0 right-0 z-[100] mt-2 max-h-60 overflow-y-auto rounded-xl border border-white/5 bg-beet-card py-1 shadow-2xl custom-scrollbar"
+                        style={{ 
+                            backdropFilter: 'blur(20px)',
+                            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%)'
+                        }}
+                    >
+                        {options.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                    onChange(option.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex w-full items-center px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                                    value === option.value 
+                                        ? 'text-black' 
+                                        : 'text-beet-muted hover:bg-white/5 hover:text-white'
+                                }`}
+                                style={{
+                                    backgroundColor: value === option.value ? accentColor : undefined
+                                }}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
