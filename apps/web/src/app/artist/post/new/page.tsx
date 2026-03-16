@@ -85,10 +85,10 @@ export default function CreatePost() {
     };
 
     const TYPE_CONFIG = {
-        TRACK: { icon: Music, label: 'Faixa/Música', desc: 'Compartilhe uma faixa musical', accept: 'audio/*' },
+        TRACK: { icon: Music, label: 'Música', desc: 'Compartilhe uma faixa musical', accept: 'audio/*' },
         VIDEO: { icon: Video, label: 'Vídeo', desc: 'Compartilhe um videoclipe ou performance', accept: 'video/*' },
         IMAGE: { icon: ImageIcon, label: 'Imagem', desc: 'Compartilhe uma foto ou arte', accept: 'image/*' },
-        LYRIC: { icon: FileText, label: 'Letra/Poesia', desc: 'Compartilhe uma letra ou composição', accept: 'image/*' },
+        LYRIC: { icon: FileText, label: 'Letra', desc: 'Compartilhe uma letra ou composição', accept: 'image/*' },
     };
 
     return (
@@ -97,14 +97,14 @@ export default function CreatePost() {
                 <div className="mb-10 flex items-center gap-4">
                     <button 
                         onClick={() => router.back()} 
-                        className="flex h-10 w-10 items-center justify-center rounded-xl transition-all"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-90"
                         style={{ background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)' }}
                     >
                         <ChevronLeft size={20} className="text-white" />
                     </button>
                     <div>
                         <span className="text-[10px] font-black text-beet-muted uppercase tracking-[0.3em] mb-1 block">Estúdio Criativo</span>
-                        <h1 className="text-3xl md:text-5xl font-display font-black text-white italic uppercase tracking-tighter">
+                        <h1 className="text-3xl md:text-5xl font-display font-black text-white italic uppercase tracking-tighter leading-none">
                             Nova <span className="text-beet-accent">Publicação</span>
                         </h1>
                     </div>
@@ -117,10 +117,10 @@ export default function CreatePost() {
                             <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
                             Tipo de conteúdo
                         </p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                             {(Object.entries(TYPE_CONFIG) as [PostType, typeof TYPE_CONFIG.TRACK][]).map(([t, config]) => (
                                 <button key={t} onClick={() => { setType(t); setFile(null); }}
-                                    className="relative flex flex-col items-center justify-center rounded-2xl border p-5 text-center transition-all duration-300 group overflow-hidden"
+                                    className="relative flex flex-col items-center justify-center rounded-2xl border p-4 md:p-5 text-center transition-all duration-300 group overflow-hidden active:scale-95"
                                     style={{
                                         borderColor: type === t ? 'var(--color-accent)' : 'var(--color-nav-border)',
                                         background: type === t ? 'var(--color-accent-dim)' : 'var(--color-nav-bg)',
@@ -131,10 +131,10 @@ export default function CreatePost() {
                                             <div className="w-2 h-2 rounded-full bg-beet-accent animate-pulse" />
                                         </div>
                                     )}
-                                    <div className={`mb-3 transition-transform duration-300 group-hover:scale-110 ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
-                                        <config.icon size={28} strokeWidth={type === t ? 2.5 : 2} />
+                                    <div className={`mb-2 md:mb-3 transition-transform duration-300 group-hover:scale-110 ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
+                                        <config.icon size={24} md:size={28} strokeWidth={type === t ? 2.5 : 2} />
                                     </div>
-                                    <p className={`text-xs font-black uppercase tracking-widest ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
+                                    <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest truncate w-full ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
                                         {config.label}
                                     </p>
                                 </button>
@@ -146,11 +146,11 @@ export default function CreatePost() {
                     <div>
                         <p className="section-title mb-4 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
-                            {type === 'TRACK' ? 'Arquivo de áudio' : type === 'VIDEO' ? 'Arquivo de vídeo' : 'Mídia da publicação'}
+                            {type === 'TRACK' ? 'Arquivo de áudio' : type === 'VIDEO' ? 'Arquivo de vídeo' : type === 'IMAGE' ? 'Mídia da publicação' : 'Opcional: Imagem/Arte'}
                         </p>
                         <label className="group block cursor-pointer">
                             <input type="file" className="hidden" accept={TYPE_CONFIG[type].accept} onChange={onFileChange} />
-                            <div className="relative rounded-[2rem] border-2 border-dashed p-12 text-center transition-all duration-500 overflow-hidden"
+                            <div className="relative rounded-[2rem] border-2 border-dashed p-8 md:p-12 text-center transition-all duration-500 overflow-hidden"
                                 style={{ 
                                     borderColor: file ? 'var(--color-beet-green)' : 'rgba(255,255,255,0.1)',
                                     background: 'var(--color-nav-bg)',
@@ -159,26 +159,26 @@ export default function CreatePost() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-beet-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 
                                 <div className="relative z-10 flex flex-col items-center">
-                                    <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 transition-all duration-500 scale-100 group-hover:scale-110 ${
+                                    <div className={`mb-4 flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl border-2 transition-all duration-500 scale-100 group-hover:scale-110 ${
                                         file 
                                             ? 'bg-beet-green/20 border-beet-green text-beet-green' 
                                             : 'bg-white/5 border-white/10 text-beet-accent shadow-neon'
                                     }`}>
-                                        {file ? <Check size={32} /> : <Upload size={32} />}
+                                        {file ? <Check size={28} /> : <Upload size={28} />}
                                     </div>
                                     
-                                    <h4 className="text-lg font-black text-white uppercase tracking-tight">
+                                    <h4 className="text-sm md:text-lg font-black text-white uppercase tracking-tight line-clamp-1 px-4">
                                         {file ? file.name : TYPE_CONFIG[type].desc}
                                     </h4>
                                     
-                                    <p className="mt-2 text-xs font-bold text-beet-muted uppercase tracking-widest">
+                                    <p className="mt-2 text-[9px] md:text-xs font-bold text-beet-muted uppercase tracking-widest">
                                         {file ? `${(file.size / (1024 * 1024)).toFixed(2)}MB` : `${type === 'TRACK' ? 'MP3 ou WAV' : type === 'VIDEO' ? 'MP4 ou MOV' : 'JPG ou PNG'} · até 50MB`}
                                     </p>
                                     
-                                    <div className={`mt-6 rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                                    <div className={`mt-6 rounded-xl px-4 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
                                         file 
                                             ? 'bg-white/10 text-white' 
-                                            : 'bg-beet-accent text-black shadow-neon hover:scale-105'
+                                            : 'bg-beet-accent text-black shadow-neon hover:scale-105 active:scale-95'
                                     }`}>
                                         {file ? 'Alterar arquivo' : 'Selecionar arquivo'}
                                     </div>
