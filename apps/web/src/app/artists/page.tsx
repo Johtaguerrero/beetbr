@@ -364,7 +364,7 @@ export default function AllArtistsPage() {
                                 <span className="text-[10px] font-black text-beet-accent uppercase tracking-[0.3em]">Curadoria Beeat</span>
                             </div>
                             <h1 className="text-3xl md:text-5xl font-display font-black text-white italic uppercase tracking-tighter">
-                                Todos os <span className="text-beet-accent">Artistas</span>
+                                <span className="text-beet-accent">Artistas</span>
                             </h1>
                             <p className="text-beet-muted text-sm mt-2 max-w-md">Explore a maior vitrine de talentos musicais do Brasil. Filtre por gênero, score e disponibilidade.</p>
                         </div>

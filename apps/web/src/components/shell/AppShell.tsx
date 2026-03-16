@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import {
     Zap, Trophy, PlusCircle, FileText, User, ShoppingBag,
     Repeat2, FolderOpen, Gem, Settings, LayoutDashboard,
@@ -35,7 +35,7 @@ const TC = 22; // tab icon size
 const ARTIST_NAV = [
     { label: 'Feed', href: '/artist/feed', icon: <Zap size={IC} strokeWidth={2} /> },
     { label: 'Explorar', href: '/rankings', icon: <Search size={IC} strokeWidth={2} /> },
-    { label: 'Todos os Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
+    { label: 'Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
     { label: 'Postar', href: '/artist/post/new', icon: <PlusCircle size={IC} strokeWidth={2} />, highlight: true },
     { collabTabs: true },
     { label: 'Marketplace', href: '/artist/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
@@ -45,7 +45,7 @@ const ARTIST_NAV = [
 
 const INDUSTRY_NAV = [
     { label: 'Dashboard', href: '/industry/dashboard', icon: <LayoutDashboard size={IC} strokeWidth={2} /> },
-    { label: 'Todos os Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
+    { label: 'Artistas', href: '/artists', icon: <Users size={IC} strokeWidth={2} /> },
     { label: 'Ranking', href: '/rankings', icon: <Trophy size={IC} strokeWidth={2} /> },
     { label: 'Descobrir', href: '/industry/discover', icon: <Search size={IC} strokeWidth={2} /> },
     { label: 'Propostas', href: '/industry/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
@@ -689,6 +689,19 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
     const isIndustry = currentUser?.role === 'INDUSTRY';
     const unreadCount = notifications.filter(n => !n.read).length;
 
+    // ── Scroll Hide Logic ───────────────────────────────────────
+    const { scrollY } = useScroll();
+    const [scrollingDown, setScrollingDown] = useState(false);
+
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        const previous = scrollY.getPrevious() || 0;
+        if (latest > previous && latest > 100) {
+            setScrollingDown(true);
+        } else {
+            setScrollingDown(false);
+        }
+    });
+
     useEffect(() => {
         if (theme === 'light') {
             document.documentElement.classList.add('theme-light');
@@ -713,7 +726,10 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
     return (
         <div className={`flex min-h-screen ${isIndustry ? 'theme-industry' : ''}`}>
             {/* Mobile Header */}
-            <header
+            <motion.header
+                initial={false}
+                animate={{ y: scrollingDown ? -100 : 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
                 className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-3 lg:hidden"
                 style={{
                     background: 'var(--color-nav-bg)',
@@ -768,7 +784,7 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
                         <MoreVertical size={18} strokeWidth={2.5} />
                     </button>
                 </div>
-            </header>
+            </motion.header>
 
             {/* Mobile Menu Overlay */}
             <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
@@ -791,7 +807,14 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
                     {children}
                 </motion.div>
             </main>
-            <TabBar postMenuOpen={postMenuOpen} setPostMenuOpen={setPostMenuOpen} />
+            <motion.div
+                initial={false}
+                animate={{ y: scrollingDown ? 100 : 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+            >
+                <TabBar postMenuOpen={postMenuOpen} setPostMenuOpen={setPostMenuOpen} />
+            </motion.div>
             <ToastContainer />
         </div>
     );

@@ -15,15 +15,21 @@ const MEDAL: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
 
 export default function Rankings() {
     useAuthGuard();
-    const { artists } = useStore();
+    const { artists, fetchArtists } = useStore();
     const [loading, setLoading] = useState(true);
     const [genre, setGenre] = useState('');
     const [state, setState] = useState('');
     const [limit, setLimit] = useState<10 | 20 | 50>(10);
 
     useEffect(() => {
-        const t = setTimeout(() => setLoading(false), 600);
-        return () => clearTimeout(t);
+        const load = async () => {
+            setLoading(true);
+            if (artists.length === 0) {
+                await fetchArtists();
+            }
+            setLoading(false);
+        };
+        load();
     }, []);
 
     const getRankings = () => {
