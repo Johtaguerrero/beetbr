@@ -1222,10 +1222,10 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
             return;
         }
 
-        // Horizontal Swipe (Next/Prev)
-        if (offset.x < -100 || velocity.x < -500) {
+        // Horizontal Swipe (Next/Prev) - Increased sensitivity
+        if (offset.x < -40 || velocity.x < -200) {
             onNext();
-        } else if (offset.x > 100 || velocity.x > 500) {
+        } else if (offset.x > 40 || velocity.x > 200) {
             onPrev();
         }
     };
@@ -1327,6 +1327,15 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                         background: '#000'
                     }}
                 >
+                    {/* Background Blur for Story - Fills the screen with post colors */}
+                    <div className="absolute inset-0 z-0 pointer-events-none">
+                        <img 
+                            src={story.mediaUrl} 
+                            className="w-full h-full object-cover blur-[100px] opacity-50 scale-125" 
+                            alt="bg-blur"
+                        />
+                    </div>
+
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={story.id}
@@ -1344,7 +1353,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                                     muted={muted}
                                     playsInline
                                     onLoadedMetadata={handleVideoMetadata}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain', zIndex: 10, position: 'relative' }}
                                     onClick={e => e.stopPropagation()}
                                 />
                             ) : story.mediaType === 'AUDIO' ? (
@@ -1355,7 +1364,7 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                                 </div>
                             ) : (
                                 <img src={story.mediaUrl} alt="Story"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain', zIndex: 10, position: 'relative' }}
                                 />
                             )}
                         </motion.div>
@@ -1460,8 +1469,8 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
     const onDragEnd = (event: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
         const { offset, velocity } = info;
         // Vertical swipe for navigation - Lowered thresholds for higher sensitivity
-        if (offset.y < -50 || velocity.y < -200) handleNext();
-        else if (offset.y > 50 || velocity.y > 200) handlePrev();
+        if (offset.y < -30 || velocity.y < -150) handleNext();
+        else if (offset.y > 30 || velocity.y > 150) handlePrev();
         // Horizontal swipe to close
         else if (offset.x > 100 || velocity.x > 300) onClose();
     };
@@ -1506,7 +1515,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                         loop
                         muted={isMuted}
                         playsInline
-                        className="w-full h-full object-contain md:object-cover"
+                        className="w-full h-full object-contain"
                     />
                 </div>
 
