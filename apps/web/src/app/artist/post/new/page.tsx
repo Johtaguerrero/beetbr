@@ -106,7 +106,7 @@ export default function CreatePost() {
                     <div>
                         <span className="text-[10px] font-black text-beet-muted uppercase tracking-[0.3em] mb-1 block">Estúdio Criativo</span>
                         <h1 className="text-3xl md:text-5xl font-display font-black text-white italic uppercase tracking-tighter leading-none">
-                            Nova <span className="text-beet-accent">Publicação</span>
+                            Nova <span className="text-beet-green">Publicação</span>
                         </h1>
                     </div>
                 </div>
@@ -115,7 +115,7 @@ export default function CreatePost() {
                     {/* Type selector */}
                     <div>
                         <p className="section-title mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-beet-green" />
                             Tipo de conteúdo
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
@@ -129,13 +129,13 @@ export default function CreatePost() {
                                     }}>
                                     {type === t && (
                                         <div className="absolute top-2 right-2">
-                                            <div className="w-2 h-2 rounded-full bg-beet-accent animate-pulse" />
+                                            <div className="w-2 h-2 rounded-full bg-beet-green animate-pulse" />
                                         </div>
                                     )}
-                                    <div className={`mb-2 md:mb-3 transition-transform duration-300 group-hover:scale-110 ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
+                                    <div className={`mb-2 md:mb-3 transition-transform duration-300 group-hover:scale-110 ${type === t ? 'text-beet-green' : 'text-beet-muted'}`}>
                                         <config.icon size={28} strokeWidth={type === t ? 2.5 : 2} className="w-6 h-6 md:w-7 md:h-7" />
                                     </div>
-                                    <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest truncate w-full ${type === t ? 'text-beet-accent' : 'text-beet-muted'}`}>
+                                    <p className={`text-[10px] md:text-xs font-black uppercase tracking-widest truncate w-full ${type === t ? 'text-beet-green' : 'text-beet-muted'}`}>
                                         {config.label}
                                     </p>
                                 </button>
@@ -146,7 +146,7 @@ export default function CreatePost() {
                     {/* Upload zone */}
                     <div>
                         <p className="section-title mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-beet-green" />
                             {type === 'TRACK' ? 'Arquivo de áudio' : type === 'VIDEO' ? 'Arquivo de vídeo' : type === 'IMAGE' ? 'Mídia da publicação' : 'Opcional: Imagem/Arte'}
                         </p>
                         <label className="group block cursor-pointer">
@@ -157,13 +157,13 @@ export default function CreatePost() {
                                     background: 'var(--color-nav-bg)',
                                 }}>
                                 
-                                <div className="absolute inset-0 bg-gradient-to-br from-beet-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-beet-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 
                                 <div className="relative z-10 flex flex-col items-center">
                                     <div className={`mb-4 flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl border-2 transition-all duration-500 scale-100 group-hover:scale-110 ${
                                         file 
                                             ? 'bg-beet-green/20 border-beet-green text-beet-green' 
-                                            : 'bg-white/5 border-white/10 text-beet-accent shadow-neon'
+                                            : 'bg-white/5 border-white/10 text-beet-green shadow-neon'
                                     }`}>
                                         {file ? <Check size={28} /> : <Upload size={28} />}
                                     </div>
@@ -179,7 +179,7 @@ export default function CreatePost() {
                                     <div className={`mt-6 rounded-xl px-4 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
                                         file 
                                             ? 'bg-white/10 text-white' 
-                                            : 'bg-beet-accent text-[#080812] shadow-neon hover:scale-105 active:scale-95'
+                                            : 'bg-beet-green text-[#080812] shadow-neon hover:scale-105 active:scale-95'
                                     }`}>
                                         {file ? 'Alterar arquivo' : 'Selecionar arquivo'}
                                     </div>
@@ -191,7 +191,7 @@ export default function CreatePost() {
                     {/* Text / caption */}
                     <div>
                         <p className="section-title mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-beet-green" />
                             Legenda / Texto
                         </p>
                         <div className="relative">
@@ -207,7 +207,7 @@ export default function CreatePost() {
                     {/* Hashtags */}
                     <div>
                         <p className="section-title mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-beet-accent" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-beet-green" />
                             Hashtags em Alta
                         </p>
                         <div className="mb-4 flex flex-wrap gap-2">
@@ -215,7 +215,7 @@ export default function CreatePost() {
                                 <button key={h} onClick={() => toggleHashtag(h)}
                                     className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                                         selectedHashtags.includes(h) 
-                                            ? 'bg-beet-accent text-[#080812] shadow-neon' 
+                                            ? 'bg-beet-green text-[#080812] shadow-neon' 
                                             : 'bg-white/5 border border-white/5 text-white hover:border-white/20'
                                     }`}>
                                     #{h}
@@ -240,9 +240,9 @@ export default function CreatePost() {
                         {selectedHashtags.length > 0 && (
                             <div className="mt-4 flex flex-wrap gap-2">
                                 {selectedHashtags.map((h) => (
-                                    <span key={h} className="group flex items-center gap-2 rounded-xl border border-beet-accent/30 bg-beet-accent/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-beet-accent">
+                                    <span key={h} className="group flex items-center gap-2 rounded-xl border border-beet-green/30 bg-beet-green/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-beet-green">
                                         #{h}
-                                        <button onClick={() => toggleHashtag(h)} className="text-beet-accent/50 hover:text-beet-red transition-colors">
+                                        <button onClick={() => toggleHashtag(h)} className="text-beet-green/50 hover:text-beet-red transition-colors">
                                             <X size={12} />
                                         </button>
                                     </span>
