@@ -206,6 +206,7 @@ export interface Post {
     comments: number;
     createdAt: string;
     liked?: boolean; // UI state
+    saved?: boolean; // UI state
 }
 
 /** Story (expires in 24h) */

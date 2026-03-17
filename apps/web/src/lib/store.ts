@@ -169,6 +169,7 @@ interface BeetrStore {
     shortlists: Record<string, string[]>;
     artistNotes: Record<string, string>;
     likedPosts: Set<string>;
+    savedPosts: Set<string>;
     followings: string[];
     followingProfiles: ArtistProfile[];
 
@@ -201,6 +202,7 @@ interface BeetrStore {
     updateIndustryScouting: (data: Partial<IndustryProfile>) => Promise<void>;
 
     togglePostLike: (postId: string) => void;
+    toggleSavePost: (postId: string) => void;
     fetchFeed: (page?: number) => Promise<void>;
     fetchStories: () => Promise<void>;
     createPost: (data: { type: Post['type']; text?: string; hashtags?: string[]; file?: File; mediaUrl?: string; publishTarget?: PublishTarget; listingId?: string; collabId?: string }) => Promise<string>;
@@ -293,6 +295,7 @@ export const useStore = create<BeetrStore>()(
             shortlists: { 'Interesse': [], 'Shortlist': [], 'Contratados': [] },
             artistNotes: {},
             likedPosts: new Set(),
+            savedPosts: new Set(),
             toasts: [],
             notifications: [],
             postComments: {},
@@ -481,6 +484,18 @@ export const useStore = create<BeetrStore>()(
                     return { ...p, likes: p.likes + 1, liked: true };
                 });
                 return { posts, likedPosts: liked };
+            }),
+
+            toggleSavePost: (postId) => set((s) => {
+                const saved = new Set(s.savedPosts);
+                const posts = s.posts.map((p) => {
+                    if (p.id !== postId) return p;
+                    const wasSaved = saved.has(postId);
+                    if (wasSaved) { saved.delete(postId); return { ...p, saved: false }; }
+                    saved.add(postId);
+                    return { ...p, saved: true };
+                });
+                return { posts, savedPosts: saved };
             }),
 
             addPostComment: (postId, text) => set((s) => {

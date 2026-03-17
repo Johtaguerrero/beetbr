@@ -7,7 +7,7 @@ import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis, FollowButton } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3, ShoppingBag } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3, ShoppingBag, Play } from 'lucide-react';
 
 const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
     { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
@@ -1443,18 +1443,22 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
    REELS VIEWER MODAL — Immersive vertical video discovery
  ══════════════════════════════════════════════════════════ */
 function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; posts: Post[]; onClose: () => void }) {
-    const { togglePostLike, artistProfile, currentUser } = useStore();
+    const { togglePostLike, toggleSavePost, addPostComment, artistProfile, currentUser } = useStore();
     const [currentIndex, setCurrentIndex] = useState(posts.findIndex(p => p.id === initialPost.id));
     const [liked, setLiked] = useState(false);
+    const [saved, setSaved] = useState(false);
     const [following, setFollowing] = useState(false);
+    const [showComments, setShowComments] = useState(false);
+    const lastScrollTime = useRef(0);
     const post = posts[currentIndex] || initialPost;
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState(false);
 
-    // Sync liked state with post
+    // Sync liked & saved state with post
     useEffect(() => {
         if (post) {
             setLiked(post.liked || false);
+            setSaved(post.saved || false);
         }
     }, [post]);
 
@@ -1475,6 +1479,38 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
         else if (offset.x > 100 || velocity.x > 300) onClose();
     };
 
+    const handleWheel = (e: React.WheelEvent) => {
+        const now = Date.now();
+        if (now - lastScrollTime.current < 800) return; // Debounce scroll
+        
+        if (e.deltaY > 50) {
+            handleNext();
+            lastScrollTime.current = now;
+        } else if (e.deltaY < -50) {
+            handlePrev();
+            lastScrollTime.current = now;
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: `BeeatBR - ${post.artist?.stageName || 'Artista'}`,
+            text: post.text || 'Confira este Reel na BeeatBR!',
+            url: window.location.href
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.error('Share failed:', err);
+            }
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link copiado!");
+        }
+    };
+
     if (!post) return null;
 
     return (
@@ -1489,6 +1525,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                 dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={0.4}
                 onDragEnd={onDragEnd}
+                onWheel={handleWheel}
                 className="relative w-full h-full md:max-w-[480px] bg-black shadow-2xl overflow-hidden md:rounded-2xl"
             >
                 {/* Background Blur for horizontal videos */}
@@ -1593,36 +1630,51 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                                 onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
                                 className="flex flex-col items-center gap-1"
                             >
-                                <div className={`p-3 rounded-full backdrop-blur-md border border-white/10 transition-all ${liked ? 'bg-beet-red border-beet-red shadow-[0_0_20px_rgba(255,0,85,0.4)]' : 'bg-black/40 text-white/80'}`}>
-                                    <Heart size={24} fill={liked ? 'currentColor' : 'none'} strokeWidth={2.5} />
+                                <div className={`p-2.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${liked ? 'bg-beet-red border-beet-red shadow-[0_0_20px_rgba(255,0,85,0.4)] text-white' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
+                                    <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={2.5} />
                                 </div>
                                 <span className="text-[10px] font-bold font-mono text-white/90">{post.likes + (liked && !post.liked ? 1 : 0)}</span>
                             </motion.button>
 
-                            <button className="flex flex-col items-center gap-1">
-                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
-                                    <MessageCircle size={24} strokeWidth={2.5} />
+                            <button className="flex flex-col items-center gap-1" onClick={() => setShowComments(true)}>
+                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
+                                    <MessageCircle size={20} strokeWidth={2.5} />
                                 </div>
                                 <span className="text-[10px] font-bold font-mono text-white/90">{post.comments}</span>
                             </button>
 
-                            <button className="flex flex-col items-center gap-1" onClick={() => alert("Link copiado!")}>
-                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
-                                    <Share2 size={24} strokeWidth={2.5} />
+                            <button className="flex flex-col items-center gap-1" onClick={handleShare}>
+                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
+                                    <Share2 size={20} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[10px] font-bold font-mono text-white/90 italic">SHARE</span>
+                                <span className="text-[8px] font-black font-sans text-white/70 tracking-tighter uppercase whitespace-nowrap">COMPARTILHAR</span>
                             </button>
 
-                            <button className="flex flex-col items-center gap-1">
-                                <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80">
-                                    <Bookmark size={24} strokeWidth={2.5} />
+                            <motion.button 
+                                whileTap={{ scale: 0.8 }}
+                                className="flex flex-col items-center gap-1" 
+                                onClick={() => { setSaved(!saved); toggleSavePost(post.id); }}
+                            >
+                                <div className={`p-2.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${saved ? 'bg-beet-green border-beet-green shadow-[0_0_15px_rgba(0,255,102,0.4)] text-black' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
+                                    <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[10px] font-bold font-mono text-white/90 italic">SAVE</span>
-                            </button>
+                                <span className="text-[8px] font-black font-sans text-white/70 tracking-tighter uppercase">SALVAR</span>
+                            </motion.button>
+
+                            {/* Views Count */}
+                            <div className="flex flex-col items-center gap-1">
+                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60">
+                                    <Play size={20} fill="currentColor" />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[10px] font-bold font-mono text-white/90">{post.plays || 0}</span>
+                                    <span className="text-[7px] font-black text-white/40 uppercase tracking-tighter">Visualizações</span>
+                                </div>
+                            </div>
 
                             <div className="flex flex-col items-center gap-1 mt-2">
-                                <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="md" />
-                                <span className="text-[8px] font-black text-neon/60 tracking-widest uppercase">SCORE</span>
+                                <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
+                                <span className="text-[8px] font-black text-neon/60 tracking-widest uppercase">PONTUAÇÃO</span>
                             </div>
                         </div>
                     </div>
@@ -1634,6 +1686,69 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                         <div key={p.id} className={`w-1 h-8 rounded-full transition-all ${p.id === post.id ? 'bg-beet-green h-12' : 'bg-white/20'}`} />
                     ))}
                 </div>
+
+                {/* Comments Overlay */}
+                <AnimatePresence>
+                    {showComments && (
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            className="absolute inset-x-0 bottom-0 z-[100] h-[70%] bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10 p-6 flex flex-col"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-bold text-white uppercase tracking-widest">Comentários</h3>
+                                <button onClick={() => setShowComments(false)} className="p-2 text-white/50 hover:text-white">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
+                                {(useStore.getState().postComments[post.id] || []).map((c, i) => (
+                                    <div key={i} className="flex gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-beet-green/20 flex items-center justify-center text-[10px] font-bold text-beet-green">
+                                            {c.authorName.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-white">{c.authorName}</p>
+                                            <p className="text-xs text-white/80">{c.text}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!useStore.getState().postComments[post.id] || useStore.getState().postComments[post.id].length === 0) && (
+                                    <div className="h-full flex flex-col items-center justify-center text-white/30 gap-3">
+                                        <MessageCircle size={40} />
+                                        <p className="text-sm">Seja o primeiro a comentar!</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-auto pt-4 border-t border-white/5">
+                                <form 
+                                    className="flex gap-2"
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const input = (e.target as any).comment;
+                                        if (input.value.trim()) {
+                                            addPostComment(post.id, input.value);
+                                            input.value = '';
+                                        }
+                                    }}
+                                >
+                                    <input 
+                                        name="comment"
+                                        type="text" 
+                                        placeholder="Deixe uma mensagem..." 
+                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-beet-green transition-all"
+                                    />
+                                    <button type="submit" className="bg-beet-green text-black px-4 py-2 rounded-xl font-bold text-sm">
+                                        Enviar
+                                    </button>
+                                </form>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
         </motion.div>
     );
