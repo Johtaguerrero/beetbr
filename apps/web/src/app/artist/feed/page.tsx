@@ -1493,10 +1493,12 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
     };
 
     const handleShare = async () => {
+        const url = window.location.href;
+        const text = `${post.text || ''}\n\nConfira este Reel na BeeatBR!`;
         const shareData = {
             title: `BeeatBR - ${post.artist?.stageName || 'Artista'}`,
-            text: post.text || 'Confira este Reel na BeeatBR!',
-            url: window.location.href
+            text: text,
+            url: url
         };
 
         if (navigator.share) {
@@ -1506,8 +1508,9 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                 console.error('Share failed:', err);
             }
         } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copiado!");
+            // Fallback to WhatsApp Web
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`;
+            window.open(waUrl, '_blank');
         }
     };
 
@@ -1526,7 +1529,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                 dragElastic={0.4}
                 onDragEnd={onDragEnd}
                 onWheel={handleWheel}
-                className="relative w-full h-full md:max-w-[480px] bg-black shadow-2xl overflow-hidden md:rounded-2xl"
+                className="relative w-full h-full md:max-w-[420px] bg-black shadow-2xl overflow-hidden md:rounded-2xl"
             >
                 {/* Background Blur for horizontal videos */}
                 <div className="absolute inset-0 z-0">
@@ -1624,30 +1627,29 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                         </div>
 
                         {/* Right Side: Quick Actions */}
-                        <div className="flex flex-col items-center gap-6 pointer-events-auto">
+                        <div className="flex flex-col items-center gap-5 pointer-events-auto">
                             <motion.button 
                                 whileTap={{ scale: 0.8 }}
                                 onClick={() => { setLiked(!liked); togglePostLike(post.id); }}
                                 className="flex flex-col items-center gap-1"
                             >
-                                <div className={`p-2.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${liked ? 'bg-beet-red border-beet-red shadow-[0_0_20px_rgba(255,0,85,0.4)] text-white' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
-                                    <Heart size={20} fill={liked ? 'currentColor' : 'none'} strokeWidth={2.5} />
+                                <div className={`p-2 rounded-full backdrop-blur-md border border-white/10 transition-all ${liked ? 'bg-beet-red border-beet-red shadow-[0_0_15px_rgba(255,0,85,0.4)] text-white' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
+                                    <Heart size={18} fill={liked ? 'currentColor' : 'none'} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[10px] font-bold font-mono text-white/90">{post.likes + (liked && !post.liked ? 1 : 0)}</span>
+                                <span className="text-[9px] font-bold font-mono text-white/90">{post.likes + (liked && !post.liked ? 1 : 0)}</span>
                             </motion.button>
 
                             <button className="flex flex-col items-center gap-1" onClick={() => setShowComments(true)}>
-                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
-                                    <MessageCircle size={20} strokeWidth={2.5} />
+                                <div className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
+                                    <MessageCircle size={18} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[10px] font-bold font-mono text-white/90">{post.comments}</span>
+                                <span className="text-[9px] font-bold font-mono text-white/90">{post.comments}</span>
                             </button>
 
                             <button className="flex flex-col items-center gap-1" onClick={handleShare}>
-                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
-                                    <Share2 size={20} strokeWidth={2.5} />
+                                <div className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-beet-green transition-all hover:bg-beet-green/20">
+                                    <Share2 size={18} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[8px] font-black font-sans text-white/70 tracking-tighter uppercase whitespace-nowrap">COMPARTILHAR</span>
                             </button>
 
                             <motion.button 
@@ -1655,26 +1657,21 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                                 className="flex flex-col items-center gap-1" 
                                 onClick={() => { setSaved(!saved); toggleSavePost(post.id); }}
                             >
-                                <div className={`p-2.5 rounded-full backdrop-blur-md border border-white/10 transition-all ${saved ? 'bg-beet-green border-beet-green shadow-[0_0_15px_rgba(0,255,102,0.4)] text-black' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
-                                    <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} strokeWidth={2.5} />
+                                <div className={`p-2 rounded-full backdrop-blur-md border border-white/10 transition-all ${saved ? 'bg-beet-green border-beet-green shadow-[0_0_10px_rgba(0,255,102,0.4)] text-black' : 'bg-black/40 text-beet-green hover:bg-beet-green/20'}`}>
+                                    <Bookmark size={18} fill={saved ? 'currentColor' : 'none'} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[8px] font-black font-sans text-white/70 tracking-tighter uppercase">SALVAR</span>
                             </motion.button>
 
                             {/* Views Count */}
                             <div className="flex flex-col items-center gap-1">
-                                <div className="p-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60">
-                                    <Play size={20} fill="currentColor" />
+                                <div className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60">
+                                    <Play size={18} fill="currentColor" />
                                 </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-[10px] font-bold font-mono text-white/90">{post.plays || 0}</span>
-                                    <span className="text-[7px] font-black text-white/40 uppercase tracking-tighter">Visualizações</span>
-                                </div>
+                                <span className="text-[9px] font-bold font-mono text-white/90">{post.plays || 0}</span>
                             </div>
 
-                            <div className="flex flex-col items-center gap-1 mt-2">
+                            <div className="flex flex-col items-center gap-1 mt-1 scale-90 origin-bottom">
                                 <ScoreBeetBadge score={post.artist?.scoreBeet || 0} size="sm" />
-                                <span className="text-[8px] font-black text-neon/60 tracking-widest uppercase">PONTUAÇÃO</span>
                             </div>
                         </div>
                     </div>
