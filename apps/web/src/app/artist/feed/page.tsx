@@ -7,7 +7,7 @@ import { useAuthGuard } from '@/components/shell/AppShell';
 import { useStore, type Post, type Story, type PublishTarget } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Avatar, ScoreBeetBadge, Skeleton, EmptyState, TrackPlayer, CustomEmojiPicker, RenderTextWithEmojis, FollowButton } from '@/components/ui';
-import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3, ShoppingBag, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Zap, MoreHorizontal, MoreVertical, Plus, UserPlus, PenLine, Image, Upload, X, Music, Film, Camera, FileText, VolumeX, Volume2, Pin, Archive, Trash2, Eye, Flame, Bookmark, Edit3, ShoppingBag, Play, ExternalLink, Video } from 'lucide-react';
 
 const PUBLISH_TARGETS: { key: PublishTarget; label: string; icon: string; desc: string }[] = [
     { key: 'FEED', label: 'Feed', icon: '📡', desc: 'Aparece no feed com boost 48h' },
@@ -45,6 +45,7 @@ function InlineComposer() {
     const [postType, setPostType] = useState<string>('IMAGE');
     const [publishTarget, setPublishTarget] = useState<PublishTarget>('FEED');
     const [publishing, setPublishing] = useState(false);
+    const [ctaUrl, setCtaUrl] = useState('');
 
     const selectedType = POST_TYPES.find(t => t.key === postType) || POST_TYPES[0];
 
@@ -68,8 +69,9 @@ function InlineComposer() {
         if (!text.trim() && !file) { addToast({ message: 'Adicione texto ou arquivo!', type: 'error' }); return; }
         setPublishing(true);
         try {
-            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined, publishTarget });
+            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined, publishTarget, ctaUrl: ctaUrl.trim() || undefined } as any);
             setText('');
+            setCtaUrl('');
             clearFile();
             setExpanded(false);
         } catch (e) { /* toast handled by store */ }
@@ -166,6 +168,25 @@ function InlineComposer() {
                         ))}
                     </div>
 
+                    {/* CTA URL (optional) */}
+                    <div style={{ marginBottom: 16 }}>
+                        <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', marginBottom: 8, letterSpacing: '0.12em' }}>LINK DO BOTÃO "SAIBA MAIS" (OPCIONAL)</p>
+                        <input
+                            type="url"
+                            value={ctaUrl}
+                            onChange={e => setCtaUrl(e.target.value)}
+                            placeholder="https://meusite.com.br ou link do produto"
+                            style={{
+                                width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--color-nav-border)',
+                                borderRadius: '4px', padding: '10px 14px', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                                outline: 'none'
+                            }}
+                        />
+                        {ctaUrl.trim() && (
+                            <p style={{ marginTop: 4, fontSize: 9, color: 'var(--color-accent)', fontFamily: 'Space Mono, monospace' }}>✓ Botão "SAIBA MAIS" aparecerá no Story/Reels</p>
+                        )}
+                    </div>
+
                     {/* Publish target */}
                     <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', marginBottom: 8, letterSpacing: '0.12em' }}>ONDE PUBLICAR?</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 20 }}>
@@ -222,23 +243,33 @@ function StoryBubble({ story, isAdd, onSelect }: { story?: Story; isAdd?: boolea
 
     /* ── ADD button ── */
     if (isAdd) return (
-        <label className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer select-none">
-            <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFile} />
-            {/* outer ring dashed */}
-            <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                border: '2px dashed var(--color-nav-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'var(--color-glass-btn)',
-                transition: 'all .2s',
-            }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-glass-btn-hover)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-nav-border)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-glass-btn)'; }}
-            >
-                <Plus size={22} strokeWidth={2} style={{ color: 'var(--color-muted)' }} />
-            </div>
+        <div className="flex flex-col items-center gap-1 flex-shrink-0 select-none">
+            {/* Gallery/File picker */}
+            <label className="cursor-pointer">
+                <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFile} />
+                <div style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    border: '2px dashed var(--color-nav-border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--color-glass-btn)',
+                    transition: 'all .2s',
+                }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-glass-btn-hover)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-nav-border)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-glass-btn)'; }}
+                >
+                    <Plus size={22} strokeWidth={2} style={{ color: 'var(--color-muted)' }} />
+                </div>
+            </label>
+            {/* Camera shortcut for mobile */}
+            <label className="cursor-pointer" title="Gravar vídeo com câmera">
+                <input type="file" className="hidden" accept="video/*" capture="user" onChange={handleFile} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px 6px', borderRadius: 4, background: 'var(--color-glass-btn)', border: '1px solid var(--color-nav-border)', cursor: 'pointer' }}>
+                    <Video size={11} style={{ color: 'var(--color-accent)', marginRight: 3 }} />
+                    <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 700, color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CAM</span>
+                </div>
+            </label>
             <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--color-muted)', textTransform: 'uppercase' }}>STORY</span>
-        </label>
+        </div>
     );
 
     if (!story) return null;
@@ -1380,58 +1411,83 @@ function StoryViewerModal({ story, stories, storyIndex, onClose, onNext, onPrev 
                     position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100,
                     background: 'linear-gradient(transparent, rgba(0,0,0,0.9))',
                     padding: '60px 20px 30px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                    {/* Reply Input */}
-                    <div style={{ flex: 1, marginRight: 15 }}>
-                        <input 
+                    {/* Saiba Mais CTA — only shown when story has a ctaUrl */}
+                    {(story as any).ctaUrl && (
+                        <a
+                            href={(story as any).ctaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             onClick={e => { e.stopPropagation(); setPaused(true); }}
-                            onBlur={() => setPaused(false)}
-                            placeholder="Enviar mensagem..."
                             style={{
-                                width: '100%', background: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.2)', borderRadius: '25px',
-                                padding: '10px 18px', color: 'white',
-                                fontFamily: 'Inter, sans-serif', fontSize: '13px',
-                                outline: 'none', backdropFilter: 'blur(10px)'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
-                        {/* Like */}
-                        <motion.button whileTap={{ scale: 0.7 }}
-                            onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-                            style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                color: liked ? '#FF0055' : 'white',
-                            }}>
-                            <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2.5}
-                                style={{ filter: liked ? 'drop-shadow(0 0 10px rgba(255,0,85,0.6))' : 'none' }} />
-                        </motion.button>
-
-                        {/* Share */}
-                        <motion.button whileTap={{ scale: 0.7 }}
-                            onClick={(e) => { e.stopPropagation(); alert('Link do story copiado!'); }}
-                            style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                width: '100%', marginBottom: 14,
+                                background: 'linear-gradient(135deg, var(--color-accent), #00E5FF)',
+                                border: 'none', borderRadius: '30px',
+                                padding: '13px 24px',
+                                color: '#000', fontFamily: 'Space Mono, monospace',
+                                fontSize: '12px', fontWeight: 900,
+                                letterSpacing: '0.12em', textDecoration: 'none',
+                                boxShadow: '0 0 20px rgba(0,255,136,0.4)',
+                                cursor: 'pointer', textTransform: 'uppercase',
                             }}
                         >
-                            <Share2 size={24} strokeWidth={2.5} />
-                        </motion.button>
+                            <ExternalLink size={14} /> SAIBA MAIS
+                        </a>
+                    )}
 
-                        {/* Zap/Fire */}
-                        <motion.button whileTap={{ scale: 0.7 }}
-                            onClick={(e) => { e.stopPropagation(); alert('🔥 Boost enviado!'); }}
-                            style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                color: 'var(--color-accent)',
-                            }}>
-                            <Zap size={24} fill="var(--color-accent)" strokeWidth={0} />
-                        </motion.button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        {/* Reply Input */}
+                        <div style={{ flex: 1, marginRight: 15 }}>
+                            <input 
+                                onClick={e => { e.stopPropagation(); setPaused(true); }}
+                                onBlur={() => setPaused(false)}
+                                placeholder="Enviar mensagem..."
+                                style={{
+                                    width: '100%', background: 'rgba(255,255,255,0.1)',
+                                    border: '1px solid rgba(255,255,255,0.2)', borderRadius: '25px',
+                                    padding: '10px 18px', color: 'white',
+                                    fontFamily: 'Inter, sans-serif', fontSize: '13px',
+                                    outline: 'none', backdropFilter: 'blur(10px)'
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
+                            {/* Like */}
+                            <motion.button whileTap={{ scale: 0.7 }}
+                                onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: liked ? '#FF0055' : 'white',
+                                }}>
+                                <Heart size={26} fill={liked ? '#FF0055' : 'none'} strokeWidth={2.5}
+                                    style={{ filter: liked ? 'drop-shadow(0 0 10px rgba(255,0,85,0.6))' : 'none' }} />
+                            </motion.button>
+
+                            {/* Share */}
+                            <motion.button whileTap={{ scale: 0.7 }}
+                                onClick={(e) => { e.stopPropagation(); alert('Link do story copiado!'); }}
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    background: 'none', border: 'none', cursor: 'pointer', color: 'white',
+                                }}
+                            >
+                                <Share2 size={24} strokeWidth={2.5} />
+                            </motion.button>
+
+                            {/* Zap/Fire */}
+                            <motion.button whileTap={{ scale: 0.7 }}
+                                onClick={(e) => { e.stopPropagation(); alert('🔥 Boost enviado!'); }}
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--color-accent)',
+                                }}>
+                                <Zap size={24} fill="var(--color-accent)" strokeWidth={0} />
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
             </motion.div>
@@ -1611,6 +1667,19 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                                 <Link href={`/artist/profile/${post.artistId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/20 transition-all">
                                     <UserPlus size={14} /> Ver Perfil
                                 </Link>
+                                
+                                {/* Saiba Mais CTA — shown when ad has a CTA URL */}
+                                {(post as any).ctaUrl && (
+                                    <a
+                                        href={(post as any).ctaUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-fit flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black text-black uppercase tracking-widest"
+                                        style={{ background: 'linear-gradient(135deg, var(--color-accent), #00E5FF)', boxShadow: '0 0 16px rgba(0,255,136,0.4)' }}
+                                    >
+                                        <ExternalLink size={13} /> SAIBA MAIS
+                                    </a>
+                                )}
                                 
                                 {post.type === 'MARKETPLACE' && (
                                     <Link href={`/artist/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-red text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-red/20">

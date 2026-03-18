@@ -540,13 +540,15 @@ export const useStore = create<BeetrStore>()(
                         mediaUrl, 
                         artistId: artistProfile.id, 
                         listingId: data.listingId, 
-                        collabId: data.collabId 
+                        collabId: data.collabId,
+                        ctaUrl: data.ctaUrl || undefined,
                     });
 
                     const BOOST_MS = 48 * 60 * 60 * 1000;
                     const now = new Date();
                     const enrichedPost: Post = {
                         ...res.data,
+                        ctaUrl: data.ctaUrl || res.data?.ctaUrl,
                         status: publishTarget === 'PROFILE_ONLY' ? 'PUBLISHED' : 'BOOSTED_48H',
                         publishTarget,
                         visibleInFeed: publishTarget !== 'PROFILE_ONLY' && publishTarget !== 'STORY',

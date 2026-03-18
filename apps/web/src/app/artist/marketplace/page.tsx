@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,10 +95,14 @@ const FEATURED_SECTIONS = [
 
 export default function MarketplaceHome() {
     useAuthGuard();
-    const { listings, toggleSaveListing, savedListings } = useStore();
+    const { listings, toggleSaveListing, savedListings, fetchListings } = useStore();
     const [search, setSearch] = useState('');
     const [selectedCat, setSelectedCat] = useState<string>('');
     const router = useRouter();
+
+    useEffect(() => {
+        fetchListings();
+    }, []);
 
     const active = listings.filter((l) => (l.status as string).toUpperCase() === 'ACTIVE');
 
