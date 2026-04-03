@@ -69,7 +69,14 @@ function InlineComposer() {
         if (!text.trim() && !file) { addToast({ message: 'Adicione texto ou arquivo!', type: 'error' }); return; }
         setPublishing(true);
         try {
-            await createPost({ type: postType as any, text, hashtags: [], file: file || undefined, publishTarget, ctaUrl: ctaUrl.trim() || undefined } as any);
+            await createPost({ 
+                type: postType as any, 
+                text, 
+                hashtags: [], 
+                file: file || undefined, 
+                publishTarget, 
+                ctaUrl: ctaUrl.trim() || undefined 
+            });
             setText('');
             setCtaUrl('');
             clearFile();
