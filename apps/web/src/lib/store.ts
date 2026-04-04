@@ -175,6 +175,7 @@ interface BeetrStore {
 
     listings: Listing[];
     savedListings: string[];
+    savedCollabs: string[];
     myListings: Listing[];
 
     collabPosts: CollabPost[];
@@ -247,6 +248,7 @@ interface BeetrStore {
     acceptInterest: (interestId: string) => void;
     rejectInterest: (interestId: string) => void;
     updateCollabStatus: (collabId: string, status: CollabPostStatus) => void;
+    toggleSaveCollab: (collabId: string) => void;
 
     // Unified Chat Actions
     fetchChatThreads: () => Promise<void>;
@@ -303,6 +305,7 @@ export const useStore = create<BeetrStore>()(
             postComments: {},
             listings: MOCK_LISTINGS,
             savedListings: [],
+            savedCollabs: [],
             followings: [],
             followingProfiles: [],
             myListings: [],
@@ -1128,6 +1131,18 @@ export const useStore = create<BeetrStore>()(
                 setTimeout(() => get().removeToast(id), 4000);
             },
 
+            toggleSaveCollab: (collabId: string) => {
+                const { savedCollabs } = get();
+                const isSaved = savedCollabs.includes(collabId);
+                if (isSaved) {
+                    set({ savedCollabs: savedCollabs.filter(id => id !== collabId) });
+                    get().addToast({ message: 'Collab removida dos salvos', type: 'info' });
+                } else {
+                    set({ savedCollabs: [...savedCollabs, collabId] });
+                    get().addToast({ message: 'Collab salva com sucesso! ⭐', type: 'success' });
+                }
+            },
+
             removeToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 
             addNotification: (notif) => {
@@ -1150,6 +1165,7 @@ export const useStore = create<BeetrStore>()(
                 proposals: s.proposals,
                 posts: s.posts,
                 savedListings: s.savedListings,
+                savedCollabs: s.savedCollabs,
                 myListings: s.myListings,
                 collabPosts: s.collabPosts,
                 notifications: s.notifications,

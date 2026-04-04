@@ -78,7 +78,7 @@ function ListingCard({ listing, saved, onSave }: { listing: Listing; saved: bool
                             <p className="price-text" style={{ fontSize: '16px', color: 'var(--color-accent)' }}>SOB CONSULTA</p>
                         )}
                     </div>
-                    <Link href={`/artist/marketplace/listing/${listing.id}`} className="btn-accent px-3 py-1 text-[9px] font-bold">VER ANÚNCIO</Link>
+                    <Link href={`/artist/marketplace/listing/${listing.id}`} className="btn-accent px-3 py-1 text-[9px] font-bold">SAIBA MAIS</Link>
                 </div>
             </Link>
         </motion.div>

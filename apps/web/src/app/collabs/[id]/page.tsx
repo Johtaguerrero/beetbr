@@ -27,7 +27,7 @@ import Link from 'next/link';
 export default function CollabDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { collabPosts, currentUser, expressInterest, collabInterests, fetchCollabPostById } = useStore();
+    const { collabPosts, currentUser, expressInterest, collabInterests, fetchCollabPostById, savedCollabs, toggleSaveCollab, addToast } = useStore();
     const [loading, setLoading] = React.useState(!collabPosts.find((p: CollabPost) => p.id === params.id));
 
     const collab = collabPosts.find((p: CollabPost) => p.id === params.id);
@@ -115,7 +115,11 @@ export default function CollabDetailPage() {
                             </div>
                             <div className="flex items-center gap-2 text-white/50 text-sm">
                                 <Calendar size={18} className="text-beet-green" />
-                                <span>{collab.deadline ? `Expira em: ${new Date(collab.deadline).toLocaleDateString('pt-BR')}` : 'Sem prazo definido'}</span>
+                                <span>
+                                    {collab.deadline && !isNaN(new Date(collab.deadline).getTime()) 
+                                        ? `Expira em: ${new Date(collab.deadline).toLocaleDateString('pt-BR')}` 
+                                        : 'Sem prazo definido'}
+                                </span>
                             </div>
                         </div>
 
@@ -201,13 +205,50 @@ export default function CollabDetailPage() {
                                 )}
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
-                                        <Heart size={18} className="text-white/40" /> Salvar
+                                    <button 
+                                        onClick={() => toggleSaveCollab(collab.id)}
+                                        className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                                    >
+                                        <Heart 
+                                            size={18} 
+                                            className={savedCollabs?.includes(collab.id) ? "text-beet-red fill-beet-red" : "text-white/40"} 
+                                        /> 
+                                        {savedCollabs?.includes(collab.id) ? 'Salvo' : 'Salvar'}
                                     </button>
-                                    <button className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
+                                    <button 
+                                        onClick={() => {
+                                            if (navigator.share) {
+                                                navigator.share({
+                                                    title: collab.title,
+                                                    text: collab.description,
+                                                    url: window.location.href
+                                                }).catch(() => {});
+                                            } else {
+                                                navigator.clipboard.writeText(window.location.href);
+                                                addToast({ message: 'Link copiado!', type: 'success' });
+                                            }
+                                        }}
+                                        className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                                    >
                                         <Share2 size={18} className="text-white/40" /> Partilhar
                                     </button>
                                 </div>
+                                
+                                {!isAuthor && (
+                                    <button
+                                        onClick={() => {
+                                            // Redireciona para o chat ou abre o fluxo de interesse
+                                            if (!hasExpressedInterest) {
+                                                expressInterest(collab.id, 'Olá! Gostaria de conversar sobre sua collab: ' + collab.title);
+                                            } else {
+                                                router.push('/artist/deals'); // Fallback para lista de propostas
+                                            }
+                                        }}
+                                        className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+                                    >
+                                        <MessageSquare size={18} className="text-beet-green" /> Contato via Chat
+                                    </button>
+                                )}
                             </div>
 
                             <div className="mt-8 p-4 bg-beet-dark/50 border border-white/5 rounded-xl space-y-4">
