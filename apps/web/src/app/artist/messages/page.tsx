@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,7 +14,7 @@ import { AppShell } from '@/components/shell/AppShell';
 import { Avatar, Spinner, StatusBadge, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
 import { api } from '@/lib/api';
 
-export default function UnifiedMessagesPage() {
+function MessagesContent() {
     const searchParams = useSearchParams();
     const threadIdFromUrl = searchParams.get('id');
     const { 
@@ -444,6 +444,14 @@ export default function UnifiedMessagesPage() {
 
             </div>
         </AppShell>
+    );
+}
+
+export default function UnifiedMessagesPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-beet-black"><div className="h-8 w-8 animate-spin rounded-full border-2 border-beet-green border-t-transparent" /></div>}>
+            <MessagesContent />
+        </Suspense>
     );
 }
 
