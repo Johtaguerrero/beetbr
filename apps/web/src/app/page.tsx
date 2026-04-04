@@ -29,11 +29,11 @@ function FloatingCard() {
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, var(--color-accent), transparent)' }} />
 
             <div className="flex items-center gap-3 mb-4">
-                <Avatar name="MC Vibrante" size="md" />
+                <Avatar name="Artista Exemplo" size="md" />
                 <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white text-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>MC Vibrante</p>
+                    <p className="font-bold text-white text-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Seu Nome Aqui</p>
                     <div className="flex gap-1 mt-1">
-                        {['#FUNK', '#TRAP'].map(g => (
+                        {['#GENERO', '#ESTILO'].map(g => (
                             <span key={g} style={{
                                 fontFamily: 'Space Mono, monospace',
                                 fontSize: '8px', fontWeight: 700, letterSpacing: '0.1em',
@@ -45,7 +45,7 @@ function FloatingCard() {
                         ))}
                     </div>
                 </div>
-                <ScoreBeetBadge score={94} />
+                <ScoreBeetBadge score={99} />
             </div>
 
             {/* Waveform */}
@@ -63,10 +63,10 @@ function FloatingCard() {
 
             <div className="flex items-center justify-between">
                 <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'var(--color-muted)', letterSpacing: '0.06em' }}>
-                    2.1M PLAYS
+                    -- PLAYS
                 </span>
                 <span style={{ fontFamily: 'Space Mono, monospace', fontSize: '9px', color: 'var(--color-accent)', letterSpacing: '0.06em' }}>
-                    +4.2% ↑
+                    +0.0% ↑
                 </span>
             </div>
         </motion.div>

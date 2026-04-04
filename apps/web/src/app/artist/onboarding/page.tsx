@@ -63,7 +63,7 @@ export default function ArtistOnboarding() {
                             </div>
                             <div>
                                 <label className="section-title mb-2 block">Nome artístico *</label>
-                                <input className="beet-input" placeholder="Ex: MC Vibrante" value={stageName} onChange={(e) => setStageName(e.target.value)} />
+                                <input className="beet-input" placeholder="Ex: Seu Nome Artístico" value={stageName} onChange={(e) => setStageName(e.target.value)} />
                             </div>
                             <div>
                                 <label className="section-title mb-2 block">Bio</label>

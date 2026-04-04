@@ -309,12 +309,16 @@ export default function ArtistProfilePage() {
                                     <div className="pt-4 flex items-center gap-6">
                                         <div>
                                             <p className="text-[10px] text-beet-muted uppercase font-black mb-1">Status Atual</p>
-                                            <p className="text-lg text-white font-black uppercase tracking-tighter">{(artist.scoreBeet || 0) > 80 ? '👑 Elite' : (artist.scoreBeet || 0) > 50 ? '🥈 Pro' : '🥉 Starter'}</p>
+                                            <p className="text-lg text-white font-black uppercase tracking-tighter">
+                                                {artist.scoreBeet ? (artist.scoreBeet > 80 ? '👑 Elite' : artist.scoreBeet > 50 ? '🥈 Pro' : '🥉 Starter') : '--'}
+                                            </p>
                                         </div>
                                         <div className="h-10 w-px bg-white/10" />
                                         <div>
                                             <p className="text-[10px] text-beet-muted uppercase font-black mb-1">Posição Nacional</p>
-                                            <p className="text-lg text-beet-accent font-black uppercase tracking-tighter">#{artist.ranking || '1.242'}º</p>
+                                            <p className="text-lg text-beet-accent font-black uppercase tracking-tighter">
+                                                {artist.ranking ? `#${artist.ranking}º` : '--'}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -338,9 +342,9 @@ export default function ArtistProfilePage() {
                         {/* Métricas Detalhadas */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {[
-                                { label: 'Engajamento', value: artist.metrics?.engagement || '12.4%', sub: '+2.1% esta semana', icon: '🔥', color: 'text-beet-accent' },
-                                { label: 'Viralidade', value: artist.metrics?.viralIndex || 'Alta', sub: 'Música 3 em alta no feed', icon: '🚀', color: 'text-beet-blue' },
-                                { label: 'Reach Total', value: (artist.metrics?.reach || '154k'), sub: '42k via Marketplace', icon: '🌎', color: 'text-white' }
+                                { label: 'Engajamento', value: artist.metrics?.engagement || '--', sub: artist.metrics?.engagement ? '+2.1% esta semana' : 'Sem dados recentes', icon: '🔥', color: 'text-beet-accent' },
+                                { label: 'Viralidade', value: artist.metrics?.viralIndex || '--', sub: artist.metrics?.viralIndex ? 'Música em alta' : 'Sem dados', icon: '🚀', color: 'text-beet-blue' },
+                                { label: 'Reach Total', value: artist.metrics?.reach || '--', sub: artist.metrics?.reach ? 'Via Marketplace' : 'Sem dados', icon: '🌎', color: 'text-white' }
                             ].map((card, i) => (
                                 <div key={i} className="beet-card p-6 flex flex-col items-center text-center group hover:scale-[1.02] transition-all cursor-default">
                                     <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center text-2xl mb-4 group-hover:bg-white/10 transition-colors">
