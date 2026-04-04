@@ -1113,7 +1113,8 @@ export const useStore = create<BeetrStore>()(
                     }));
                     return newThread.messages || [];
                 } catch (error: any) {
-                    get().addToast({ message: 'Erro ao carregar mensagens', type: 'error' });
+                    // Silent fail on polling — avoid flooding the UI with error toasts
+                    console.error('Failed to fetch thread messages:', error?.message || error);
                     return [];
                 }
             },

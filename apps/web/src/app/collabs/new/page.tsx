@@ -144,6 +144,7 @@ function NewCollabPageContent() {
       addToast({ message: 'Preencha os campos obrigatórios', type: 'error' });
       return;
     }
+    if (loading) return; // prevent double submission
 
     setLoading(true);
     try {
@@ -151,15 +152,14 @@ function NewCollabPageContent() {
         ...formData,
         targetArtistId: formData.targetArtistId || undefined
       };
-      const res = await createCollabPost(payload as any);
-      if (res) {
-        addToast({ message: 'Collab publicada!', type: 'success' });
+      const collabId = await createCollabPost(payload as any);
+      if (collabId) {
+        // Toast already shown by store
         router.push('/collabs');
-      } else {
-        addToast({ message: 'Erro ao publicar (Verifique os campos)', type: 'error' });
       }
-    } catch (error: any) {
-      addToast({ message: error.message || 'Erro ao publicar collab', type: 'error' });
+      // Error toast already shown by store if collabId is empty
+    } catch {
+      // Unexpected error — store already handles toast
     } finally {
       setLoading(false);
     }
