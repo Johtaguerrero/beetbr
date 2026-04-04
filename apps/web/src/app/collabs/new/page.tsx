@@ -149,7 +149,7 @@ function NewCollabPageContent() {
     try {
       const payload = {
         ...formData,
-        targetArtistId: formData.targetArtistId || undefined
+        targetArtistId: formData.targetArtistId || null
       };
       const res = await createCollabPost(payload as any);
       if (res) {

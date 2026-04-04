@@ -345,6 +345,15 @@ export default function NewListingPage() {
                                     </p>
                                 </div>
 
+                                <div className="bg-accent/5 border border-accent/20 rounded-sm p-4">
+                                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">Dicas de Mídia Profissional:</p>
+                                    <ul className="text-[10px] text-beet-muted space-y-1 list-disc list-inside">
+                                        <li>Formatos suportados: <span className="text-white">1080x1080</span> (Quadrado) ou <span className="text-white">1080x1920</span> (Vertical/Anúncio).</li>
+                                        <li>Vídeos: Limite de <span className="text-white">45 segundos</span>. Perfeito para filmar do celular!</li>
+                                        <li>Anúncios verticais ganham mais destaque no feed principal.</li>
+                                    </ul>
+                                </div>
+
                                 <div className="grid grid-cols-2 gap-4">
                                      <div className="space-y-4">
                                         <label className="section-label">Amostra de Áudio</label>

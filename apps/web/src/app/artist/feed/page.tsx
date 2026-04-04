@@ -612,9 +612,9 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                                 marginBottom: 12, 
                                 outline: 'none', 
                                 background: 'black', 
-                                maxHeight: 'min(85vh, 820px)', 
+                                maxHeight: 'min(90vh, 1000px)', 
                                 height: 'auto',
-                                objectFit: 'cover' 
+                                objectFit: 'contain' 
                             }} 
                             className="md:rounded-sm" 
                         />
@@ -637,10 +637,10 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                                 width: '100%', 
                                 borderRadius: '0', 
                                 marginBottom: 12, 
-                                objectFit: 'cover', 
-                                maxHeight: 'min(85vh, 820px)', 
+                                objectFit: 'contain', 
+                                maxHeight: 'min(90vh, 1000px)', 
                                 height: 'auto',
-                                background: 'var(--color-nav-bg)' 
+                                background: 'black' 
                             }} 
                             className="md:rounded-sm" 
                         />
@@ -668,7 +668,7 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                                     <p className="text-[10px] uppercase tracking-widest font-black text-beet-red mb-1">Novo Anúncio no Marketplace</p>
                                     <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate group-hover/market:text-beet-red transition-colors">{post.text || 'Anúncio sem título'}</h4>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-xs font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase tracking-tighter">Ver detalhes ›</span>
+                                        <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded border border-white/10 uppercase tracking-tighter hover:bg-[var(--color-accent)] hover:text-black transition-colors font-bold">Saiba Mais ›</span>
                                     </div>
                                 </div>
                             </div>
@@ -694,7 +694,7 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                                     </div>
                                     <h4 className="text-lg font-bold text-[var(--color-primary-text,white)] truncate group-hover/collab:text-[var(--color-accent)] transition-colors leading-tight">{post.text || 'Projeto de Colaboração'}</h4>
                                     <div className="flex items-center gap-2 mt-3">
-                                        <span className="text-[10px] font-bold bg-[var(--color-accent)] text-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm hover:scale-105 transition-transform">Ver Convite ›</span>
+                                        <span className="text-[10px] font-bold bg-[var(--color-accent)] text-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-sm hover:scale-105 transition-transform">Saiba Mais ›</span>
                                     </div>
                                 </div>
                             </div>
