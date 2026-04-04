@@ -24,6 +24,7 @@ const TC: Record<string, { label: string; color: string }> = {
     IMAGE: { label: 'IMAGE', color: '#FF8800' },
     LYRIC: { label: 'LYRIC', color: '#00E5FF' },
     MARKETPLACE: { label: 'MARKET', color: '#FF3B5C' },
+    COLLAB: { label: 'COLLAB', color: '#00E5FF' },
 };
 
 const POST_TYPES = [
@@ -90,7 +91,7 @@ function InlineComposer() {
             margin: '12px 12px 0', padding: '16px',
             background: 'var(--color-card)', border: '1px solid var(--color-nav-border)',
             borderLeft: `3px solid ${selectedType.color}`,
-            borderRadius: '2px',
+            borderRadius: '16px',
         }}>
             {!expanded ? (
                 <button onClick={() => setExpanded(true)} style={{
@@ -450,9 +451,9 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                 background: 'var(--color-card)',
                 border: '1px solid var(--color-nav-border)',
                 borderLeft: `3px solid ${tc.color}`,
-                borderRadius: '2px',
+                borderRadius: '16px',
                 overflow: 'visible', // Change to visible to allow emoji picker popup
-                boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                boxShadow: 'var(--shadow-card)',
                 position: 'relative'
             }}
         >
@@ -647,7 +648,7 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                 )}
 
                 {post.type === 'TRACK' && (
-                    <div style={{ borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }} className="mx-[12px] md:mx-0">
+                    <div style={{ borderRadius: '12px', border: '1px solid var(--color-nav-border)', background: 'var(--color-nav-bg)', padding: 14, marginBottom: 12 }} className="mx-[12px] md:mx-0">
                         <TrackPlayer ref={mediaRef as any} url={post.mediaUrl} title="Faixa" />
                     </div>
                 )}
@@ -675,7 +676,33 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                     </div>
                 )}
 
-                {post.hashtags.length > 0 && (
+                {post.type === 'COLLAB' && post.collabId && (
+                    <div className="px-[18px] md:px-0">
+                        <Link href={`/collabs/${post.collabId}`} style={{ textDecoration: 'none' }}>
+                            <div className="beet-card p-5 flex items-center gap-5 transition-all hover:border-[var(--color-accent)] group/collab bg-gradient-to-br from-[var(--color-accent-dim)] to-transparent">
+                                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-black/20 border border-[var(--color-nav-border)] shadow-lg">
+                                    {post.mediaUrl ? (
+                                        <img src={api.getMediaUrl(post.mediaUrl)} alt="Collab" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-3xl">🤝</div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Zap size={12} className="text-[var(--color-accent)] animate-pulse" />
+                                        <p className="text-[10px] uppercase tracking-widest font-black text-[var(--color-accent)]">Nova Oportunidade de Collab</p>
+                                    </div>
+                                    <h4 className="text-lg font-bold text-[var(--color-primary-text,white)] truncate group-hover/collab:text-[var(--color-accent)] transition-colors leading-tight">{post.text || 'Projeto de Colaboração'}</h4>
+                                    <div className="flex items-center gap-2 mt-3">
+                                        <span className="text-[10px] font-bold bg-[var(--color-accent)] text-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm hover:scale-105 transition-transform">Ver Convite ›</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                )}
+
+                {post.hashtags?.length > 0 && (
                     <div className="px-[18px] md:px-0">
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
                             {post.hashtags.map(h => (
@@ -728,7 +755,7 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                     <motion.button whileTap={{ scale: 0.85 }}
                         style={{
                             width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            borderRadius: '2px', border: '1px solid var(--color-nav-border)', background: 'var(--color-glass-btn)',
+                            borderRadius: '10px', border: '1px solid var(--color-nav-border)', background: 'var(--color-glass-btn)',
                             color: 'var(--color-muted)', cursor: 'pointer'
                         }}
                         onClick={() => alert("Compartilhado!")}

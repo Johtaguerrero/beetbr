@@ -27,9 +27,25 @@ import Link from 'next/link';
 export default function CollabDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { collabPosts, currentUser, expressInterest, collabInterests } = useStore();
+    const { collabPosts, currentUser, expressInterest, collabInterests, fetchCollabPostById } = useStore();
+    const [loading, setLoading] = React.useState(!collabPosts.find((p: CollabPost) => p.id === params.id));
 
     const collab = collabPosts.find((p: CollabPost) => p.id === params.id);
+
+    React.useEffect(() => {
+        if (!collab && params.id) {
+            setLoading(true);
+            fetchCollabPostById(params.id as string).finally(() => setLoading(false));
+        }
+    }, [params.id, collab, fetchCollabPostById]);
+
+    if (loading) {
+        return (
+            <div className="flex h-[80vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-beet-green border-t-transparent" />
+            </div>
+        );
+    }
 
     if (!collab) {
         return (

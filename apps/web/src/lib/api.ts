@@ -196,6 +196,7 @@ class ApiClient {
     // ── Collaborations ──────────────────────────────────────────
     collaborations = {
         list: (params?: object) => this.get(`/collaborations${params ? '?' + new URLSearchParams(params as any).toString() : ''}`),
+        get: (id: string) => this.get(`/collaborations/${id}`),
         create: (data: object) => this.post('/collaborations', data),
         expressInterest: (collabId: string, data: { message: string }) => this.post(`/collaborations/${collabId}/interest`, data),
         getInterests: () => this.get('/collaborations/interests'),

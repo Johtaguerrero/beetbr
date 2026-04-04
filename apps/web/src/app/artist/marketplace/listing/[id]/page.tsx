@@ -66,13 +66,21 @@ export default function ListingDetail() {
     const router = useRouter();
     const id = params.id as string;
 
-    const { listings, savedListings, toggleSaveListing, startMarketplaceInquiry } = useStore();
+    const { listings, savedListings, toggleSaveListing, startMarketplaceInquiry, fetchListingById } = useStore();
     const [reported, setReported] = useState(false);
     const [chatLoading, setChatLoading] = useState(false);
+    const [loading, setLoading] = useState(!listings.find(l => l.id === id));
 
     const listing = listings.find((l) => l.id === id);
     const cat = listing ? MARKETPLACE_CATEGORIES.find((c) => c.slug === listing.category) : null;
     const isSaved = savedListings.includes(id);
+
+    useEffect(() => {
+        if (!listing) {
+            setLoading(true);
+            fetchListingById(id).finally(() => setLoading(false));
+        }
+    }, [id, listing, fetchListingById]);
 
     const handleStartChat = async () => {
         if (!listing) return;
@@ -88,6 +96,14 @@ export default function ListingDetail() {
         setReported(true);
         setTimeout(() => setReported(false), 3000);
     };
+
+    if (loading) {
+        return (
+            <div className="flex h-[80vh] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-t-transparent" />
+            </div>
+        );
+    }
 
     if (!listing) {
         return (

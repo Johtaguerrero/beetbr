@@ -233,6 +233,7 @@ interface BeetrStore {
     uploadContract: (proposalId: string, fileName: string) => void;
 
     fetchListings: (params?: object) => Promise<void>;
+    fetchListingById: (id: string) => Promise<any | null>;
     createListing: (data: any) => Promise<boolean>;
     toggleSaveListing: (listingId: string) => void;
     isListingSaved: (listingId: string) => boolean;
@@ -240,6 +241,7 @@ interface BeetrStore {
 
     fetchCollabPosts: (params?: object) => Promise<void>;
     fetchMyCollabs: () => Promise<void>;
+    fetchCollabPostById: (id: string) => Promise<any | null>;
     createCollabPost: (data: CreateCollabPostInput) => Promise<string>;
     expressInterest: (collabId: string, message: string) => Promise<void>;
     acceptInterest: (interestId: string) => void;
@@ -535,12 +537,15 @@ export const useStore = create<BeetrStore>()(
                         mediaUrl = res.url;
                     }
                     
+                    // Remove file from data to avoid sending [object File] in JSON
+                    const { file: _, ...cleanData } = data;
+                    
                     const res: any = await api.feed.createPost({ 
-                        ...data, 
+                        ...cleanData, 
                         mediaUrl, 
                         artistId: artistProfile.id, 
-                        listingId: data.listingId, 
-                        collabId: data.collabId,
+                        listingId: data.listingId || undefined, 
+                        collabId: data.collabId || undefined,
                         ctaUrl: data.ctaUrl || undefined,
                     });
 
@@ -815,6 +820,23 @@ export const useStore = create<BeetrStore>()(
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
             },
 
+            fetchListingById: async (id: string) => {
+                try {
+                    const res: any = await api.marketplace.get(id);
+                    if (res.data) {
+                        set((s) => ({
+                            listings: s.listings.some(l => l.id === id) 
+                                ? s.listings.map(l => l.id === id ? res.data : l)
+                                : [res.data, ...s.listings]
+                        }));
+                        return res.data;
+                    }
+                } catch (error: any) {
+                    console.error('Failed to fetch listing:', error);
+                }
+                return null;
+            },
+
             createListing: async (data: any) => {
                 const { currentUser, accessToken } = get();
                 if (!currentUser) return false;
@@ -910,6 +932,23 @@ export const useStore = create<BeetrStore>()(
                     // Optionally set a separate state or just reuse collabPosts
                     set({ collabPosts: res.data });
                 } catch (error: any) { get().addToast({ message: error.message, type: 'error' }); }
+            },
+
+            fetchCollabPostById: async (id: string) => {
+                try {
+                    const res: any = await api.collaborations.get(id);
+                    if (res.data) {
+                        set((s) => ({
+                            collabPosts: s.collabPosts.some(p => p.id === id)
+                                ? s.collabPosts.map(p => p.id === id ? res.data : p)
+                                : [res.data, ...s.collabPosts]
+                        }));
+                        return res.data;
+                    }
+                } catch (error: any) {
+                    console.error('Failed to fetch collab:', error);
+                }
+                return null;
             },
 
             createCollabPost: async (data: CreateCollabPostInput) => {

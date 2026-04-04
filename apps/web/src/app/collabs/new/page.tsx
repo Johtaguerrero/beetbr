@@ -147,7 +147,11 @@ function NewCollabPageContent() {
 
     setLoading(true);
     try {
-      const res = await createCollabPost(formData as any);
+      const payload = {
+        ...formData,
+        targetArtistId: formData.targetArtistId || undefined
+      };
+      const res = await createCollabPost(payload as any);
       if (res) {
         addToast({ message: 'Collab publicada!', type: 'success' });
         router.push('/collabs');
