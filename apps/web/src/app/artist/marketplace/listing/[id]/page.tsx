@@ -88,7 +88,7 @@ export default function ListingDetail() {
         const threadId = await startMarketplaceInquiry(listing.id);
         setChatLoading(false);
         if (threadId) {
-            router.push(`/artist/seller/chat/${threadId}`);
+            router.push(`/artist/messages?id=${threadId}`);
         }
     };
 

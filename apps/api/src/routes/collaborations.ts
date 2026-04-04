@@ -158,27 +158,54 @@ collaborationsRouter.post('/:id/interest', authenticate, async (req: AuthRequest
         },
     });
 
-    // Create Unified Chat Thread
-    await prisma.chatThread.create({
-        data: {
+    // Find or create Unified Chat Thread
+    let thread = await prisma.chatThread.findFirst({
+        where: {
             type: 'COLLAB',
             collabId: collab.id,
             participants: {
-                connect: [
-                    { id: collab.author.userId },
-                    { id: req.user!.userId }
-                ]
-            },
-            lastMessage: '🤝 Novo interesse em collab',
-            messages: {
-                create: {
-                    senderId: req.user!.userId,
-                    content: validated.data.message || `Tenho interesse em participar da sua collab: ${collab.title}`,
-                    isSystem: false
+                every: {
+                    id: { in: [collab.author.userId, req.user!.userId] }
                 }
             }
         }
     });
+
+    if (!thread) {
+        thread = await prisma.chatThread.create({
+            data: {
+                type: 'COLLAB',
+                collabId: collab.id,
+                participants: {
+                    connect: [
+                        { id: collab.author.userId },
+                        { id: req.user!.userId }
+                    ]
+                },
+                lastMessage: '🤝 Novo interesse em collab',
+                messages: {
+                    create: {
+                        senderId: req.user!.userId,
+                        content: validated.data.message || `Tenho interesse em participar da sua collab: ${collab.title}`,
+                        isSystem: false
+                    }
+                }
+            }
+        });
+    } else {
+        // Add message to existing thread
+        await prisma.chatMessage.create({
+            data: {
+                threadId: thread.id,
+                senderId: req.user!.userId,
+                content: validated.data.message || `Tenho interesse em participar da sua collab: ${collab.title}`,
+            }
+        });
+        await prisma.chatThread.update({
+            where: { id: thread.id },
+            data: { lastMessage: '🤝 Novo interesse em collab' }
+        });
+    }
 
     // Create Notification for the author
     await prisma.notification.create({
@@ -187,9 +214,9 @@ collaborationsRouter.post('/:id/interest', authenticate, async (req: AuthRequest
             type: 'COLLAB_INTEREST',
             title: 'Novo interesse em sua Collab!',
             message: `${profile.stageName} tem interesse em: ${collab.title}`,
-            link: `/artist/collabs/interests`,
+            link: `/artist/messages?id=${thread.id}`,
         }
     });
 
-    return res.status(201).json({ success: true, data: interest });
+    return res.status(201).json({ success: true, data: { ...interest, chatThreadId: thread.id } });
 });

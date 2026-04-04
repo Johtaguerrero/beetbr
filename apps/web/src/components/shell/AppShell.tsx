@@ -40,6 +40,7 @@ const ARTIST_NAV = [
     { collabTabs: true },
     { label: 'Marketplace', href: '/artist/marketplace', icon: <ShoppingBag size={IC} strokeWidth={2} /> },
     { label: 'Propostas', href: '/artist/deals', icon: <Briefcase size={IC} strokeWidth={2} /> },
+    { label: 'Mensagens', href: '/artist/messages', icon: <MessageSquare size={IC} strokeWidth={2} /> },
     { label: 'Meu Perfil', href: '/artist/profile/me', icon: <User size={IC} strokeWidth={2} />, dynamicProfile: true },
 ];
 

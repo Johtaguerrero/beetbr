@@ -100,10 +100,10 @@ model ChatThread {
   proposalId  String?        @unique
   proposal    Proposal?      @relation("ProposalChat", fields: [proposalId], references: [id])
   
-  collabId    String?        @unique
+  collabId    String?
   collab      CollabPost?    @relation("CollabChat", fields: [collabId], references: [id])
   
-  listingId   String?        @unique
+  listingId   String?
   listing     Listing?       @relation("ListingChat", fields: [listingId], references: [id])
   
   lastMessage String?        @db.Text
@@ -494,7 +494,7 @@ model Listing {
   artistSeller   ArtistProfile?   @relation(fields: [artistSellerId], references: [id])
   industrySeller IndustryProfile? @relation(fields: [industrySellerId], references: [id])
   posts          Post[]
-  chatThread     ChatThread?      @relation("ListingChat")
+  chatThreads    ChatThread[]     @relation("ListingChat")
 
   @@index([category])
   @@index([sellerId])
@@ -576,7 +576,7 @@ model CollabPost {
 
   interests    CollabInterest[]
   posts        Post[]
-  chatThread   ChatThread?      @relation("CollabChat")
+  chatThreads   ChatThread[]      @relation("CollabChat")
 
   @@index([authorId])
   @@index([targetArtistId])

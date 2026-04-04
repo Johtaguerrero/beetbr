@@ -37,9 +37,9 @@ export function FollowButton({ artistId, showIcon = true, size = 'md', className
     if (isSelf) return null;
 
     const sizes = {
-        sm: 'px-3 py-1.5 text-[9px] gap-1.5',
-        md: 'px-5 py-2 text-[10px] gap-2',
-        lg: 'px-7 py-3 text-[11px] gap-2.5'
+        sm: 'px-2 py-1 text-[8px] gap-1 tracking-tight',
+        md: 'px-5 py-2 text-[10px] gap-2 tracking-widest',
+        lg: 'px-7 py-3 text-[11px] gap-2.5 tracking-widest'
     };
 
     if (loading) {
@@ -62,7 +62,7 @@ export function FollowButton({ artistId, showIcon = true, size = 'md', className
                 }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                className={`flex items-center rounded-sm font-['Space_Mono'] font-bold uppercase tracking-widest transition-all border ${sizes[size]} ${className}`}
+                className={`flex items-center rounded-sm font-['Space_Mono'] font-bold uppercase transition-all border ${sizes[size]} ${className}`}
                 style={{
                     background: isHovered ? 'var(--color-accent)' : 'rgba(0, 255, 136, 0.05)',
                     borderColor: 'var(--color-accent)',
@@ -90,7 +90,7 @@ export function FollowButton({ artistId, showIcon = true, size = 'md', className
     return (
         <motion.button
             onClick={handleToggle}
-            className={`flex items-center rounded-sm font-['Space_Mono'] font-bold uppercase tracking-widest transition-all border ${sizes[size]} ${className}`}
+            className={`flex items-center rounded-sm font-['Space_Mono'] font-bold uppercase transition-all border ${sizes[size]} ${className}`}
             style={{
                 background: 'var(--color-accent)',
                 borderColor: 'var(--color-accent)',

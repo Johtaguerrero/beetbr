@@ -1047,17 +1047,17 @@ export default function FeedPage() {
                                     onMouseEnter={e => (e.currentTarget.style.borderLeftColor = 'var(--color-accent)')}
                                     onMouseLeave={e => (e.currentTarget.style.borderLeftColor = 'transparent')}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <div style={{ position: 'relative' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                                        <div style={{ position: 'relative', flexShrink: 0 }}>
                                             <Avatar name={a.stageName} imageUrl={a.avatarUrl} size="sm" />
                                             <span style={{ position: 'absolute', top: -4, left: -8, fontFamily: 'Space Mono, monospace', fontSize: '7px', fontWeight: 700, background: 'var(--color-accent)', color: '#000', padding: '1px 4px', borderRadius: '2px' }}>#{i + 1}</span>
                                         </div>
-                                        <div style={{ minWidth: 0 }}>
-                                            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '14px', fontWeight: 700, color: 'var(--color-primary-text, white)', lineHeight: 1, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.stageName}</p>
+                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                            <p style={{ fontFamily: 'Syne, sans-serif', fontSize: '13px', fontWeight: 800, color: 'var(--color-primary-text, white)', lineHeight: 1.2, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em', textTransform: 'uppercase' }}>{a.stageName}</p>
                                             <ScoreBeetBadge score={a.scoreBeet || 0} size="sm" />
                                         </div>
                                     </div>
-                                    <FollowButton artistId={a.id} size="sm" className="!h-7 !px-3" />
+                                    <FollowButton artistId={a.id} size="sm" className="ml-2 flex-shrink-0" />
                                 </Link>
                             ))}
                         </div>

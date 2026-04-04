@@ -80,7 +80,7 @@ export default function ListingDetail() {
         const threadId = await startMarketplaceInquiry(listing.id);
         setChatLoading(false);
         if (threadId) {
-            router.push(`/industry/chat/${threadId}`);
+            router.push(`/industry/messages?id=${threadId}`);
         }
     };
 

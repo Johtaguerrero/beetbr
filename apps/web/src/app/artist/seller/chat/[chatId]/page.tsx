@@ -21,7 +21,7 @@ export default function MarketplaceChat() {
     useAuthGuard();
     const params = useParams();
     const chatId = params.chatId as string;
-    const { chatThreads, sendChatMessage, currentUser, fetchThreadMessages } = useStore();
+    const { chatThreads, sendMessage, currentUser, fetchThreadMessages } = useStore();
     const [text, setText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +40,7 @@ export default function MarketplaceChat() {
 
     const handleSend = () => {
         if (!text.trim() || !chatId) return;
-        sendChatMessage(chatId, text.trim());
+        sendMessage(chatId, text.trim());
         setText('');
     };
 

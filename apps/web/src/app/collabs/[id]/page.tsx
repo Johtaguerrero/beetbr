@@ -189,7 +189,12 @@ export default function CollabDetailPage() {
                                     </Link>
                                 ) : (
                                     <button
-                                        onClick={() => expressInterest(collab.id, 'Tenho interesse em colaborar!')}
+                                        onClick={async () => {
+                                            const threadId = await expressInterest(collab.id, 'Tenho interesse em colaborar!');
+                                            if (threadId) {
+                                                router.push(`/artist/messages?id=${threadId}`);
+                                            }
+                                        }}
                                         disabled={hasExpressedInterest}
                                         className={`w-full py-4 rounded-xl font-black uppercase tracking-tight flex items-center justify-center gap-2 transition-all ${hasExpressedInterest
                                             ? 'bg-white/10 text-white/40 cursor-not-allowed'
@@ -236,12 +241,15 @@ export default function CollabDetailPage() {
                                 
                                 {!isAuthor && (
                                     <button
-                                        onClick={() => {
-                                            // Redireciona para o chat ou abre o fluxo de interesse
-                                            if (!hasExpressedInterest) {
-                                                expressInterest(collab.id, 'Olá! Gostaria de conversar sobre sua collab: ' + collab.title);
+                                        onClick={async () => {
+                                            const interest = (collabInterests || []).find((i: CollabInterest) => i.collabPostId === collab.id && i.interestedUserId === currentUser?.id);
+                                            if (interest?.chatThreadId) {
+                                                router.push(`/artist/messages?id=${interest.chatThreadId}`);
                                             } else {
-                                                router.push('/artist/deals'); // Fallback para lista de propostas
+                                                const threadId = await expressInterest(collab.id, 'Olá! Gostaria de conversar sobre sua collab: ' + collab.title);
+                                                if (threadId) {
+                                                    router.push(`/artist/messages?id=${threadId}`);
+                                                }
                                             }
                                         }}
                                         className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 hover:bg-white/10 transition-all"

@@ -175,5 +175,21 @@ marketplaceRouter.post('/:id/inquiry', authenticate, async (req: AuthRequest, re
         });
     }
 
+    // Get sender info for notification
+    const senderProfile = await prisma.artistProfile.findUnique({ where: { userId } }) 
+        || await prisma.industryProfile.findUnique({ where: { userId } });
+    const senderName = (senderProfile as any)?.stageName || (senderProfile as any)?.companyName || 'Um usuário';
+
+    // Create notification for seller
+    await prisma.notification.create({
+        data: {
+            userId: sellerUserId,
+            type: 'MARKETPLACE_INTERACT',
+            title: 'Novo contato no Marketplace!',
+            message: `${senderName} tem interesse em: ${listing.title}`,
+            link: `/${listing.sellerType === 'ARTIST' ? 'artist' : 'industry'}/messages?id=${thread.id}`
+        }
+    });
+
     return res.json({ success: true, data: thread });
 });

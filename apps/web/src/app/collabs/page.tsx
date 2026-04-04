@@ -75,7 +75,7 @@ function CollabExplorerContent() {
       await expressInterest(showInterestModal, interestMessage || 'Tenho interesse na sua collab!');
       if (type === 'chat') {
         addToast({ message: 'Chat iniciado!', type: 'success' });
-        router.push('/messages'); 
+        router.push('/artist/messages'); 
       } else {
         addToast({ message: 'Interesse enviado!', type: 'success' });
       }

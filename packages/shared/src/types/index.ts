@@ -497,6 +497,7 @@ export interface CollabInterest {
     userAvatarUrl?: string;
     message: string;
     status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+    chatThreadId?: string;
     createdAt: string;
 }
 

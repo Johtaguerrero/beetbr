@@ -209,6 +209,7 @@ class ApiClient {
         get: (id: string) => this.get(`/chats/${id}`),
         sendMessage: (id: string, data: { content: string; attachmentUrl?: string; attachmentName?: string }) => 
             this.post(`/chats/${id}/messages`, data),
+        markAsRead: (id: string) => this.patch(`/chats/${id}/read`, {}),
     };
     getMediaUrl(path: string | null | undefined): string | undefined {
         if (!path) return undefined;

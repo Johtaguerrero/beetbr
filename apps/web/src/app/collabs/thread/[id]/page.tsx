@@ -21,7 +21,7 @@ import { Avatar, ScoreBeetBadge } from '@/components/ui';
 export default function CollabThreadPage() {
     const params = useParams();
     const router = useRouter();
-    const { chatThreads, currentUser, sendChatMessage, fetchThreadMessages } = useStore();
+    const { chatThreads, currentUser, sendMessage, fetchThreadMessages } = useStore();
 
     const [inputText, setInputText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export default function CollabThreadPage() {
 
     const handleSend = () => {
         if (!inputText.trim()) return;
-        sendChatMessage(thread.id, inputText);
+        sendMessage(thread.id, inputText);
         setInputText('');
     };
 
