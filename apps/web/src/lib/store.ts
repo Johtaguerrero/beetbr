@@ -249,6 +249,7 @@ interface BeetrStore {
     rejectInterest: (interestId: string) => void;
     updateCollabStatus: (collabId: string, status: CollabPostStatus) => void;
     toggleSaveCollab: (collabId: string) => void;
+    triggerChatNotification: (thread: ChatThread, message: ChatMessage) => void;
 
     // Unified Chat Actions
     fetchChatThreads: () => Promise<void>;
@@ -1033,10 +1034,60 @@ export const useStore = create<BeetrStore>()(
             },
 
             // ── Unified Chat Actions Implementation ─────────────────────
+            triggerChatNotification: (thread: ChatThread, message: ChatMessage) => {
+                const { currentUser, addNotification } = get();
+                if (!currentUser || message.senderId === currentUser.id) return;
+
+                const senderName = message.sender?.artistProfile?.stageName 
+                    || message.sender?.industryProfile?.companyName 
+                    || 'Usuário';
+                
+                let subject = '';
+                if (thread.type === 'MARKETPLACE' && thread.listing) subject = `no anúncio: ${thread.listing.title}`;
+                else if (thread.type === 'COLLAB' && thread.collab) subject = `na collab: ${thread.collab.title}`;
+                else if (thread.type === 'PROPOSAL' && thread.proposal) subject = `na proposta: ${thread.proposal.title || 'Serviço'}`;
+                else subject = 'no chat';
+
+                addNotification({
+                    type: 'MESSAGE',
+                    title: 'Nova Mensagem 💬',
+                    message: `${senderName} respondeu ${subject}`,
+                    link: thread.type === 'PROPOSAL' ? `/deals/${thread.proposal?.id || thread.id}` : `/artist/deals` // Ajustar conforme rotas reais
+                });
+            },
+
             fetchChatThreads: async () => {
                 try {
+                    const oldThreads = get().chatThreads;
                     const res: any = await api.chats.list();
-                    set({ chatThreads: res.data });
+                    const newThreads = res.data as ChatThread[];
+                    
+                    // Detect changes for notifications
+                    newThreads.forEach(newT => {
+                        const oldT = oldThreads.find(t => t.id === newT.id);
+                        
+                        // Scenario: New message in existing thread
+                        const isNewMessage = oldT 
+                            ? (newT.updatedAt !== oldT.updatedAt && newT.lastMessage !== oldT.lastMessage)
+                            : (newT.lastMessage); // Or if it's a completely new thread with a message
+
+                        if (isNewMessage) {
+                            // We don't have the full Message object here, so we simulate it 
+                            // enough for the notification trigger to work.
+                            const mockMsg: ChatMessage = {
+                                id: `temp-${Date.now()}`,
+                                threadId: newT.id,
+                                senderId: 'external', // Simplified, triggerChatNotification checks this
+                                content: newT.lastMessage || '',
+                                createdAt: newT.updatedAt,
+                                sender: newT.participants?.find(p => p.id !== get().currentUser?.id),
+                                isSystem: false
+                            };
+                            get().triggerChatNotification(newT, mockMsg);
+                        }
+                    });
+
+                    set({ chatThreads: newThreads });
                 } catch (error: any) {
                     console.error('Failed to fetch chat threads:', error);
                 }
@@ -1044,10 +1095,19 @@ export const useStore = create<BeetrStore>()(
 
             fetchThreadMessages: async (threadId) => {
                 try {
+                    const oldThread = get().chatThreads.find(t => t.id === threadId) || get().activeThread;
                     const res: any = await api.chats.get(threadId);
+                    const newThread = res.data as ChatThread;
+                    
+                    // If thread just updated and we are not the sender of the last message
+                    if (newThread.messages && newThread.messages.length > (oldThread?.messages?.length || 0)) {
+                        const lastMsg = newThread.messages[newThread.messages.length - 1];
+                        get().triggerChatNotification(newThread, lastMsg);
+                    }
+
                     set((s) => ({
-                        activeThread: res.data,
-                        chatThreads: s.chatThreads.map(t => t.id === threadId ? res.data : t)
+                        activeThread: newThread,
+                        chatThreads: s.chatThreads.map(t => t.id === threadId ? newThread : t)
                     }));
                 } catch (error: any) {
                     get().addToast({ message: 'Erro ao carregar mensagens', type: 'error' });

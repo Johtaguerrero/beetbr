@@ -690,6 +690,7 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
+        if (!theme) return;
         if (theme === 'light') {
             document.documentElement.classList.add('theme-light');
             document.body.classList.add('theme-light');
@@ -698,6 +699,20 @@ export function AppShell({ children, noPadding = false }: AppShellProps) {
             document.body.classList.remove('theme-light');
         }
     }, [theme]);
+
+    const { fetchChatThreads } = useStore();
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        
+        // Initial fetch
+        fetchChatThreads();
+
+        const interval = setInterval(() => {
+            fetchChatThreads();
+        }, 15000); // Poll every 15s for demo purposes
+
+        return () => clearInterval(interval);
+    }, [isAuthenticated, fetchChatThreads]);
 
     if (isAuthenticated && !currentUser) {
         return (
