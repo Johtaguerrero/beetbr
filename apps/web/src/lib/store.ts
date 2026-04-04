@@ -952,8 +952,18 @@ export const useStore = create<BeetrStore>()(
             },
 
             createCollabPost: async (data: CreateCollabPostInput) => {
+                const { artistProfile } = get();
+                if (!artistProfile) return '';
+
                 try {
-                    const res: any = await api.collaborations.create(data);
+                    // Deep Sanitize: ensure no empty strings reach the API for UUID fields
+                    const payload = {
+                        ...data,
+                        authorId: artistProfile.id,
+                        targetArtistId: data.targetArtistId || undefined
+                    };
+
+                    const res: any = await api.collaborations.create(payload);
                     set((s) => ({ collabPosts: [res.data, ...s.collabPosts] }));
                     
                     // Social Integration (Feed/Story)
