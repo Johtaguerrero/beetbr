@@ -10,9 +10,7 @@ import {
     CheckCircle2, Clock, Info, ExternalLink
 } from 'lucide-react';
 import { useStore, type ChatThread, type ChatMessage } from '@/lib/store';
-import { AppShell } from '@/components/shell/AppShell';
 import { Avatar, Spinner, StatusBadge, CustomEmojiPicker, RenderTextWithEmojis } from '@/components/ui';
-import { api } from '@/lib/api';
 
 function MessagesContent() {
     const searchParams = useSearchParams();
@@ -66,7 +64,7 @@ function MessagesContent() {
         if (!activeThreadId) return;
         const interval = setInterval(() => {
             loadMessages(activeThreadId, true);
-        }, 5000);
+        }, 30000);
         return () => clearInterval(interval);
     }, [activeThreadId]);
 
@@ -127,8 +125,7 @@ function MessagesContent() {
     };
 
     return (
-        <AppShell noPadding>
-            <div className="flex h-[calc(100vh-env(safe-area-inset-bottom))] w-full flex-col lg:flex-row overflow-hidden bg-beet-black">
+        <div className="flex h-[calc(100vh-env(safe-area-inset-bottom))] w-full flex-col lg:flex-row overflow-hidden bg-beet-black">
                 
                 {/* ── Sidebar (Thread List) ── */}
                 <div className={`
@@ -443,7 +440,6 @@ function MessagesContent() {
                 </AnimatePresence>
 
             </div>
-        </AppShell>
     );
 }
 
