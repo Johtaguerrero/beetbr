@@ -656,8 +656,11 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                 {post.type === 'MARKETPLACE' && post.listingId && (
                     <div className="px-[18px] md:px-0">
                         <Link href={`/artist/marketplace/listing/${post.listingId}`} style={{ textDecoration: 'none' }}>
-                            <div className="beet-card p-4 flex items-center gap-4 transition-all hover:border-[var(--color-accent)] group/market">
-                                <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20 border border-[var(--color-nav-border)]">
+                            <div className="beet-card p-4 flex items-center gap-4 transition-all group/market" style={{ borderColor: 'rgba(27,77,255,0.3)' }}
+                                onMouseEnter={e => (e.currentTarget.style.borderColor = '#1B4DFF')}
+                                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(27,77,255,0.3)')}
+                            >
+                                <div className="h-20 w-32 flex-shrink-0 overflow-hidden rounded-sm bg-black/20" style={{ border: '1px solid rgba(27,77,255,0.25)' }}>
                                     {post.mediaUrl ? (
                                         <img src={api.getMediaUrl(post.mediaUrl)} alt="Marketplace" className="w-full h-full object-cover" />
                                     ) : (
@@ -665,10 +668,10 @@ function PostCard({ post, isStoryOpen, onMediaClick, onReelsOpen }: { post: Post
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] uppercase tracking-widest font-black text-beet-red mb-1">Novo Anúncio no Marketplace</p>
-                                    <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate group-hover/market:text-beet-red transition-colors">{post.text || 'Anúncio sem título'}</h4>
+                                    <p className="text-[10px] uppercase tracking-widest font-black mb-1" style={{ color: '#1B4DFF', textShadow: '0 0 12px rgba(27,77,255,0.8), 0 0 24px rgba(27,77,255,0.4)' }}>Novo Anúncio no Marketplace</p>
+                                    <h4 className="text-base font-bold text-[var(--color-primary-text,white)] truncate transition-colors group-hover/market:" style={{ color: 'var(--color-primary-text, white)' }} onMouseEnter={e => (e.currentTarget.style.color = '#1B4DFF')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-primary-text, white)')}>{post.text || 'Anúncio sem título'}</h4>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-xs font-mono bg-white/5 px-3 py-1 rounded border border-white/10 uppercase tracking-tighter hover:bg-[var(--color-accent)] hover:text-black transition-colors font-bold">Saiba Mais ›</span>
+                                        <span className="text-xs font-mono px-3 py-1 rounded uppercase tracking-tighter font-bold transition-colors" style={{ background: 'rgba(27,77,255,0.12)', border: '1px solid rgba(27,77,255,0.35)', color: '#4D7FFF' }}>Saiba Mais ›</span>
                                     </div>
                                 </div>
                             </div>
@@ -1667,7 +1670,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                             {/* Context Badges */}
                             <div className="flex gap-2 mb-4">
                                 {post.type === 'VIDEO' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-purple text-white uppercase">REELS</span>}
-                                {post.type === 'MARKETPLACE' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-red text-white uppercase">MARKETPLACE</span>}
+                                {post.type === 'MARKETPLACE' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest text-white uppercase" style={{ background: '#1B4DFF', boxShadow: '0 0 10px rgba(27,77,255,0.6)' }}>MARKETPLACE</span>}
                                 {post.type === 'TRACK' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-beet-green text-black uppercase">MÚSICA</span>}
                                 {post.status === 'BOOSTED_48H' && <span className="px-2 py-0.5 rounded text-[8px] font-black tracking-widest bg-neon text-black uppercase">FLY</span>}
                             </div>
@@ -1716,7 +1719,7 @@ function ReelsViewerModal({ initialPost, posts, onClose }: { initialPost: Post; 
                                 )}
                                 
                                 {post.type === 'MARKETPLACE' && (
-                                    <Link href={`/artist/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg bg-beet-red text-[10px] font-bold text-white uppercase tracking-widest shadow-lg shadow-beet-red/20">
+                                    <Link href={`/artist/marketplace/listing/${post.listingId}`} className="w-fit flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold text-white uppercase tracking-widest" style={{ background: '#1B4DFF', boxShadow: '0 0 20px rgba(27,77,255,0.35)' }}>
                                         <ShoppingBag size={14} /> Ver Anúncio
                                     </Link>
                                 )}
