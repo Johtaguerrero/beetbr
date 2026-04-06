@@ -23,7 +23,7 @@ const TC: Record<string, { label: string; color: string }> = {
     VIDEO: { label: 'VIDEO', color: '#7000FF' },
     IMAGE: { label: 'IMAGE', color: '#FF8800' },
     LYRIC: { label: 'LYRIC', color: '#00E5FF' },
-    MARKETPLACE: { label: 'MARKET', color: '#FF3B5C' },
+    MARKETPLACE: { label: 'MARKET', color: '#1B4DFF' },
     COLLAB: { label: 'COLLAB', color: '#00E5FF' },
 };
 
